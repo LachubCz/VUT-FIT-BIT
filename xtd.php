@@ -3,184 +3,6 @@
  * @author Petr Buchal(xbucha02)
  */
 
-function childrennames ($file)
-{
-	$namescount = $file->count();
-	$namesarr = array_fill(0, $namescount, 0);
-	$i = 0;
-
-	foreach ($file->children() as $child)
-	{
-	    $namesarr[$i] = $child->getName();
-	    $i+=1;
-	}
-
-	//$namesarr = array_unique($namesarr);
-	return $namesarr;
-}
-
-function childrennames2 ($arr,$file)
-{
-	$count = $file->count();
-	$ncount = 0;
-
-	for ($i=0; $i < $count; $i++) 
-	{
-		$ncount+= $file->{$arr[0]}[$i]->count() . "\n";
-	}
-
-	$namesarr = array_fill(0, $ncount, 0);
-	$ncount = 0;
-
-	for ($i=0; $i < $count; $i++)
-	{
-		foreach ($file->{$arr[0]}[$i]->children() as $childreen)
-		{
-			 $namesarr[$ncount] = $childreen->getName();
-			 $ncount+=1;
-		}
-		$namesarr = array_unique($namesarr);
-	}
-
-	return $namesarr;
-}
-
-function getattributes($arr, $file)
-{
-	$count = $file->count();
-	$namesarr = array_fill(0, $count, 0);
-	$ncount = 0;
-
-	for ($i=0; $i < $count; $i++) 
-	{ 
-		foreach($file->{$arr[0]}[$i]->attributes() as $a => $b)
-		{
-			$ncount+= 1;
-		}
-	}
-
-	$namesarr = array_fill(0, $ncount, 0);
-	$ncount = 0;
-
-	for ($i=0; $i < $count; $i++) 
-	{ 
-		foreach($file->{$arr[0]}[$i]->attributes() as $a => $b)
-		{
-			$namesarr[$ncount] = $a;
-			$ncount+=1;
-
-		}
-		$namesarr = array_unique($namesarr);
-	}
-
-	return $namesarr;
-}
-
-function getattributesval($arr, $file)
-{
-	$count = $file->count();
-	$namesarr = array_fill(0, $count, 0);
-	$ncount = 0;
-
-	for ($i=0; $i < $count; $i++) 
-	{ 
-		foreach($file->{$arr[0]}[$i]->attributes() as $a => $b)
-		{
-			$ncount+= 1;
-		}
-	}
-
-	$namesarr = array_fill(0, $ncount, 0);
-	$ncount = 0;
-
-	for ($i=0; $i < $count; $i++) 
-	{ 
-		foreach($file->{$arr[0]}[$i]->attributes() as $a => $b)
-		{
-			$namesarr[$ncount] = $b;
-			$ncount+=1;
-
-		}
-	}
-
-	return $namesarr;
-}
-
-function childrenvalues ($arr, $file)
-{
-	$count = $file->count();
-	$ncount = 0;
-
-	for ($i=0; $i < $count; $i++) 
-	{
-		$ncount+= $file->{$arr[0]}[$i]->count();
-	}
-
-	$namesarr = array_fill(0, $ncount, 0);
-	$ncount = 0;
-
-	for ($i=0; $i < $count; $i++)
-	{
-		foreach ($file->{$arr[0]}[$i]->children() as $childreen)
-		{
-			 $namesarr[$ncount] = $childreen;
-			 $ncount+=1;
-		}
-	}
-
-	return $namesarr;
-}
-
-function control($name, $val, $type)
-{
-	for ($i=0, $e=0; $e < count($name); $i++) 
-	{
-		if (!empty($name[$i]))
-		{
-			if (empty($val[$i]) || $val[$i] === '0' || $val[$i] === '1' || !strcasecmp($val[$i], "true")|| !strcasecmp($val[$i], "false")) 
-			{
-				$val[$i] = "BIT";
-			}
-			else if (isfloat("$val[$i]")) 
-			{
-				$val[$i] = "FLOAT";
-			}
-			else if (is_numeric("$val[$i]")) 
-			{
-				$val[$i] = "INT";
-			}
-			else if ($type === 1) 
-			{
-				$val[$i] = "NVARCHAR";
-			}
-			else
-			{
-				$val[$i] = "NTEXT";
-			}
-			$e++;
-		}
-		else
-		{
-			$val[$i] = "";
-		}
-	}
-	return $val;
-}
-
-function output ($final, $parameter)
-{
-	if ($parameter === '-1') 
-	{
-		echo $final;
-	}
-	else
-	{
-		$output = fopen($parameter,"w");
-		fwrite($output, $final);
-		fclose($output);
-	}
-}
-
 //####################################################################################
 //############################Zpracovani argumentu skriptu############################
 //####################################################################################
@@ -564,7 +386,8 @@ class database
 
 	function addtable ($table)
 	{
-		array_push($this->arrayoftables, $table);
+		$this->arrayoftables[$table->name] = $table;
+		//array_push($this->arrayoftables, $table);
 	}
 
 	function find ($table)
@@ -650,6 +473,8 @@ class table
 		$this->attributes[$name] = $type;
         //array_push($this->attributes[$name] = $type);
     }
+
+
 }
 
 //vytvoreni hlavni struktury databaze, 
@@ -676,32 +501,252 @@ print_r($database);
 //####################################Parsing XML#####################################
 //####################################################################################
 
-
-
-
-
-
-//layers($file);
-/*
-function layers ($file)
+function childrennames ($file)
 {
-	$names = childrennames($file);
-	$index = count($names);
-	for ($i=0; $i < $index; $i++) 
-	{ 
-		# code...
-	}
-	//print_r($names);
-	//echo count($names);
-	//print_r($file);
-}*/
+	$namescount = $file->count();
+	$namesarr = array_fill(0, $namescount, 0);
+	$i = 0;
 
+	foreach ($file->children() as $child)
+	{
+	    $namesarr[$i] = $child->getName();
+	    $i+=1;
+	}
+
+	//$namesarr = array_unique($namesarr);
+	return $namesarr;
+}
+
+
+
+function getattributes($arr, $file)
+{
+	$count = $file->count();
+	$namesarr = array_fill(0, $count, 0);
+	$ncount = 0;
+
+	for ($i=0; $i < $count; $i++) 
+	{ 
+		foreach($file->{$arr[0]}[$i]->attributes() as $a => $b)
+		{
+			$ncount+= 1;
+		}
+	}
+
+	$namesarr = array_fill(0, $ncount, 0);
+	$ncount = 0;
+
+	for ($i=0; $i < $count; $i++) 
+	{ 
+		foreach($file->{$arr[0]}[$i]->attributes() as $a => $b)
+		{
+			$namesarr[$ncount] = $a;
+			$ncount+=1;
+
+		}
+		$namesarr = array_unique($namesarr);
+	}
+
+	return $namesarr;
+}
+
+function getattributesval($arr, $file)
+{
+	$count = $file->count();
+	$namesarr = array_fill(0, $count, 0);
+	$ncount = 0;
+
+	for ($i=0; $i < $count; $i++) 
+	{ 
+		foreach($file->{$arr[0]}[$i]->attributes() as $a => $b)
+		{
+			$ncount+= 1;
+		}
+	}
+
+	$namesarr = array_fill(0, $ncount, 0);
+	$ncount = 0;
+
+	for ($i=0; $i < $count; $i++) 
+	{ 
+		foreach($file->{$arr[0]}[$i]->attributes() as $a => $b)
+		{
+			$namesarr[$ncount] = $b;
+			$ncount+=1;
+
+		}
+	}
+
+	return $namesarr;
+}
+
+function childrenvalues ($arr, $file)
+{
+	$count = $file->count();
+	$ncount = 0;
+
+	for ($i=0; $i < $count; $i++) 
+	{
+		$ncount+= $file->{$arr[0]}[$i]->count();
+	}
+
+	$namesarr = array_fill(0, $ncount, 0);
+	$ncount = 0;
+
+	for ($i=0; $i < $count; $i++)
+	{
+		foreach ($file->{$arr[0]}[$i]->children() as $childreen)
+		{
+			 $namesarr[$ncount] = $childreen;
+			 $ncount+=1;
+		}
+	}
+
+	return $namesarr;
+}
+
+function control($name, $val, $type)
+{
+	for ($i=0, $e=0; $e < count($name); $i++) 
+	{
+		if (!empty($name[$i]))
+		{
+			if (empty($val[$i]) || $val[$i] === '0' || $val[$i] === '1' || !strcasecmp($val[$i], "true")|| !strcasecmp($val[$i], "false")) 
+			{
+				$val[$i] = "BIT";
+			}
+			else if (isfloat("$val[$i]")) 
+			{
+				$val[$i] = "FLOAT";
+			}
+			else if (is_numeric("$val[$i]")) 
+			{
+				$val[$i] = "INT";
+			}
+			else if ($type === 1) 
+			{
+				$val[$i] = "NVARCHAR";
+			}
+			else
+			{
+				$val[$i] = "NTEXT";
+			}
+			$e++;
+		}
+		else
+		{
+			$val[$i] = "";
+		}
+	}
+	return $val;
+}
+
+function output ($final, $parameter)
+{
+	if ($parameter === '-1') 
+	{
+		echo $final;
+	}
+	else
+	{
+		$output = fopen($parameter,"w");
+		fwrite($output, $final);
+		fclose($output);
+	}
+}
+
+$classes = childrennames($file);  //prohledani prvni vrstvy
+
+while (count($classes) > $i) 
+{
+	$table = new table();
+	$table->set_name($classes[0]);
+	$database->addtable($table);
+	$i+=1;
+}
+
+//print_r($database);
+/*
+for ($i=0; count($classes) > $i; $i++) 
+{ 
+	uelements($database, $file);
+}
+*/
+uelements($database,$file);
+
+function attredit()
+{
+	//porovna a prekopiruje pole do objectu
+}
+
+function attuniq($array, $name, $uniq)
+{
+	return $array[$name] = $type;
+	//vytvori num_ID a vlozi ho do pole
+}
+
+function etcdesider($database, $etc)
+{
+	//rozhodne bud o prekopirovani atributu (pouziti fce attredit) nebo o vytvoreni prislusne nove tabulky
+}
+
+
+function uelements ($database, $file)
+{
+	$countf = count($file);
+	$countd = count($database);
+	for ($e=0; $e < $countd; $e++) 
+	{
+		$array = array();
+		$array = $database->arrayoftables;
+		$val = array_values($array)[$e];
+		for ($i=0; $i < $countf; $i++)
+		{
+			$array = array();
+			foreach ($file->{$val->name}[$i]->children() as $childreen)
+			{
+				$name = $childreen->getName();
+				$type = control($name, $childreen, '1');
+				$array = attuniq($array, $name, $uniq);
+				
+				//echo $name . " ".$type . "\n";
+			}
+			//$val->prks_put($childreen->getName(), $childreen, '1');
+			//echo $childreen->getName() . "\n";
+			//$namesarr = array_unique($namesarr);
+		}
+	}
+	//print_r($val);
+	//echo $count . "\n";
+	/*
+	$ncount = 0;
+
+	for ($i=0; $i < $count; $i++) 
+	{
+		$ncount+= $file->{$arr[0]}[$i]->count() . "\n";
+	}
+
+	$namesarr = array_fill(0, $ncount, 0);
+	$ncount = 0;
+
+	for ($i=0; $i < $count; $i++)
+	{
+		foreach ($file->{$arr[0]}[$i]->children() as $childreen)
+		{
+			 $namesarr[$ncount] = $childreen->getName();
+			 $ncount+=1;
+		}
+		$namesarr = array_unique($namesarr);
+	}
+
+	return $namesarr;*/
+}
 
 
 
 /*
 $names = childrennames($file);  //jmeno hlavni tabulky
-
+  
 $final = add1($final, $names[0]);  //CREATE_TABLE
 
 
