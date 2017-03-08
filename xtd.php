@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * @author Petr Buchal(xbucha02)
  */
@@ -302,7 +302,7 @@ function control($name, $val, $type)
 	{
 		if (!empty($name[$i]))
 		{
-			if (empty($val[$i]) || $val[$i] === 0 || $val[$i] === 1 || !strcasecmp($val[$i], "true")|| !strcasecmp($val[$i], "false")) 
+			if (empty($val[$i]) || $val[$i] === '0' || $val[$i] === '1' || !strcasecmp($val[$i], "true")|| !strcasecmp($val[$i], "false")) 
 			{
 				$val[$i] = "BIT";
 			}
@@ -330,6 +330,20 @@ function control($name, $val, $type)
 		}
 	}
 	return $val;
+}
+
+function output ($final, $parameter)
+{
+	if ($parameter === '-1') 
+	{
+		echo $final;
+	}
+	else
+	{
+		$output = fopen($parameter,"w");
+		fwrite($output, $final);
+		fclose($output);
+	}
 }
 
 $types = array("2"=>"-1", "3"=>"-1", "4"=>"-1", "5"=>"-1", "6"=>"-1", "7"=>"-1", "8"=>"-1", );
@@ -465,13 +479,6 @@ switch(true)
 		exit(1);
 }
 
-//testovani argumentu
-/*
-echo $types['2'];echo "\n";
-echo $types['3'];echo "\n";
-echo $types['6'];echo "\n";
-echo $types['7'];echo "\n";
-*/
 
 emptyfile($types['2']);  //kontrola prazdnosti souboru
 
@@ -485,13 +492,23 @@ $final = add1($final, $names[0]);  //CREATE_TABLE
 $children = childrennames2($names, $file);
 $childrenval = childrenvalues($names, $file);
 $childrenval = control($children, $childrenval, 0);
-$final = add2($final, $children);  //tisk _id
+$final = add2($final, $children);  //tisk potomku
 
 
 $attributes = getattributes($names, $file);
 $attributesval = getattributesval($names, $file);
 $attributesval = control($attributes, $attributesval, 1);
-$final = add3($final, $attributes, $attributesval);  //tisk ne _id
+
+
+if ($types['6'] === '-1')  //osetreni argumentu -a
+{
+	$final = add3($final, $attributes, $attributesval);  //tisk atributu
+}
+else
+{
+	$final = substr($final, 0, -2);
+	$final = $final . "\n);\n";
+}
 
 
 for ($i=0, $e=0; $e < count($children); $i++) 
@@ -505,6 +522,6 @@ for ($i=0, $e=0; $e < count($children); $i++)
 	}
 }
 
+output ($final, $types['3']);
 
-echo $final . "\n";
 ?>
