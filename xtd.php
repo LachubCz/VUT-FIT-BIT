@@ -15,7 +15,7 @@ function childrennames ($file)
 	    $i+=1;
 	}
 
-	$namesarr = array_unique($namesarr);
+	//$namesarr = array_unique($namesarr);
 	return $namesarr;
 }
 
@@ -494,6 +494,7 @@ $file = fileload($types['2']);
 //####################################################################################
 //##################################Funkce pro tisk###################################
 //####################################################################################
+
 function add($header)
 {
 	$final = "";
@@ -548,7 +549,131 @@ function add3($string, $arr, $arr2)
 $final = add($types['4']);
 
 //####################################################################################
-//##################################Funkce pro tisk###################################
+//#############################Tridy pro ukladani hodnot##############################
+//####################################################################################
+
+//trida na ulozeni pole tabulek
+class database
+{
+	var $arrayoftables;
+
+	function init()
+	{
+		$this->arrayoftables = array();
+	}
+
+	function addtable ($table)
+	{
+		array_push($this->arrayoftables, $table);
+	}
+
+	function find ($table)
+	{
+		if (in_array($table, $this->arrayoftables))
+		{
+			return 0;  //nalezena shoda
+		}
+		else
+		{
+			return -1;  //nenalezena shoda
+		}
+	}
+}
+
+//trida na ulozeni jednotlivych tabulek 
+class table
+{
+	var $name;
+	var $primarykeys;
+	var $attributes;
+
+	function set_name($name)
+	{
+		$this->name = $name;
+		$this->primarykeys = array();
+		$this->attributes = array();
+	}
+
+	function prks_put($name, $type, $etc)
+    {
+		if (array_key_exists($name, $this->primarykeys)) 
+		{
+		    if ($etc === 2)
+		    {
+		    	$temp = $name . "1_ID";
+		    	$arr[$temp] = $arr[$name];
+				unset($arr[$name]);
+		    	$temp = $name . "2_ID";
+		    	$this->primarykeys[$temp] = $type;
+				//array_push($this->primarykeys[$temp] = $type);
+		    }
+		    else
+		    {
+		    	;  //etc je jedna a polozka by mela mit vlastni tabulku (pomoci globals)
+		    }
+		}
+		else
+		{
+			for ($i=1; $i < ($etc + 1); $i++) 
+			{
+				$temp = $name . $i . "_ID";
+				if (array_key_exists($temp, $this->primarykeys)) 
+				{
+				    ;
+				}
+				else
+				{
+					if (($etc+1) >= $i)
+						if ($i === '1') 
+						{
+							$this->primarykeys[$name] = $type;
+							break;
+							//array_push($this->primarykeys['$name'] = $type);
+						}
+						else
+						{
+							$this->primarykeys[$temp] = $type;
+							break;
+							//array_push($this->primarykeys['$temp'] = $type);
+						}
+					else
+					{
+						;  //etc je mensi nez pocet polozek a polozka by mela mit vlastni tabulku (pomoci globals)
+					}
+				}
+			}
+		}
+    }    
+
+    function atts_put($name, $type)
+    {
+		$this->attributes[$name] = $type;
+        //array_push($this->attributes[$name] = $type);
+    }
+}
+
+//vytvoreni hlavni struktury databaze, 
+$database = new database();
+$database->init();
+
+/*
+//debugging struktur
+$database = new database();
+$database->init();
+
+$table = new table();
+$table->set_name("table_name");
+$table->prks_put("child", "INT", '2');
+$table->prks_put("child", "INT", '2');
+$table->atts_put("attr", "FLOAT");
+
+$database->addtable($table);
+
+print_r($database);
+*/
+
+//####################################################################################
+//####################################Parsing XML#####################################
 //####################################################################################
 
 
@@ -556,9 +681,25 @@ $final = add($types['4']);
 
 
 
+//layers($file);
+/*
+function layers ($file)
+{
+	$names = childrennames($file);
+	$index = count($names);
+	for ($i=0; $i < $index; $i++) 
+	{ 
+		# code...
+	}
+	//print_r($names);
+	//echo count($names);
+	//print_r($file);
+}*/
 
 
-//$file = simplexml_load_file($types['2']);  //nacteni souboru
+
+
+/*
 $names = childrennames($file);  //jmeno hlavni tabulky
 
 $final = add1($final, $names[0]);  //CREATE_TABLE
@@ -598,5 +739,5 @@ for ($i=0, $e=0; $e < count($children); $i++)
 }
 
 output ($final, $types['3']);
-
+*/
 ?>
