@@ -3,171 +3,6 @@
  * @author Petr Buchal(xbucha02)
  */
 
-function help_print()
-{
-	echo "--help viz společné zadání všech úloh"; echo"\n";
-	echo "--input=filename zadaný vstupní soubor ve formátu XML"; echo"\n";
-	echo "--output=filename zadaný výstupní soubor ve formátu definovaném výše"; echo"\n";
-	echo "--header='hlavička' na začátek výstupního souboru se vloží zakomentovaná hlavička"; echo"\n";
-	echo "--etc=n pro n ≥ 0 určuje maximální počet sloupců vzniklých ze stejnojmenných podelementů"; echo"\n";
-	echo "-a nebudou se generovat sloupce z atributů ve vstupním XML souboru"; echo"\n";
-	echo "-b pokud bude element obsahovat více podelementů stejného názvu, bude se uvažovat, jako by zde byl pouze jediný takový (tento parametr nesmí být kombinován s parametrem --etc=n)"; echo"\n";
- 	echo "-g lze jej uplatnit v kombinaci s jakýmikoliv jinými přepínači vyjma --help. Při jeho aktivaci bude výstupním souborem pouze XML"; echo"\n";
-}
-
-function help_test($argv, $argc)
-{
-	$index = 1;
-
-	while ($index < $argc) 
-	{
-		if (!(strcmp ($argv[$index], "--help")))
-		{
-			return 1;
-		}
-		$index++;
-	}
-
-	return 0;
-}
-
-function parameter_test($parameter)
-{
-	if (strlen($parameter) === 2)
-	{
-		if (!(strcmp ($parameter, "-a")))
-			return 6;
-		if (!(strcmp ($parameter, "-b")))
-			return 7;
-		if (!(strcmp ($parameter, "-g")))
-			return 8;
-	}
-
-	if (!(strlen($parameter) >= 6))
-	{
-		exit(1);
-	}
-	else
-	{
-		$cropped = substr($parameter, 0, 6);
-		if (!(strcmp ($cropped, "--etc=")))
-			return 5;
-	}
-
-	if (!(strlen($parameter) >= 8))
-	{
-		exit(1);
-	}
-	else
-	{
-		$cropped = substr($parameter, 0, 8);
-		if (!(strcmp ($cropped, "--input=")))
-			return 2;
-	}
-
-	if (!(strlen($parameter) >= 9))
-	{
-		exit(1);
-	}
-	else
-	{
-		$cropped = substr($parameter, 0, 9);
-		if (!(strcmp ($cropped, "--header=")))
-			return 4;
-		if (!(strcmp ($cropped, "--output=")))
-			return 3;		
-	}
-
-	exit(1);
-}
-
-function isfloat($value)
-{
-	return is_float($value + 0);
-}
-
-function parameter_value($type, $parameter)
-{	
-	switch(true)
-	{
-		case ($type === 2):
-			parse_str($parameter, $output);
-			$value = $output['--input'];
-			break;
-		case ($type === 3):
-			parse_str($parameter, $output);
-			$value = $output['--output'];
-			break;
-		case ($type === 4):
-			parse_str($parameter, $output);
-			$value = $output['--header'];
-			break;
-		case ($type === 5):
-			parse_str($parameter, $output);
-			$value = $output['--etc'];
-			if (!(is_numeric($value)) || (isfloat($value)))
-			{
-				exit(1);
-			}
-			break;
-		default:
-		return 1;
-	}
-	return $value;
-}
-
-function add1($final, $string)
-{
-	return $string = $final . "CREATE TABLE " . $string . "(\n	prk_" . $string . "_id" .  " INT PRIMARY KEY,\n";
-}
-
-function add2($string, $arr)
-{
-	for ($i=0, $e=0; $e < count($arr); $i++) 
-	{
-		if (!empty($arr[$i])) 
-		{
-			$string = $string . "	" . $arr[$i] . "_id INT,\n";
-			$e++;
-		}
-	}
-
-	return $string;
-}
-
-function add3($string, $arr, $arr2)
-{
-	for ($i=0, $e=0; $e < count($arr); $i++) 
-	{
-		if (!empty($arr[$i])) 
-		{
-			$e++;
-			if ($e === count($arr)) 
-				$string = $string . "	" . $arr[$i] . " " . $arr2[$i] . "\n";
-			else
-				$string = $string . "	" . $arr[$i] . " " . $arr2[$i] . ",\n";
-		}
-	}
-
-	return $string . ");\n";
-}
-
-function emptyfile($name)
-{
-	if (file_exists($name)) 
-	{
-		if (filesize($name) === 0)
-	    	exit (1);
-
-	    $xml = simplexml_load_file($name);
-
-	 	if ($xml->count() === 0) 
-	 	{
-	 		exit(0);
-	 	}
-	} 
-}
-
 function childrennames ($file)
 {
 	$namescount = $file->count();
@@ -346,8 +181,128 @@ function output ($final, $parameter)
 	}
 }
 
+//####################################################################################
+//############################Zpracovani argumentu skriptu############################
+//####################################################################################
+
+//tisk cele napovedy
+function help_print()
+{
+	echo "--help viz společné zadání všech úloh"; echo"\n";
+	echo "--input=filename zadaný vstupní soubor ve formátu XML"; echo"\n";
+	echo "--output=filename zadaný výstupní soubor ve formátu definovaném výše"; echo"\n";
+	echo "--header='hlavička' na začátek výstupního souboru se vloží zakomentovaná hlavička"; echo"\n";
+	echo "--etc=n pro n ≥ 0 určuje maximální počet sloupců vzniklých ze stejnojmenných podelementů"; echo"\n";
+	echo "-a nebudou se generovat sloupce z atributů ve vstupním XML souboru"; echo"\n";
+	echo "-b pokud bude element obsahovat více podelementů stejného názvu, bude se uvažovat, jako by zde byl pouze jediný takový (tento parametr nesmí být kombinován s parametrem --etc=n)"; echo"\n";
+ 	echo "-g lze jej uplatnit v kombinaci s jakýmikoliv jinými přepínači vyjma --help. Při jeho aktivaci bude výstupním souborem pouze XML"; echo"\n";
+}
+
+//pokud je nektery z argumentu "--help" a argumentu je vic nez dva, ukoncuje program "exit(1)"
+function help_test($argv, $argc)
+{
+	$index = 1;
+
+	while ($index < $argc) 
+	{
+		if (!(strcmp ($argv[$index], "--help")))
+		{
+			exit(1);
+		}
+		$index++;
+	}
+}
+
+//vraci hodnotu parametru, pokud je parametr jiny nez v zadani ukoncuje program "exit(1)"
+function parameter_test($parameter)
+{
+	if (strlen($parameter) === 2)
+	{
+		if (!(strcmp ($parameter, "-a")))
+			return 6;
+		if (!(strcmp ($parameter, "-b")))
+			return 7;
+		if (!(strcmp ($parameter, "-g")))
+			return 8;
+	}
+
+	if (!(strlen($parameter) >= 6))
+	{
+		exit(1);
+	}
+	else
+	{
+		$cropped = substr($parameter, 0, 6);
+		if (!(strcmp ($cropped, "--etc=")))
+			return 5;
+	}
+
+	if (!(strlen($parameter) >= 8))
+	{
+		exit(1);
+	}
+	else
+	{
+		$cropped = substr($parameter, 0, 8);
+		if (!(strcmp ($cropped, "--input=")))
+			return 2;
+	}
+
+	if (!(strlen($parameter) >= 9))
+	{
+		exit(1);
+	}
+	else
+	{
+		$cropped = substr($parameter, 0, 9);
+		if (!(strcmp ($cropped, "--header=")))
+			return 4;
+		if (!(strcmp ($cropped, "--output=")))
+			return 3;		
+	}
+
+	exit(1);
+}
+
+//kontrola cisla, zda-li je float
+function isfloat($value)
+{
+	return is_float($value + 0);
+}
+
+//vraci hodnoty parametru skriptu, pokud je hodnota nespravna program konci "exit(1)"
+function parameter_value($type, $parameter)
+{	
+	switch(true)
+	{
+		case ($type === 2):
+			parse_str($parameter, $output);
+			$value = $output['--input'];
+			break;
+		case ($type === 3):
+			parse_str($parameter, $output);
+			$value = $output['--output'];
+			break;
+		case ($type === 4):
+			parse_str($parameter, $output);
+			$value = $output['--header'];
+			break;
+		case ($type === 5):
+			parse_str($parameter, $output);
+			$value = $output['--etc'];
+			if (!(is_numeric($value)) || (isfloat($value)))
+			{
+				exit(1);
+			}
+			break;
+	}
+	return $value;
+}
+
+//vytvoreni pole do ktereho se ukladaji hodnoty argumentu
 $types = array("2"=>"-1", "3"=>"-1", "4"=>"-1", "5"=>"-1", "6"=>"-1", "7"=>"-1", "8"=>"-1", );
 
+//switch, ktery zpracovava argumenty pomoci predchozich funkci
 switch(true)
 {
 	case ($argc === 1):
@@ -365,8 +320,7 @@ switch(true)
 	  	break;
 
 	case ($argc === 3):
-		if(help_test($argv, $argc))
-			exit(1);
+		help_test($argv, $argc);
 
 		$type1 = parameter_test($argv[1]);
 		$types[$type1] = parameter_value($type1, $argv[1]);
@@ -376,8 +330,7 @@ switch(true)
 	    break;
 
 	case ($argc === 4):
-		if(help_test($argv, $argc))
-			exit(1);
+		help_test($argv, $argc);
 
 		$type1 = parameter_test($argv[1]);
 		$types[$type1] = parameter_value($type1, $argv[1]);
@@ -390,8 +343,7 @@ switch(true)
 	    break;
 
 	case ($argc === 5):
-		if(help_test($argv, $argc))
-			exit(1);
+		help_test($argv, $argc);
 
 		$type1 = parameter_test($argv[1]);
 		$types[$type1] = parameter_value($type1, $argv[1]);
@@ -407,8 +359,7 @@ switch(true)
 	    break;
 
 	case ($argc === 6):
-		if(help_test($argv, $argc))
-			exit(1);
+		help_test($argv, $argc);
 
 		$type1 = parameter_test($argv[1]);
 		$types[$type1] = parameter_value($type1, $argv[1]);
@@ -427,8 +378,7 @@ switch(true)
 	    break;
 
 	case ($argc === 7):
-		if(help_test($argv, $argc))
-			exit(1);
+		help_test($argv, $argc);
 
 		$type1 = parameter_test($argv[1]);
 		$types[$type1] = parameter_value($type1, $argv[1]);
@@ -450,8 +400,7 @@ switch(true)
 	    break;
 
 	case ($argc === 8):
-		if(help_test($argv, $argc))
-			exit(1);
+		help_test($argv, $argc);
 
 		$type1 = parameter_test($argv[1]);
 		$types[$type1] = parameter_value($type1, $argv[1]);
@@ -478,14 +427,140 @@ switch(true)
 	default:
 		exit(1);
 }
+//####################################################################################
+//############################Zpracovani vstupniho souboru############################
+//####################################################################################
+
+//kontrola prazdnosti souboru a vstupu STDIN + kontrola existence souboru
+function emptyfile($name, $type)
+{
+	if ($type === '1') 
+	{
+		$xml = simplexml_load_string($name);
+
+	 	if ($xml->count() === 0) 
+	 	{
+	 		exit(0);
+	 	}
+	}
+	else
+	{
+		if (file_exists($name)) 
+		{
+			if (filesize($name) === 0)
+		    	exit (0);
+
+		    $xml = simplexml_load_file($name);
+
+		 	if ($xml->count() === 0) 
+		 	{
+		 		exit(0);
+		 	}
+		}
+		else
+		{
+			exit(1);
+		}
+	}
+}
+
+//nacteni a rozparserovani souboru, pokud neni soubor zadan nacteni dat ze STDIN a jejich rozparserovani
+function fileload($file)
+{
+	if ($file === '-1') 
+	{
+		$file = "";
+		$f = fopen( 'php://stdin', 'r' );
+		while( $line = fgets($f)) 
+		{
+		  $file = $file . $line;
+		}
+		fclose($f);
+		emptyfile($file, '1');  //kontrola prazdnosti souboru
+		$file = simplexml_load_string($file);  //nacteni souboru
+	}
+	else
+	{
+		emptyfile($file, '0');  //kontrola prazdnosti souboru
+		$file = simplexml_load_file($file);  //nacteni souboru
+	}
+
+	return $file;
+}
+
+//pokud soubor neni zadan, je prijman standartni vstup + kontrola zda-li neni soubor prazdny a existuje
+$file = fileload($types['2']);
+
+//####################################################################################
+//##################################Funkce pro tisk###################################
+//####################################################################################
+function add($header)
+{
+	$final = "";
+	
+	if ($header !== '-1') 
+	{
+		return $final . "--" . $header . "\n\n";
+	}
+	else
+	{
+		return $final;
+	}
+}
+
+function add1($final, $string)
+{
+	return $string = $final . "CREATE TABLE " . $string . "(\n	prk_" . $string . "_id" .  " INT PRIMARY KEY,\n";
+}
+
+function add2($string, $arr)
+{
+	for ($i=0, $e=0; $e < count($arr); $i++) 
+	{
+		if (!empty($arr[$i])) 
+		{
+			$string = $string . "	" . $arr[$i] . "_id INT,\n";
+			$e++;
+		}
+	}
+
+	return $string;
+}
+
+function add3($string, $arr, $arr2)
+{
+	for ($i=0, $e=0; $e < count($arr); $i++) 
+	{
+		if (!empty($arr[$i])) 
+		{
+			$e++;
+			if ($e === count($arr)) 
+				$string = $string . "	" . $arr[$i] . " " . $arr2[$i] . "\n";
+			else
+				$string = $string . "	" . $arr[$i] . " " . $arr2[$i] . ",\n";
+		}
+	}
+
+	return $string . ");\n";
+}
+
+//vytvoreni $final stringu, popripade pridani hlavicky
+$final = add($types['4']);
+
+//####################################################################################
+//##################################Funkce pro tisk###################################
+//####################################################################################
 
 
-emptyfile($types['2']);  //kontrola prazdnosti souboru
 
 
-$file = simplexml_load_file($types['2']);  //nacteni souboru
+
+
+
+
+//$file = simplexml_load_file($types['2']);  //nacteni souboru
 $names = childrennames($file);  //jmeno hlavni tabulky
-$final = "";
+
 $final = add1($final, $names[0]);  //CREATE_TABLE
 
 
