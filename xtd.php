@@ -378,10 +378,13 @@ $final = add($types['4']);
 class database
 {
 	var $arrayoftables;
+	var $arguments;
 
-	function init()
+	function init($types)
 	{
 		$this->arrayoftables = array();
+		$this->arguments = $types;
+		//array_push($this->arguments, $types);
 	}
 
 	function addtable ($table)
@@ -479,7 +482,8 @@ class table
 
 //vytvoreni hlavni struktury databaze, 
 $database = new database();
-$database->init();
+$database->init($types);
+//print_r($types);
 
 /*
 //debugging struktur
@@ -672,23 +676,90 @@ for ($i=0; count($classes) > $i; $i++)
 	uelements($database, $file);
 }
 */
-uelements($database,$file);
+$database = uelements($database,$file);
+print_r($database);
 
-function attredit()
+function attredit($arrdata, $arrnew)
 {
-	//porovna a prekopiruje pole do objectu
+	$arrdata = array_merge($arrdata, $arrnew);
+	$allKeys = array_keys($arrdata);
+	
+	for ($i=0; $i < count($allKeys); $i++) 
+	{ 
+		$substing = substr($allKeys[$i], -4);
+
+		if ($substing === "1_ID") 
+		{
+			$len = strlen($allKeys[$i]) - 4;
+			$delstr = substr($allKeys[$i], 0, $len);
+			$delstr .= "_ID";
+			
+			if (array_key_exists($delstr, $arrdata)) 
+			{
+				unset($arrdata[$delstr]);
+			}
+		}
+	}
+	return $arrdata;
 }
 
-function attuniq($array, $name, $uniq)
+function attuniq($array, $name, $type)
 {
-	return $array[$name] = $type;
-	//vytvori num_ID a vlozi ho do pole
+	$num = 1;
+	$namenumID = $name . $num . "_ID";
+	$nameID = $name . "_ID";
+	if (array_key_exists($nameID, $array))
+	{
+		$temp = $array[$nameID];
+		unset($array[$nameID]);
+		$array[$namenumID] = $temp;
+		$num+=1;
+		$namenumID = $name . $num . "_ID";
+		$array[$namenumID] = $type;
+	}
+	else
+	{
+		if (!(array_key_exists($namenumID, $array))) 
+		{
+			$array[$nameID] = $type;
+		}
+		else
+		{
+			while (1) 
+			{
+				$num+=1;
+				$namenumID = $name . $num . "_ID";
+				if (!(array_key_exists($namenumID, $array))) 
+				{
+					$array[$namenumID] = $type;
+					break;
+				}
+			}
+		}
+	}
+	return $array;
 }
 
-function etcdesider($database, $etc)
+
+//funkce zatim neumi rearangovat atributy prekracujici etc do svych tabulek
+function etcdesider($name, $arrayprk, $database)
 {
-	//rozhodne bud o prekopirovani atributu (pouziti fce attredit) nebo o vytvoreni prislusne nove tabulky
+	$etc = $database->arguments['5'];
+	$array = $database->arrayoftables;
+
+	for ($i=0; $i < count($database); $i++) 
+	{ 
+		$val = array_values($array)[$i];
+
+		if ($val->name === $name) 
+		{
+			$primarykeys = attredit($val->primarykeys, $arrayprk);
+			$database->arrayoftables[$name]->primarykeys = $primarykeys;
+		}	
+	}
+	//rozhodne bud o ponechani atributu (pouziti fce etctbmaker) nebo o vytvoreni prislusne nove tabulky
 }
+
 
 
 function uelements ($database, $file)
@@ -707,10 +778,17 @@ function uelements ($database, $file)
 			{
 				$name = $childreen->getName();
 				$type = control($name, $childreen, '1');
-				$array = attuniq($array, $name, $uniq);
-				
-				//echo $name . " ".$type . "\n";
+				$array = attuniq($array, $name, $type);  //musime se podivat zdali pole uz hodnotu obsahuje pokud ano, preidexuje se pole
 			}
+			etcdesider($val->name, $array, $database);
+			//print_r($database);
+			
+
+
+
+			//$array = attuniq($array, $name, $type);  //pole atributu
+			//nyni by se mela zavolat funkce na zpracovani pole do tvaru num_ID podle etc
+			//a mely by se aktualizovat hodnoty ve strukture tabulek
 			//$val->prks_put($childreen->getName(), $childreen, '1');
 			//echo $childreen->getName() . "\n";
 			//$namesarr = array_unique($namesarr);
@@ -740,6 +818,7 @@ function uelements ($database, $file)
 	}
 
 	return $namesarr;*/
+	return $database;
 }
 
 
