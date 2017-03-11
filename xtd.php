@@ -272,13 +272,14 @@ function emptyfile($name, $type)
 		if (file_exists($name)) 
 		{
 			if (filesize($name) === 0)
-		    	exit (0);
+				output ("", $GLOBALS['out']);
 
 		    $xml = simplexml_load_file($name);
 
-		 	if ($xml->count() === 0) 
+		 	if ($xml->count() === 0)
 		 	{
-		 		exit(0);
+		 		//echo "string" . $GLOBALS['out'] . "\n";
+		 		output ("", $GLOBALS['out']);
 		 	}
 		}
 		else
@@ -334,7 +335,13 @@ function print_database($database)
 
 		if ($database->arguments['6'] === '-1')  //osetreni argumentu -a
 		{
-			$final = add3($final, $val->attributes);
+			if (count($val->attributes) === 0) 
+			{
+				$final = substr($final, 0, -2);
+				$final = $final . "\n);\n";
+			}
+			else
+				$final = add3($final, $val->attributes);
 		}
 		else
 		{
@@ -389,12 +396,17 @@ function output ($final, $parameter)
 	if ($parameter === '-1') 
 	{
 		echo $final;
+		exit(0);
 	}
 	else
 	{
-		$output = fopen($parameter,"w");
+		$dir = realpath($parameter);
+		//echo $parameter;
+		//echo $dir;
+		$output = fopen($parameter,'w');
 		fwrite($output, $final);
 		fclose($output);
+		exit(0);
 	}
 }
 
@@ -621,6 +633,8 @@ function recursivegold ($file, $database)
 //###########################Samotne telo mocneho programu############################
 //####################################################################################
 
+$GLOBALS['out'] = $types['3'];
+
 //osetreni vzajemneho zadani argumentu --etc a -a
 if (($types['5'] !== '-1') && ($types['7']=== '1')) 
 {
@@ -635,6 +649,98 @@ $database->init($types);
 
 $database = recursivegold ($file, $database);
 
+correct($database);
+
+function correct($database)
+{
+	$countd = count($database->arrayoftables);
+	for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+	{
+		$array = array();
+		$array = $database->arrayoftables;  //priradi do array arrayoftebles
+		$val = array_values($array)[$e];  //vybere e-tou hodnotu
+
+		if (count($val->primarykeys) === 0) 
+		{
+			for ($i=0; $i < $countd; $i++) 
+			{ 
+				$cmp = array_values($array)[$i];  //vybere e-tou hodnotu
+				$allKeys = array_keys($cmp->primarykeys);
+				for ($o=0; $o < count($allKeys); $o++) 
+				{
+					$type = "BIT";
+					$namenumID = $val->name . "_id";
+					if(array_key_exists($namenumID, $cmp->primarykeys))
+					{
+						$typetemp = $cmp->primarykeys[$namenumID];
+						$type = typeenum($type, $typetemp);
+					}
+					else
+					{
+						$num = 0;
+						$namenumID = $val->name;
+						while (1) 
+						{
+							$num+=1;
+							$namenumID = $namenumID . $num . "_id";
+
+							if (array_key_exists($namenumID, $cmp->primarykeys))
+							{
+								$typetemp = $cmp->primarykeys[$namenumID];
+								$type = typeenum($type, $typetemp);
+							}
+							else
+								break;
+						}
+					}
+
+					if (count($val->attributes) === 0) 
+						$val->attributes["value"] = $type;
+					else
+					{
+						$typetemp = $val->attributes["value"];
+						$type = typeenum ($type, $typetemp);
+						$val->attributes["value"] = $type;
+					}
+				}
+			}
+		}
+	}
+}
+
 print_database($database);
+
+function typeenum ($type, $typetemp)
+{
+	$typec = $type;
+	$typetempc = $typetemp;
+
+	if ($type === "BIT") 
+		$type = 1;
+	if ($type === "INT") 
+		$type = 2;
+	if ($type === "FLOAT") 
+		$type = 3;
+	if ($type === "NVARCHAR") 
+		$type = 4;
+	if ($type === "NTEXT") 
+		$type = 5;
+
+	if ($typetemp === "BIT") 
+		$typetemp = 1;
+	if ($typetemp === "INT") 
+		$typetemp = 2;
+	if ($typetemp === "FLOAT") 
+		$typetemp = 3;
+	if ($typetemp === "NVARCHAR") 
+		$typetemp = 4;
+	if ($typetemp === "NTEXT") 
+		$typetemp = 5;
+
+	if ($typetemp < $type) 
+		return $typec;
+	else
+		return $typetempc;
+}
 
 ?>
