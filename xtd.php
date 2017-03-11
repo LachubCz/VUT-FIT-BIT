@@ -310,13 +310,11 @@ function fileload($file)
 	return $file;
 }
 
-//pokud soubor neni zadan, je prijman standartni vstup + kontrola zda-li neni soubor prazdny a existuje
-$file = fileload($types['2']);
-
 //####################################################################################
 //##################################Funkce pro tisk###################################
 //####################################################################################
 
+//tiskne tabulku volanim funkci add1, add2, add3
 function print_database($database)
 {
 	$final = "";
@@ -327,21 +325,31 @@ function print_database($database)
 	}
 	for ($i=0; $i < count($database->arrayoftables); $i++) 
 	{ 
-		//$database->arrayoftables[$i];
 		$array = $database->arrayoftables;
 		$val = array_values($array)[$i];
 		$final = add1($final, $val->name);
 		$final = add2($final, $val->primarykeys);
-		$final = add3($final, $val->attributes);
+
+		if ($database->arguments['6'] === '-1')  //osetreni argumentu -a
+		{
+			$final = add3($final, $val->attributes);
+		}
+		else
+		{
+			$final = substr($final, 0, -2);
+			$final = $final . "\n);\n";
+		}
 	}
 	output ($final, $database->arguments['3']);
 }
 
+//tiskne zacatek tabulky
 function add1($final, $string)
 {
 	return $string = $final . "CREATE TABLE " . $string . "(\n	prk_" . $string . "_id" .  " INT PRIMARY KEY,\n";
 }
 
+//tiskne podelementy tabulky
 function add2($string, $arr)
 {
 	$allKeys = array_keys($arr);
@@ -353,6 +361,7 @@ function add2($string, $arr)
 	return $string;
 }
 
+//tiskne atributy tabulky
 function add3($string, $arr)
 {
 	$allKeys = array_keys($arr);
@@ -367,7 +376,19 @@ function add3($string, $arr)
 	return $string . ");\n";
 }
 
-//vytvoreni $final stringu, popripade pridani hlavicky
+function output ($final, $parameter)
+{
+	if ($parameter === '-1') 
+	{
+		echo $final;
+	}
+	else
+	{
+		$output = fopen($parameter,"w");
+		fwrite($output, $final);
+		fclose($output);
+	}
+}
 
 //####################################################################################
 //#############################Tridy pro ukladani hodnot##############################
@@ -383,25 +404,11 @@ class database
 	{
 		$this->arrayoftables = array();
 		$this->arguments = $types;
-		//array_push($this->arguments, $types);
 	}
 
 	function addtable ($table)
 	{
 		$this->arrayoftables[$table->name] = $table;
-		//array_push($this->arrayoftables, $table);
-	}
-
-	function find ($table)
-	{
-		if (in_array($table, $this->arrayoftables))
-		{
-			return 0;  //nalezena shoda
-		}
-		else
-		{
-			return -1;  //nenalezena shoda
-		}
 	}
 }
 
@@ -418,87 +425,7 @@ class table
 		$this->primarykeys = array();
 		$this->attributes = array();
 	}
-
-	function prks_put($name, $type, $etc)
-    {
-		if (array_key_exists($name, $this->primarykeys)) 
-		{
-		    if ($etc === 2)
-		    {
-		    	$temp = $name . "1_ID";
-		    	$arr[$temp] = $arr[$name];
-				unset($arr[$name]);
-		    	$temp = $name . "2_ID";
-		    	$this->primarykeys[$temp] = $type;
-				//array_push($this->primarykeys[$temp] = $type);
-		    }
-		    else
-		    {
-		    	;  //etc je jedna a polozka by mela mit vlastni tabulku (pomoci globals)
-		    }
-		}
-		else
-		{
-			for ($i=1; $i < ($etc + 1); $i++) 
-			{
-				$temp = $name . $i . "_ID";
-				if (array_key_exists($temp, $this->primarykeys)) 
-				{
-				    ;
-				}
-				else
-				{
-					if (($etc+1) >= $i)
-						if ($i === '1') 
-						{
-							$this->primarykeys[$name] = $type;
-							break;
-							//array_push($this->primarykeys['$name'] = $type);
-						}
-						else
-						{
-							$this->primarykeys[$temp] = $type;
-							break;
-							//array_push($this->primarykeys['$temp'] = $type);
-						}
-					else
-					{
-						;  //etc je mensi nez pocet polozek a polozka by mela mit vlastni tabulku (pomoci globals)
-					}
-				}
-			}
-		}
-    }    
-
-    function atts_put($name, $type)
-    {
-		$this->attributes[$name] = $type;
-        //array_push($this->attributes[$name] = $type);
-    }
-
-
 }
-
-//vytvoreni hlavni struktury databaze, 
-$database = new database();
-$database->init($types);
-//print_r($types);
-
-/*
-//debugging struktur
-$database = new database();
-$database->init();
-
-$table = new table();
-$table->set_name("table_name");
-$table->prks_put("child", "INT", '2');
-$table->prks_put("child", "INT", '2');
-$table->atts_put("attr", "FLOAT");
-
-$database->addtable($table);
-
-print_r($database);
-*/
 
 //####################################################################################
 //####################################Parsing XML#####################################
@@ -515,12 +442,182 @@ function childrennames ($file)
 		array_push($namesarr, $name);
 	}
 
-	//print_r($namesarr);
 	return $namesarr;
 }
 
+function control($val, $type)
+{
+	if (empty($val) || $val === '0' || $val === '1' || !strcasecmp($val, "true")|| !strcasecmp($val, "false")) 
+	{
+		$val = "BIT";
+	}
+	else if (isfloat("$val")) 
+	{
+		$val = "FLOAT";
+	}
+	else if (is_numeric("$val")) 
+	{
+		$val = "INT";
+	}
+	else if ($type === '1') 
+	{
+		$val = "NVARCHAR";
+	}
+	else
+	{
+		$val = "NTEXT";
+	}
+	return $val;
+}
 
+function attredit($arrdata, $arrnew)
+{
+	$arrdata = array_merge($arrdata, $arrnew);
+	$allKeys = array_keys($arrdata);
+	
+	for ($i=0; $i < count($allKeys); $i++) 
+	{ 
+		$substing = substr($allKeys[$i], -4);
 
+		if ($substing === "1_ID") 
+		{
+			$len = strlen($allKeys[$i]) - 4;
+			$delstr = substr($allKeys[$i], 0, $len);
+			$delstr .= "_ID";
+			
+			if (array_key_exists($delstr, $arrdata)) 
+			{
+				unset($arrdata[$delstr]);
+			}
+		}
+	}
+	return $arrdata;
+}
+
+function attuniq($array, $name, $type)
+{
+	$num = 1;
+	$namenumID = $name . $num . "_ID";
+	$nameID = $name . "_ID";
+	if (array_key_exists($nameID, $array))
+	{
+		$temp = $array[$nameID];
+		unset($array[$nameID]);
+		$array[$namenumID] = $temp;
+		$num+=1;
+		$namenumID = $name . $num . "_ID";
+		$array[$namenumID] = $type;
+	}
+	else
+	{
+		if (!(array_key_exists($namenumID, $array))) 
+		{
+			$array[$nameID] = $type;
+		}
+		else
+		{
+			while (1) 
+			{
+				$num+=1;
+				$namenumID = $name . $num . "_ID";
+				if (!(array_key_exists($namenumID, $array))) 
+				{
+					$array[$namenumID] = $type;
+					break;
+				}
+			}
+		}
+	}
+	return $array;
+}
+
+//funkce zatim neumi rearangovat atributy prekracujici etc do svych tabulek
+function etcdesider($name, $arrayprk, $database)
+{
+	$etc = $database->arguments['5'];
+	$array = $database->arrayoftables;
+
+	for ($i=0; $i < count($database->arrayoftables); $i++) 
+	{ 
+		$val = array_values($array)[$i];
+
+		if ($val->name === $name) 
+		{
+			$primarykeys = attredit($val->primarykeys, $arrayprk);
+			$database->arrayoftables[$name]->primarykeys = $primarykeys;
+		}	
+	}
+	//rozhodne bud o ponechani atributu (pouziti fce etctbmaker) nebo o vytvoreni prislusne nove tabulky
+}
+
+function uelements ($database, $file)
+{
+	$countf = count($file);
+	$countd = count($database->arrayoftables);
+	for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+	{
+		$array = array();
+		$array = $database->arrayoftables;  //priradi do array arrayoftebles
+		$val = array_values($array)[$e];  //vybere e-tou hodnotu
+		for ($i=0; $i < count($file->{$val->name}); $i++)
+		{
+			$array = array();
+			if ($database->arguments['6'] !== '-1') 
+			{
+				foreach($file->{$val->name}[$i]->attributes() as $a => $b)
+				{
+					//echo $a ." --- " . $b . "\n";
+					$type = control($b, '1');
+					$database->arrayoftables[$val->name]->attributes[$a] = $type;
+					//argput(, $a, $type, $database);
+				}
+			}
+
+			foreach ($file->{$val->name}[$i]->children() as $childreen)  //prochazeni jmen a hodnot country a jinych struktur ktere jsou prvni na rade
+			{
+				$name = $childreen->getName();
+				//echo $childreen . "\n";
+				$type = control($childreen, '0');
+				$array = attuniq($array, $name, $type);  //musime se podivat zdali pole uz hodnotu obsahuje pokud ano, preidexuje se pole
+			}
+			etcdesider($val->name, $array, $database);
+			//nyni by se mela zavolat funkce na zpracovani pole do tvaru num_ID podle etc
+			//a mely by se aktualizovat hodnoty ve strukture tabulek
+		}
+	}
+
+	//print_r($database);
+	return $database;
+}
+
+//osetreni vzajemneho zadani argumentu --etc a -a
+if (($types['5'] !== -1) && ($types['7']!== -1)) 
+{
+	exit(1);
+}
+
+$file = fileload($types['2']);  //pokud soubor neni zadan, je prijman standartni vstup + kontrola zda-li neni soubor prazdny a existuje
+
+//vytvoreni hlavni struktury databaze, 
+$database = new database();
+$database->init($types);
+
+$classes = childrennames($file);  //prohledani prvni vrstvy
+$i = 0;
+
+while (count($classes) > $i) 
+{
+	$table = new table();
+	$table->set_name($classes[$i]);
+	$database->addtable($table);
+	$i+=1;
+}
+
+$database = uelements($database,$file);
+print_database($database);
+
+/*
+//funkce puvodniho tela programu
 function getattributes($arr, $file)
 {
 	$count = $file->count();
@@ -607,184 +704,7 @@ function childrenvalues ($arr, $file)
 	return $namesarr;
 }
 
-function control($val, $type)
-{
-	if (empty($val) || $val === '0' || $val === '1' || !strcasecmp($val, "true")|| !strcasecmp($val, "false")) 
-	{
-		$val = "BIT";
-	}
-	else if (isfloat("$val")) 
-	{
-		$val = "FLOAT";
-	}
-	else if (is_numeric("$val")) 
-	{
-		$val = "INT";
-	}
-	else if ($type === '1') 
-	{
-		$val = "NVARCHAR";
-	}
-	else
-	{
-		$val = "NTEXT";
-	}
-	return $val;
-}
-
-function output ($final, $parameter)
-{
-	if ($parameter === '-1') 
-	{
-		echo $final;
-	}
-	else
-	{
-		$output = fopen($parameter,"w");
-		fwrite($output, $final);
-		fclose($output);
-	}
-}
-
-$classes = childrennames($file);  //prohledani prvni vrstvy
-$i = 0;
-
-while (count($classes) > $i) 
-{
-	$table = new table();
-	$table->set_name($classes[$i]);
-	$database->addtable($table);
-	$i+=1;
-}
-
-$database = uelements($database,$file);
-print_database($database);
-
-function attredit($arrdata, $arrnew)
-{
-	$arrdata = array_merge($arrdata, $arrnew);
-	$allKeys = array_keys($arrdata);
-	
-	for ($i=0; $i < count($allKeys); $i++) 
-	{ 
-		$substing = substr($allKeys[$i], -4);
-
-		if ($substing === "1_ID") 
-		{
-			$len = strlen($allKeys[$i]) - 4;
-			$delstr = substr($allKeys[$i], 0, $len);
-			$delstr .= "_ID";
-			
-			if (array_key_exists($delstr, $arrdata)) 
-			{
-				unset($arrdata[$delstr]);
-			}
-		}
-	}
-	return $arrdata;
-}
-
-function attuniq($array, $name, $type)
-{
-	$num = 1;
-	$namenumID = $name . $num . "_ID";
-	$nameID = $name . "_ID";
-	if (array_key_exists($nameID, $array))
-	{
-		$temp = $array[$nameID];
-		unset($array[$nameID]);
-		$array[$namenumID] = $temp;
-		$num+=1;
-		$namenumID = $name . $num . "_ID";
-		$array[$namenumID] = $type;
-	}
-	else
-	{
-		if (!(array_key_exists($namenumID, $array))) 
-		{
-			$array[$nameID] = $type;
-		}
-		else
-		{
-			while (1) 
-			{
-				$num+=1;
-				$namenumID = $name . $num . "_ID";
-				if (!(array_key_exists($namenumID, $array))) 
-				{
-					$array[$namenumID] = $type;
-					break;
-				}
-			}
-		}
-	}
-	return $array;
-}
-
-
-//funkce zatim neumi rearangovat atributy prekracujici etc do svych tabulek
-function etcdesider($name, $arrayprk, $database)
-{
-	$etc = $database->arguments['5'];
-	$array = $database->arrayoftables;
-
-	for ($i=0; $i < count($database->arrayoftables); $i++) 
-	{ 
-		$val = array_values($array)[$i];
-
-		if ($val->name === $name) 
-		{
-			$primarykeys = attredit($val->primarykeys, $arrayprk);
-			$database->arrayoftables[$name]->primarykeys = $primarykeys;
-		}	
-	}
-	//rozhodne bud o ponechani atributu (pouziti fce etctbmaker) nebo o vytvoreni prislusne nove tabulky
-}
-
-function uelements ($database, $file)
-{
-	$countf = count($file);
-	$countd = count($database->arrayoftables);
-	for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
-	{
-		$array = array();
-		$array = $database->arrayoftables;  //priradi do array arrayoftebles
-		$val = array_values($array)[$e];  //vybere e-tou hodnotu
-		for ($i=0; $i < count($file->{$val->name}); $i++)
-		{
-			$array = array();
-			if ($database->arguments['6'] !== '1') 
-			{
-				foreach($file->{$val->name}[$i]->attributes() as $a => $b)
-				{
-					//echo $a ." --- " . $b . "\n";
-					$type = control($b, '1');
-						$database->arrayoftables[$val->name]->attributes[$a] = $type;
-					//argput(, $a, $type, $database);
-				}
-			}
-
-
-			foreach ($file->{$val->name}[$i]->children() as $childreen)  //prochazeni jmen a hodnot country a jinych struktur ktere jsou prvni na rade
-			{
-				$name = $childreen->getName();
-				//echo $childreen . "\n";
-				$type = control($childreen, '0');
-				$array = attuniq($array, $name, $type);  //musime se podivat zdali pole uz hodnotu obsahuje pokud ano, preidexuje se pole
-			}
-			etcdesider($val->name, $array, $database);
-			//nyni by se mela zavolat funkce na zpracovani pole do tvaru num_ID podle etc
-			//a mely by se aktualizovat hodnoty ve strukture tabulek
-		}
-	}
-
-	//print_r($database);
-	return $database;
-}
-
-
-
-/*
+//puvodni ridici strom programu
 $names = childrennames($file);  //jmeno hlavni tabulky
   
 $final = add1($final, $names[0]);  //CREATE_TABLE
@@ -799,18 +719,6 @@ $final = add2($final, $children);  //tisk potomku
 $attributes = getattributes($names, $file);
 $attributesval = getattributesval($names, $file);
 $attributesval = control($attributes, $attributesval, 1);
-
-
-if ($types['6'] === '-1')  //osetreni argumentu -a
-{
-	$final = add3($final, $attributes, $attributesval);  //tisk atributu
-}
-else
-{
-	$final = substr($final, 0, -2);
-	$final = $final . "\n);\n";
-}
-
 
 for ($i=0, $e=0; $e < count($children); $i++) 
 { 
