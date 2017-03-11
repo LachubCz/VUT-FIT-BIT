@@ -326,10 +326,13 @@ function print_database($database)
 	{
 		$final = $final . "--" . $header . "\n\n";
 	}
+
 	for ($i=0; $i < count($database->arrayoftables); $i++) 
 	{ 
+		
 		$array = $database->arrayoftables;
 		$val = array_values($array)[$i];
+
 		$final = add1($final, $val->name);
 		$final = add2($final, $val->primarykeys);
 
@@ -362,12 +365,7 @@ function add1($final, $string)
 function add2($string, $arr)
 {
 	$allKeys = array_keys($arr);
-	/*
-	if (count($arr) === 0) 
-	{
-		$string = $string . "	" . "value " . "NTEXT\n";
-	}
-	*/
+
 	for ($i=0; $i < count($arr); $i++) 
 	{
 		$string = $string . "	" . $allKeys[$i] . " INT,\n";
@@ -401,8 +399,6 @@ function output ($final, $parameter)
 	else
 	{
 		$dir = realpath($parameter);
-		//echo $parameter;
-		//echo $dir;
 		$output = fopen($parameter,'w');
 		fwrite($output, $final);
 		fclose($output);
@@ -519,6 +515,7 @@ function attuniq($array, $name, $type)
 	$num = 1;
 	$namenumID = $name . $num . "_id";
 	$nameID = $name . "_id";
+
 	if (array_key_exists($nameID, $array))
 	{
 		$temp = $array[$nameID];
@@ -574,6 +571,7 @@ function uelements ($database, $file)
 {
 	$countf = count($file);
 	$countd = count($database->arrayoftables);
+	
 	for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
 	{
 		$array = array();
@@ -649,11 +647,15 @@ $database->init($types);
 
 $database = recursivegold ($file, $database);
 
-correct($database);
+$database = correct($database);
+$database = etcandbcor($database);
+
+print_database($database);
 
 function correct($database)
 {
 	$countd = count($database->arrayoftables);
+
 	for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
 	{
 		$array = array();
@@ -666,10 +668,12 @@ function correct($database)
 			{ 
 				$cmp = array_values($array)[$i];  //vybere e-tou hodnotu
 				$allKeys = array_keys($cmp->primarykeys);
+
 				for ($o=0; $o < count($allKeys); $o++) 
 				{
 					$type = "BIT";
 					$namenumID = $val->name . "_id";
+
 					if(array_key_exists($namenumID, $cmp->primarykeys))
 					{
 						$typetemp = $cmp->primarykeys[$namenumID];
@@ -695,20 +699,76 @@ function correct($database)
 					}
 
 					if (count($val->attributes) === 0) 
-						$val->attributes["value"] = $type;
+						$val->primarykeys["value"] = $type;
 					else
 					{
-						$typetemp = $val->attributes["value"];
+						$typetemp = $val->primarykeys["value"];
 						$type = typeenum ($type, $typetemp);
-						$val->attributes["value"] = $type;
+						$val->primarykeys["value"] = $type;
 					}
 				}
 			}
+			$database->arrayoftables[$val->name] = $val;
 		}
 	}
+	return $database;
 }
 
-print_database($database);
+function etcandbcor($database)
+{
+	if($database->arguments['7'] === 1)
+	{
+		$countd = count($database->arrayoftables);
+
+		for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+		{
+			$array = array();
+			$array = $database->arrayoftables;  //priradi do array arrayoftebles
+			$val = array_values($array)[$e];  //vybere e-tou hodnotu
+
+			$allKeys = array_keys($val->primarykeys);
+
+			for ($i=0; $i < count($allKeys); $i++) 
+			{ 
+				$end = substr($allKeys[$i], -4);
+
+				if ($end === "1_id") 
+				{
+					$len = strlen($allKeys[$i]) - 4;
+					$name = substr($allKeys[$i], 0, $len);
+					$num = 0;
+					$type = "BIT";
+
+					while (1) 
+					{
+						$num+=1;
+						$name = substr($allKeys[$i], 0, $len);
+						$name = $name . $num . "_id";
+
+						if (array_key_exists($name, $val->primarykeys))
+						{
+							$typetemp = $val->primarykeys[$name];
+							$type = typeenum($type, $typetemp);
+							unset($val->primarykeys[$name]);
+						}
+						else
+						{
+							$name = substr($allKeys[$i], 0, $len);
+							$name = $name . "_id";
+							$val->primarykeys[$name] = $type;
+							break;
+						}
+					}
+					$database->arrayoftables[$val->name] = $val;
+				}
+			}
+			
+		}
+	}
+	return $database;
+}
+
+
 
 function typeenum ($type, $typetemp)
 {
