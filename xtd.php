@@ -117,6 +117,8 @@ function parameter_value($type, $parameter)
 				exit(1);
 			}
 			break;
+		default:
+			return 1;
 	}
 	return $value;
 }
@@ -353,9 +355,15 @@ function add1($final, $string)
 function add2($string, $arr)
 {
 	$allKeys = array_keys($arr);
+	/*
+	if (count($arr) === 0) 
+	{
+		$string = $string . "	" . "value " . "NTEXT\n";
+	}
+	*/
 	for ($i=0; $i < count($arr); $i++) 
 	{
-		$string = $string . "	" . $allKeys[$i] . "_id INT,\n";
+		$string = $string . "	" . $allKeys[$i] . " INT,\n";
 	}
 
 	return $string;
@@ -479,11 +487,11 @@ function attredit($arrdata, $arrnew)
 	{ 
 		$substing = substr($allKeys[$i], -4);
 
-		if ($substing === "1_ID") 
+		if ($substing === "1_id") 
 		{
 			$len = strlen($allKeys[$i]) - 4;
 			$delstr = substr($allKeys[$i], 0, $len);
-			$delstr .= "_ID";
+			$delstr .= "_id";
 			
 			if (array_key_exists($delstr, $arrdata)) 
 			{
@@ -497,15 +505,15 @@ function attredit($arrdata, $arrnew)
 function attuniq($array, $name, $type)
 {
 	$num = 1;
-	$namenumID = $name . $num . "_ID";
-	$nameID = $name . "_ID";
+	$namenumID = $name . $num . "_id";
+	$nameID = $name . "_id";
 	if (array_key_exists($nameID, $array))
 	{
 		$temp = $array[$nameID];
 		unset($array[$nameID]);
 		$array[$namenumID] = $temp;
 		$num+=1;
-		$namenumID = $name . $num . "_ID";
+		$namenumID = $name . $num . "_id";
 		$array[$namenumID] = $type;
 	}
 	else
@@ -519,7 +527,7 @@ function attuniq($array, $name, $type)
 			while (1) 
 			{
 				$num+=1;
-				$namenumID = $name . $num . "_ID";
+				$namenumID = $name . $num . "_id";
 				if (!(array_key_exists($namenumID, $array))) 
 				{
 					$array[$namenumID] = $type;
@@ -562,7 +570,7 @@ function uelements ($database, $file)
 		for ($i=0; $i < count($file->{$val->name}); $i++)
 		{
 			$array = array();
-			if ($database->arguments['6'] !== '-1') 
+			if ($database->arguments['6'] === '-1') 
 			{
 				foreach($file->{$val->name}[$i]->attributes() as $a => $b)
 				{
@@ -585,13 +593,36 @@ function uelements ($database, $file)
 			//a mely by se aktualizovat hodnoty ve strukture tabulek
 		}
 	}
-
-	//print_r($database);
 	return $database;
 }
 
+function recursivegold ($file, $database)
+{
+	$classes = childrennames($file);  //prohledani prvni vrstvy
+	$i = 0;
+
+	while (count($classes) > $i) 
+	{
+		$table = new table();
+		$table->set_name($classes[$i]);
+		$database->addtable($table);
+		$i+=1;
+	}
+
+	$database = uelements ($database, $file);
+	foreach ($file->children() as $child) 
+	{
+		$database = recursivegold($child, $database);
+	}
+	return $database;
+}
+
+//####################################################################################
+//###########################Samotne telo mocneho programu############################
+//####################################################################################
+
 //osetreni vzajemneho zadani argumentu --etc a -a
-if (($types['5'] !== -1) && ($types['7']!== -1)) 
+if (($types['5'] !== '-1') && ($types['7']=== '1')) 
 {
 	exit(1);
 }
@@ -602,135 +633,8 @@ $file = fileload($types['2']);  //pokud soubor neni zadan, je prijman standartni
 $database = new database();
 $database->init($types);
 
-$classes = childrennames($file);  //prohledani prvni vrstvy
-$i = 0;
+$database = recursivegold ($file, $database);
 
-while (count($classes) > $i) 
-{
-	$table = new table();
-	$table->set_name($classes[$i]);
-	$database->addtable($table);
-	$i+=1;
-}
-
-$database = uelements($database,$file);
 print_database($database);
 
-/*
-//funkce puvodniho tela programu
-function getattributes($arr, $file)
-{
-	$count = $file->count();
-	$namesarr = array_fill(0, $count, 0);
-	$ncount = 0;
-
-	for ($i=0; $i < $count; $i++) 
-	{ 
-		foreach($file->{$arr[0]}[$i]->attributes() as $a => $b)
-		{
-			$ncount+= 1;
-		}
-	}
-
-	$namesarr = array_fill(0, $ncount, 0);
-	$ncount = 0;
-
-	for ($i=0; $i < $count; $i++) 
-	{ 
-		foreach($file->{$arr[0]}[$i]->attributes() as $a => $b)
-		{
-			$namesarr[$ncount] = $a;
-			$ncount+=1;
-
-		}
-		$namesarr = array_unique($namesarr);
-	}
-
-	return $namesarr;
-}
-
-function getattributesval($arr, $file)
-{
-	$count = $file->count();
-	$namesarr = array_fill(0, $count, 0);
-	$ncount = 0;
-
-	for ($i=0; $i < $count; $i++) 
-	{ 
-		foreach($file->{$arr[0]}[$i]->attributes() as $a => $b)
-		{
-			$ncount+= 1;
-		}
-	}
-
-	$namesarr = array_fill(0, $ncount, 0);
-	$ncount = 0;
-
-	for ($i=0; $i < $count; $i++) 
-	{ 
-		foreach($file->{$arr[0]}[$i]->attributes() as $a => $b)
-		{
-			$namesarr[$ncount] = $b;
-			$ncount+=1;
-
-		}
-	}
-
-	return $namesarr;
-}
-
-function childrenvalues ($arr, $file)
-{
-	$count = $file->count();
-	$ncount = 0;
-
-	for ($i=0; $i < $count; $i++) 
-	{
-		$ncount+= $file->{$arr[0]}[$i]->count();
-	}
-
-	$namesarr = array_fill(0, $ncount, 0);
-	$ncount = 0;
-
-	for ($i=0; $i < $count; $i++)
-	{
-		foreach ($file->{$arr[0]}[$i]->children() as $childreen)
-		{
-			 $namesarr[$ncount] = $childreen;
-			 $ncount+=1;
-		}
-	}
-
-	return $namesarr;
-}
-
-//puvodni ridici strom programu
-$names = childrennames($file);  //jmeno hlavni tabulky
-  
-$final = add1($final, $names[0]);  //CREATE_TABLE
-
-
-$children = childrennames2($names, $file);
-$childrenval = childrenvalues($names, $file);
-$childrenval = control($children, $childrenval, 0);
-$final = add2($final, $children);  //tisk potomku
-
-
-$attributes = getattributes($names, $file);
-$attributesval = getattributesval($names, $file);
-$attributesval = control($attributes, $attributesval, 1);
-
-for ($i=0, $e=0; $e < count($children); $i++) 
-{ 
-	if (!empty($children[$i]))
-	{
-		$array = array("value");
-		$final = add1($final, $children[$i]);
-		$final = add3($final, $array, $childrenval);
-		$e++;
-	}
-}
-
-output ($final, $types['3']);
-*/
 ?>
