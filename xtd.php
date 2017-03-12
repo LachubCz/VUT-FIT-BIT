@@ -368,7 +368,14 @@ function add2($string, $arr)
 
 	for ($i=0; $i < count($arr); $i++) 
 	{
-		$string = $string . "	" . $allKeys[$i] . " INT,\n";
+		if ($allKeys[$i] === "value") 
+		{
+			$string = $string . "	" . $allKeys[$i] . " " . $arr[$allKeys[$i]] . ",\n";
+		}
+		else
+		{
+			$string = $string . "	" . $allKeys[$i] . " INT,\n";
+		}
 	}
 
 	return $string;
@@ -798,12 +805,32 @@ function etcandbcor($database)
 						if ($end1 === $nameoftable || $end2 === $nameoftable) 
 						{
 							$name = $cmp->name . "_id"; 
-							$val->primarykeys[$name] = "INT";
+							$database->arrayoftables[$val->name]->primarykeys[$name] = "INT";
 
 							if ($end2 === $nameoftable) 
 							{
-								unset($cmp->primarykeys[$allKeys[$i]]);
-								$database->arrayoftables[$cmp->name] = $cmp;
+								//echo $val->primarykeys["value"] . "  -  ". $cmp->primarykeys[$allKeys[$i]] . "\n";
+								$value = typeenum($val->primarykeys["value"], $cmp->primarykeys[$allKeys[$i]]);
+								//echo $value . "\n";
+								//print_r($val);
+								//$value = $cmp->primarykeys[$allKeys[$i]];
+								//print_r($database->arrayoftables[$val->name]);
+								
+								//$database->arrayoftables[$val->name]->primarykeys['value'] = $value;
+
+								if (array_key_exists('value', $database->arrayoftables[$val->name]->primarykeys))
+								{
+									//echo $value;
+									//print_r($database->arrayoftables[$val->name]->primarykeys['value']);
+									$database->arrayoftables[$val->name]->primarykeys['value'] = $value;
+								}
+								//print_r($val);
+								//print_r($database);
+								//echo $allKeys[$i];
+								
+								unset($database->arrayoftables[$cmp->name]->primarykeys[$allKeys[$i]]);
+								//print_r($cmp);
+								//$database->arrayoftables[$cmp->name] = $cmp;
 							}
 							else
 							{				
@@ -818,22 +845,34 @@ function etcandbcor($database)
 
 									if (array_key_exists($name, $cmp->primarykeys))
 									{
-										unset($cmp->primarykeys[$name]);
+										$value = typeenum($database->arrayoftables[$val->name]->primarykeys['value'], $cmp->primarykeys[$allKeys[$i]]);
+
+										if (array_key_exists('value', $database->arrayoftables[$val->name]->primarykeys))
+										{
+											//echo "string";
+											$database->arrayoftables[$val->name]->primarykeys['value'] = $value;
+										}				
+
+
+										unset($database->arrayoftables[$cmp->name]->primarykeys[$name]);
 									}
 									else
 									{
 										break;
 									}
 								}
-							$database->arrayoftables[$cmp->name] = $cmp;
+							//$database->arrayoftables[$cmp->name] = $cmp;
 							}
 						}
 					}
 				}
 			}
+			//print_r($database);
+				//print_database($database);
+	
 		}
 	}
-	return $database;
+return $database;
 }
 
 
