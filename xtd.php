@@ -702,7 +702,7 @@ function correct($database)
 						}
 					}
 
-					if (count($val->attributes) === 0) 
+					if (count($val->primarykeys) === 0) 
 						$val->primarykeys["value"] = $type;
 					else
 					{
@@ -769,9 +769,87 @@ function etcandbcor($database)
 			
 		}
 	}
-	if ($database->arguments['5'] !== -1) 
+
+	if ($database->arguments['5'] !== '-1') 
 	{
 		if ($database->arguments['5'] !== 0) 
+		{
+			$countd = count($database->arrayoftables);
+
+			for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+			{
+				$array = array();
+				$array = $database->arrayoftables;  //priradi do array arrayoftebles
+				$val = array_values($array)[$e];  //vybere e-tou hodnotu
+
+				$nameoftable = $val->name;
+
+				for ($y=0; $y < $countd; $y++) 
+				{
+					$array = array();
+					$array = $database->arrayoftables;  //priradi do array arrayoftebles
+					$cmp = array_values($array)[$y];  //vybere e-tou hodnotu
+					
+					$allKeys = array_keys($cmp->primarykeys);
+
+					for ($i=0; $i < count($allKeys); $i++) 
+					{ 
+						$len = strlen($allKeys[$i]) - 4;
+						$name = substr($allKeys[$i], 0, $len);
+						$end1 = substr($allKeys[$i], 0, $len);
+						$len = strlen($allKeys[$i]) - 3;
+						$end2 = substr($allKeys[$i], 0, $len);
+
+						if ($end1 === $nameoftable || $end2 === $nameoftable) 
+						{
+							$name = $cmp->name . "_id"; 
+							$database->arrayoftables[$val->name]->primarykeys[$name] = "INT";
+
+							if ($end2 === $nameoftable) 
+							{
+								$value = typeenum($val->primarykeys["value"], $cmp->primarykeys[$allKeys[$i]]);
+
+								if (array_key_exists('value', $database->arrayoftables[$val->name]->primarykeys))
+								{
+									$database->arrayoftables[$val->name]->primarykeys['value'] = $value;
+								}
+								
+								unset($database->arrayoftables[$cmp->name]->primarykeys[$allKeys[$i]]);
+							}
+							else
+							{				
+								$len = strlen($allKeys[$i]) - 4;
+								$num = 0;
+
+								while (1) 
+								{
+									$num+=1;
+									$name = substr($allKeys[$i], 0, $len);
+									$name = $name . $num . "_id";
+
+									if (array_key_exists($name, $cmp->primarykeys))
+									{
+										$value = typeenum($database->arrayoftables[$val->name]->primarykeys['value'], $cmp->primarykeys[$allKeys[$i]]);
+
+										if (array_key_exists('value', $database->arrayoftables[$val->name]->primarykeys))
+										{
+											$database->arrayoftables[$val->name]->primarykeys['value'] = $value;
+										}				
+
+										unset($database->arrayoftables[$cmp->name]->primarykeys[$name]);
+									}
+									else
+									{
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		else
 		{
 			$countd = count($database->arrayoftables);
 
