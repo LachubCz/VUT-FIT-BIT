@@ -571,7 +571,6 @@ function etcdesider($name, $arrayprk, $database)
 			$database->arrayoftables[$name]->primarykeys = $primarykeys;
 		}	
 	}
-	//rozhodne bud o ponechani atributu (pouziti fce etctbmaker) nebo o vytvoreni prislusne nove tabulky
 }
 
 function uelements ($database, $file)
@@ -584,30 +583,28 @@ function uelements ($database, $file)
 		$array = array();
 		$array = $database->arrayoftables;  //priradi do array arrayoftebles
 		$val = array_values($array)[$e];  //vybere e-tou hodnotu
+
 		for ($i=0; $i < count($file->{$val->name}); $i++)
 		{
 			$array = array();
+
 			if ($database->arguments['6'] === '-1') 
 			{
 				foreach($file->{$val->name}[$i]->attributes() as $a => $b)
 				{
-					//echo $a ." --- " . $b . "\n";
 					$type = control($b, '1');
 					$database->arrayoftables[$val->name]->attributes[$a] = $type;
-					//argput(, $a, $type, $database);
 				}
 			}
 
 			foreach ($file->{$val->name}[$i]->children() as $childreen)  //prochazeni jmen a hodnot country a jinych struktur ktere jsou prvni na rade
 			{
 				$name = $childreen->getName();
-				//echo $childreen . "\n";
 				$type = control($childreen, '0');
 				$array = attuniq($array, $name, $type);  //musime se podivat zdali pole uz hodnotu obsahuje pokud ano, preidexuje se pole
 			}
+
 			etcdesider($val->name, $array, $database);
-			//nyni by se mela zavolat funkce na zpracovani pole do tvaru num_ID podle etc
-			//a mely by se aktualizovat hodnoty ve strukture tabulek
 		}
 	}
 	return $database;
@@ -809,28 +806,14 @@ function etcandbcor($database)
 
 							if ($end2 === $nameoftable) 
 							{
-								//echo $val->primarykeys["value"] . "  -  ". $cmp->primarykeys[$allKeys[$i]] . "\n";
 								$value = typeenum($val->primarykeys["value"], $cmp->primarykeys[$allKeys[$i]]);
-								//echo $value . "\n";
-								//print_r($val);
-								//$value = $cmp->primarykeys[$allKeys[$i]];
-								//print_r($database->arrayoftables[$val->name]);
-								
-								//$database->arrayoftables[$val->name]->primarykeys['value'] = $value;
 
 								if (array_key_exists('value', $database->arrayoftables[$val->name]->primarykeys))
 								{
-									//echo $value;
-									//print_r($database->arrayoftables[$val->name]->primarykeys['value']);
 									$database->arrayoftables[$val->name]->primarykeys['value'] = $value;
 								}
-								//print_r($val);
-								//print_r($database);
-								//echo $allKeys[$i];
 								
 								unset($database->arrayoftables[$cmp->name]->primarykeys[$allKeys[$i]]);
-								//print_r($cmp);
-								//$database->arrayoftables[$cmp->name] = $cmp;
 							}
 							else
 							{				
@@ -849,10 +832,8 @@ function etcandbcor($database)
 
 										if (array_key_exists('value', $database->arrayoftables[$val->name]->primarykeys))
 										{
-											//echo "string";
 											$database->arrayoftables[$val->name]->primarykeys['value'] = $value;
 										}				
-
 
 										unset($database->arrayoftables[$cmp->name]->primarykeys[$name]);
 									}
@@ -861,18 +842,14 @@ function etcandbcor($database)
 										break;
 									}
 								}
-							//$database->arrayoftables[$cmp->name] = $cmp;
 							}
 						}
 					}
 				}
 			}
-			//print_r($database);
-				//print_database($database);
-	
 		}
 	}
-return $database;
+	return $database;
 }
 
 
