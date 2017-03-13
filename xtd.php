@@ -324,7 +324,7 @@ function print_database($database)
 	
 	if ($database->arguments['4'] !== '-1') 
 	{
-		$final = $final . "--" . $header . "\n\n";
+		$final = $final . "--" . $database->arguments['4'] . "\n\n";
 	}
 
 	for ($i=0; $i < count($database->arrayoftables); $i++) 
@@ -571,6 +571,7 @@ function etcdesider($name, $arrayprk, $database)
 			$database->arrayoftables[$name]->primarykeys = $primarykeys;
 		}	
 	}
+	return $database;
 }
 
 function uelements ($database, $file)
@@ -604,7 +605,7 @@ function uelements ($database, $file)
 				$array = attuniq($array, $name, $type);  //musime se podivat zdali pole uz hodnotu obsahuje pokud ano, preidexuje se pole
 			}
 
-			etcdesider($val->name, $array, $database);
+			$database = etcdesider($val->name, $array, $database);
 		}
 	}
 	return $database;
@@ -619,7 +620,10 @@ function recursivegold ($file, $database)
 	{
 		$table = new table();
 		$table->set_name($classes[$i]);
-		$database->addtable($table);
+		if (!(array_key_exists($classes[$i], $database->arrayoftables)))
+		{
+			$database->addtable($table);
+		}
 		$i+=1;
 	}
 
@@ -639,10 +643,8 @@ $GLOBALS['out'] = $types['3'];
 
 if ($types['5'] !== '-1')
 {	
-	//echo "nice";
 	if ($types['7'] === 1) 
 	{
-		//echo "shit";
 		exit(1);
 	}
 }
