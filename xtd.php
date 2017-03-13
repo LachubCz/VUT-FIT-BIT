@@ -684,43 +684,25 @@ function xml_print ($database)
 		$val = array_values($array)[$i];  //vybere e-tou hodnotu
 		$final = $final . "	<table name=\"" . $database->arrayoftables[$val->name]->name . "\">\n";
 		$final = $final . "		<relation to=\"" . $val->name . "\" relation_type=\"1:1\" />\n";
-		$temp = array();
-		$temp = xml_relations($temp, $val->name, $database);
-		print_r($temp);
+		$final = xml_relations($final, $val->name, $database);
+		$final = $final . "	</table>\n";
 	}
-
+	$final = $final . "</tables>\n";
 	output($final, $database->arguments['3']);
 }
 
-
-
-
-
-
-
-
-
-
-
-function xml_relations ($temp, $name, $database)
+function xml_relations ($final, $name, $database)
 {
-	//$final = $final . "		<relation to=\"" . $name . "\" relation_type=\"1:1\" />\n";
-
-	//$array = array();
 	$val = $database->arrayoftables[$name];  //priradi do array arrayoftebles
 
 	$allKeys = array_keys($val->primarykeys);
 	
-	//print_r($database->arrayoftables);
-	//$temp = array();
+	$temp = array();
 	for ($i=0; $i < count($allKeys); $i++) 
 	{ 
-		//$temp = array();
 		$len = $allKeys[$i];
 		$end1 = substr($allKeys[$i], 0, ($len - 4));
 		$end2 = substr($allKeys[$i], 0, ($len - 3));
-
-		//echo $end1 . " - " . $end2 . "\n";
 
 		if (array_key_exists($end1, $database->arrayoftables)) 
 		{
@@ -729,47 +711,70 @@ function xml_relations ($temp, $name, $database)
 
 		if (array_key_exists($end2, $database->arrayoftables)) 
 		{
-			//echo "shit";
 			array_push($temp, $end2);
 		}
 	}
 
-	//array_unique($temp);
-	//echo $name . "\n";
-	//print_r($temp);
+	$temp = array_unique($temp);
 
 	for ($i=0; $i < count($temp); ) 
 	{ 
 		if (array_key_exists($temp[$i], $database->arrayoftables)) 
 		{
-			//$final = $final . "		<relation to=\"" . $temp[$i] . "\" relation_type=\"N:1\" />\n";
-			//$final = 
-			$temp = xml_relations($temp, $temp[$i], $database);
+			$final = $final . "		<relation to=\"" . $temp[$i] . "\" relation_type=\"N:1\" />\n";
+			$final = recursive_xml($final, $temp, $database);
 			$i++;
 		}
 	}
-	
-	array_unique($temp);
-	return $temp;
+
+	return $final;
 }
 
-function recursive_xml ($temp, $database)
+function recursive_xml ($final, $array, $database)
 {
+	if (count($array) === '0') 
+	{
+		return $final;
+	}
 
+	$temp = array();
+
+	for ($i=0; $i < count($array); $i++) 
+	{
+		$allKeys = array_keys($database->arrayoftables[$array[$i]]->primarykeys);
+
+		for ($e=0; $e < count($allKeys); $e++) 
+		{ 
+			$len = $allKeys[$e];
+			$end1 = substr($allKeys[$e], 0, ($len - 4));
+			$end2 = substr($allKeys[$e], 0, ($len - 3));
+
+			if (array_key_exists($end1, $database->arrayoftables)) 
+			{
+				array_push($temp, $end1);
+			}
+
+			if (array_key_exists($end2, $database->arrayoftables)) 
+			{
+				array_push($temp, $end2);
+			}
+		}
+	}
+
+	$temp = array_unique($temp);
+
+	for ($i=0; $i < count($temp); ) 
+	{ 
+		if (array_key_exists($temp[$i], $database->arrayoftables)) 
+		{
+			$final = $final . "		<relation to=\"" . $temp[$i] . "\" relation_type=\"N:1\" />\n";
+			$final = recursive_xml($final, $temp, $database);
+			$i++;
+		}
+	}
+
+	return $final;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 function attcheck($database)
 {
