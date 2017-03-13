@@ -663,7 +663,113 @@ $database = etcandbcor($database);
 
 attcheck ($database);
 
-print_database($database);
+if ($database->arguments['8'] === '-1') 
+{
+	print_database($database);
+}
+else
+{
+	xml_print($database);
+}
+
+function xml_print ($database)
+{
+	$final = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<tables>\n";
+
+	$array = array();
+	$array = $database->arrayoftables;  //priradi do array arrayoftebles
+
+	for ($i=0; $i < count($database->arrayoftables); $i++) 
+	{
+		$val = array_values($array)[$i];  //vybere e-tou hodnotu
+		$final = $final . "	<table name=\"" . $database->arrayoftables[$val->name]->name . "\">\n";
+		$final = $final . "		<relation to=\"" . $val->name . "\" relation_type=\"1:1\" />\n";
+		$temp = array();
+		$temp = xml_relations($temp, $val->name, $database);
+		print_r($temp);
+	}
+
+	output($final, $database->arguments['3']);
+}
+
+
+
+
+
+
+
+
+
+
+
+function xml_relations ($temp, $name, $database)
+{
+	//$final = $final . "		<relation to=\"" . $name . "\" relation_type=\"1:1\" />\n";
+
+	//$array = array();
+	$val = $database->arrayoftables[$name];  //priradi do array arrayoftebles
+
+	$allKeys = array_keys($val->primarykeys);
+	
+	//print_r($database->arrayoftables);
+	//$temp = array();
+	for ($i=0; $i < count($allKeys); $i++) 
+	{ 
+		//$temp = array();
+		$len = $allKeys[$i];
+		$end1 = substr($allKeys[$i], 0, ($len - 4));
+		$end2 = substr($allKeys[$i], 0, ($len - 3));
+
+		//echo $end1 . " - " . $end2 . "\n";
+
+		if (array_key_exists($end1, $database->arrayoftables)) 
+		{
+			array_push($temp, $end1);
+		}
+
+		if (array_key_exists($end2, $database->arrayoftables)) 
+		{
+			//echo "shit";
+			array_push($temp, $end2);
+		}
+	}
+
+	//array_unique($temp);
+	//echo $name . "\n";
+	//print_r($temp);
+
+	for ($i=0; $i < count($temp); ) 
+	{ 
+		if (array_key_exists($temp[$i], $database->arrayoftables)) 
+		{
+			//$final = $final . "		<relation to=\"" . $temp[$i] . "\" relation_type=\"N:1\" />\n";
+			//$final = 
+			$temp = xml_relations($temp, $temp[$i], $database);
+			$i++;
+		}
+	}
+	
+	array_unique($temp);
+	return $temp;
+}
+
+function recursive_xml ($temp, $database)
+{
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function attcheck($database)
 {
@@ -675,25 +781,16 @@ function attcheck($database)
 		$array = $database->arrayoftables;  //priradi do array arrayoftebles
 		$val = array_values($array)[$e];  //vybere e-tou hodnotu
 
-		for ($i=0; $i < $countd; $i++) 
-		{ 
-			$array = array();
-			$array = $database->arrayoftables;  //priradi do array arrayoftebles
-			$cmp = array_values($array)[$i];  //vybere e-tou hodnotu
+		$allKeys1 = array_keys($val->attributes);
+		$allKeys2 = array_keys($val->primarykeys);
 
-			if ($cmp->name !== $val->name) 
-			{
-				$allKeys1 = array_keys($val->attributes);
-				$allKeys2 = array_keys($cmp->attributes);
-				for ($o=0; $o < count($allKeys1); $o++) 
-				{ 
-					for ($y=0; $y < count($allKeys2); $y++) 
-					{ 
-						if ($allKeys1[$o] === $allKeys2[$y]) 
-						{
-							exit(90);
-						}
-					}
+		for ($o=0; $o < count($allKeys1); $o++) 
+		{ 
+			for ($y=0; $y < count($allKeys2); $y++) 
+			{ 
+				if ($allKeys1[$o] === $allKeys2[$y]) 
+				{
+					exit(90);
 				}
 			}
 		}
