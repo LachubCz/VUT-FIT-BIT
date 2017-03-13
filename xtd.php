@@ -684,11 +684,57 @@ function xml_print ($database)
 		$val = array_values($array)[$i];  //vybere e-tou hodnotu
 		$final = $final . "	<table name=\"" . $database->arrayoftables[$val->name]->name . "\">\n";
 		$final = $final . "		<relation to=\"" . $val->name . "\" relation_type=\"1:1\" />\n";
+		$final = xml_relations2($final, $val->name, $database);
 		$final = xml_relations($final, $val->name, $database);
 		$final = $final . "	</table>\n";
 	}
 	$final = $final . "</tables>\n";
 	output($final, $database->arguments['3']);
+}
+
+function xml_relations2($final, $name, $database)
+{
+	$countd = count($database->arrayoftables);
+
+	for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+	{
+		$array = array();
+		$array = $database->arrayoftables;  //priradi do array arrayoftebles
+		$val = array_values($array)[$e];  //vybere e-tou hodnotu
+
+		$allKeys = array_keys($val->primarykeys);
+
+		for ($u=0; $u < count($allKeys); $u++) 
+		{
+			$len = $allKeys[$u];
+			$end1 = substr($allKeys[$u], 0, ($len - 4));
+			$end2 = substr($allKeys[$u], 0, ($len - 3));
+
+			if ($name === $end1 || $name === $end2) 
+			{
+				for ($a=0; $a < count($allKeys); $a++) 
+				{
+					$len = $allKeys[$a];
+					$start1 = substr($allKeys[$a], 0, ($len - 4));
+					$end1 = substr($allKeys[$a], -4);
+					$start2 = substr($allKeys[$a], 0, ($len - 3));
+					$end2 = substr($allKeys[$a], -3);
+					
+					if ($end1 === "1_id" && $name !== $start1) 
+					{
+						$final = $final . "		<relation to=\"" . $start1 . "\" relation_type=\"N:M\" />\n";	
+					}
+
+					if ($end2 === "_id" && $name !== $start2) 
+					{
+						$final = $final . "		<relation to=\"" . $start2 . "\" relation_type=\"N:M\" />\n";
+					}
+				}
+				break;
+			}
+		}	
+	}
+	return $final;
 }
 
 function xml_relations ($final, $name, $database)
