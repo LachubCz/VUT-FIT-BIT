@@ -661,7 +661,44 @@ $database = correct($database);
 
 $database = etcandbcor($database);
 
+attcheck ($database);
+
 print_database($database);
+
+function attcheck($database)
+{
+	$countd = count($database->arrayoftables);
+
+	for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+	{
+		$array = array();
+		$array = $database->arrayoftables;  //priradi do array arrayoftebles
+		$val = array_values($array)[$e];  //vybere e-tou hodnotu
+
+		for ($i=0; $i < $countd; $i++) 
+		{ 
+			$array = array();
+			$array = $database->arrayoftables;  //priradi do array arrayoftebles
+			$cmp = array_values($array)[$i];  //vybere e-tou hodnotu
+
+			if ($cmp->name !== $val->name) 
+			{
+				$allKeys1 = array_keys($val->attributes);
+				$allKeys2 = array_keys($cmp->attributes);
+				for ($o=0; $o < count($allKeys1); $o++) 
+				{ 
+					for ($y=0; $y < count($allKeys2); $y++) 
+					{ 
+						if ($allKeys1[$o] === $allKeys2[$y]) 
+						{
+							exit(90);
+						}
+					}
+				}
+			}
+		}
+	}
+}
 
 function correct($database)
 {
