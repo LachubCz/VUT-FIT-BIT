@@ -358,7 +358,7 @@ function print_database($database)
 //tiskne zacatek tabulky
 function add1($final, $string)
 {
-	return $string = $final . "CREATE TABLE " . $string . "(\n	prk_" . $string . "_id" .  " INT PRIMARY KEY,\n";
+	return $string = $final . "CREATE TABLE " . $string . " (\n	prk_" . $string . "_id" .  " INT PRIMARY KEY,\n";
 }
 
 //tiskne podelementy tabulky
@@ -393,7 +393,7 @@ function add3($string, $arr)
 			$string = $string . "	" . $allKeys[$i] . " " . $arr[$allKeys[$i]] . ",\n";
 	}
 
-	return $string . ");\n";
+	return $string . ");\n\n";
 }
 
 function output ($final, $parameter)
@@ -637,10 +637,14 @@ function recursivegold ($file, $database)
 
 $GLOBALS['out'] = $types['3'];
 
-//osetreni vzajemneho zadani argumentu --etc a -a
-if (($types['5'] !== '-1') && ($types['7']=== '1')) 
-{
-	exit(1);
+if ($types['5'] !== '-1')
+{	
+	//echo "nice";
+	if ($types['7'] === 1) 
+	{
+		//echo "shit";
+		exit(1);
+	}
 }
 
 $file = fileload($types['2']);  //pokud soubor neni zadan, je prijman standartni vstup + kontrola zda-li neni soubor prazdny a existuje
@@ -772,7 +776,7 @@ function etcandbcor($database)
 
 	if ($database->arguments['5'] !== '-1') 
 	{
-		if ($database->arguments['5'] !== 0) 
+		if ($database->arguments['5'] === '0') 
 		{
 			$countd = count($database->arrayoftables);
 
@@ -859,66 +863,54 @@ function etcandbcor($database)
 				$array = $database->arrayoftables;  //priradi do array arrayoftebles
 				$val = array_values($array)[$e];  //vybere e-tou hodnotu
 
-				$nameoftable = $val->name;
+				$allKeys = array_keys($val->primarykeys);
 
-				for ($y=0; $y < $countd; $y++) 
+				for ($i=0; $i < count($allKeys); $i++) 
 				{
-					$array = array();
-					$array = $database->arrayoftables;  //priradi do array arrayoftebles
-					$cmp = array_values($array)[$y];  //vybere e-tou hodnotu
-					
-					$allKeys = array_keys($cmp->primarykeys);
+					$end = substr($allKeys[$i], -4);
 
-					for ($i=0; $i < count($allKeys); $i++) 
-					{ 
+					if ($end === "1_id") 
+					{
 						$len = strlen($allKeys[$i]) - 4;
-						$name = substr($allKeys[$i], 0, $len);
-						$end1 = substr($allKeys[$i], 0, $len);
-						$len = strlen($allKeys[$i]) - 3;
-						$end2 = substr($allKeys[$i], 0, $len);
+						$num = 0;
+						$counter = 0;
 
-						if ($end1 === $nameoftable || $end2 === $nameoftable) 
+						while (1) 
 						{
-							$name = $cmp->name . "_id"; 
-							$database->arrayoftables[$val->name]->primarykeys[$name] = "INT";
+							$num+=1;
+							$name = substr($allKeys[$i], 0, $len);
+							$name = $name . $num . "_id";
 
-							if ($end2 === $nameoftable) 
+							if (array_key_exists($name, $val->primarykeys))
 							{
-								$value = typeenum($val->primarykeys["value"], $cmp->primarykeys[$allKeys[$i]]);
-
-								if (array_key_exists('value', $database->arrayoftables[$val->name]->primarykeys))
-								{
-									$database->arrayoftables[$val->name]->primarykeys['value'] = $value;
-								}
-								
-								unset($database->arrayoftables[$cmp->name]->primarykeys[$allKeys[$i]]);
+								$counter+=1; 
 							}
 							else
-							{				
-								$len = strlen($allKeys[$i]) - 4;
-								$num = 0;
+							{
+								break;
+							}
+						}
+						if ($database->arguments['5'] < $counter) 
+						{
+							$len = strlen($allKeys[$i]) - 4;
+							$num = 0;
 
-								while (1) 
+							while (1) 
+							{
+								$num+=1;
+								$name = substr($allKeys[$i], 0, $len);
+								$name = $name . $num . "_id";
+
+								if (array_key_exists($name, $val->primarykeys))
 								{
-									$num+=1;
-									$name = substr($allKeys[$i], 0, $len);
-									$name = $name . $num . "_id";
-
-									if (array_key_exists($name, $cmp->primarykeys))
-									{
-										$value = typeenum($database->arrayoftables[$val->name]->primarykeys['value'], $cmp->primarykeys[$allKeys[$i]]);
-
-										if (array_key_exists('value', $database->arrayoftables[$val->name]->primarykeys))
-										{
-											$database->arrayoftables[$val->name]->primarykeys['value'] = $value;
-										}				
-
-										unset($database->arrayoftables[$cmp->name]->primarykeys[$name]);
-									}
-									else
-									{
-										break;
-									}
+									$nametemp = substr($allKeys[$i], 0, $len);
+									$putter = $val->name . "_id";
+									$database->arrayoftables[$nametemp]->primarykeys[$putter] = "INT";
+									unset($database->arrayoftables[$val->name]->primarykeys[$name]);
+								}
+								else
+								{
+									break;
 								}
 							}
 						}
@@ -929,8 +921,6 @@ function etcandbcor($database)
 	}
 	return $database;
 }
-
-
 
 function typeenum ($type, $typetemp)
 {
