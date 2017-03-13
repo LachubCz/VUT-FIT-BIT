@@ -658,6 +658,7 @@ $database->init($types);
 $database = recursivegold ($file, $database);
 
 $database = correct($database);
+
 $database = etcandbcor($database);
 
 print_database($database);
@@ -708,14 +709,17 @@ function correct($database)
 						}
 					}
 
-					if (count($val->primarykeys) === 0) 
-						$val->primarykeys["value"] = $type;
-					else
+					if (count($val->primarykeys) === 0 && count($val->attributes) === 0) 
 					{
-						$typetemp = $val->primarykeys["value"];
-						$type = typeenum ($type, $typetemp);
 						$val->primarykeys["value"] = $type;
 					}
+					if (array_key_exists("value", $val->primarykeys))
+					{
+							$typetemp = $val->primarykeys["value"];
+							$type = typeenum ($type, $typetemp);
+							$val->primarykeys["value"] = $type;
+					}
+					
 				}
 			}
 			$database->arrayoftables[$val->name] = $val;
@@ -723,6 +727,7 @@ function correct($database)
 	}
 	return $database;
 }
+
 
 function etcandbcor($database)
 {
