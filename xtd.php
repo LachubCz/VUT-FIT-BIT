@@ -726,6 +726,8 @@ function xml_relations3($final, $name, $database)
 function xml_relations2($final, $name, $database)
 {
 	$countd = count($database->arrayoftables);
+	$field = array();
+	$used = array();
 
 	for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
 	{
@@ -756,15 +758,20 @@ function xml_relations2($final, $name, $database)
 						if (array_key_exists($start1, $database->arrayoftables)) 
 						{
 							$final = $final . "		<relation to=\"" . $start1 . "\" relation_type=\"N:M\" />\n";
+							array_push($field, $start1);
+							array_push($field, $name);
+							array_push($used, $name);
 						}
-							
 					}
-
+					
 					if ($end2 === "_id" && $name !== $start2) 
 					{
 						if (array_key_exists($start2, $database->arrayoftables)) 
 						{
-							$final = $final . "		<relation to=\"" . $start2 . "\" relation_type=\"N:M\" />\n";	
+							$final = $final . "		<relation to=\"" . $start2 . "\" relation_type=\"N:M\" />\n";
+							array_push($field, $start2);
+							array_push($field, $name);
+							array_push($used, $name);
 						}
 						
 					}
@@ -773,6 +780,114 @@ function xml_relations2($final, $name, $database)
 			}
 		}	
 	}
+
+	$allKeys = array_keys($database->arrayoftables[$name]->primarykeys);
+	
+	for ($a=0; $a < count($allKeys); $a++) 
+	{
+		$len = $allKeys[$a];
+		$start1 = substr($allKeys[$a], 0, ($len - 4));
+		$end1 = substr($allKeys[$a], -4);
+		$start2 = substr($allKeys[$a], 0, ($len - 3));
+		$end2 = substr($allKeys[$a], -3);
+		if (array_key_exists($start1, $database->arrayoftables)) 
+		{
+			array_push($field, $start1);
+		}
+		if (array_key_exists($start2, $database->arrayoftables)) 
+		{
+			array_push($field, $start2);
+		}
+	}
+
+	$field = array_unique($field);
+	$used = array_unique($used);
+
+	$final = recursive_xml2($final, $field, $used, $database);
+	return $final;
+}
+
+function recursive_xml2($final, $field, $used, $database)
+{
+	$countd = count($database->arrayoftables);
+	$result = array_diff($field, $used);
+
+	if (empty ($result)) 
+	{
+		return $final;
+	}
+
+	$num = 0;
+	for ($y=0; $y < count($result); $y++) 
+	{ 
+		while (1) 
+		{	
+			if (in_array($result[$num], $result))
+			{
+				$name = $result[$num];
+				break;
+			}
+			$num += 1;
+		}
+
+		for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+		{
+			$array = array();
+			$array = $database->arrayoftables;  //priradi do array arrayoftebles
+			$val = array_values($array)[$e];  //vybere e-tou hodnotu
+
+			$allKeys = array_keys($val->primarykeys);
+
+			for ($u=0; $u < count($allKeys); $u++) 
+			{
+				$len = $allKeys[$u];
+				$end1 = substr($allKeys[$u], 0, ($len - 4));
+				$end2 = substr($allKeys[$u], 0, ($len - 3));
+
+				if ($name === $end1 || $name === $end2) 
+				{
+					for ($a=0; $a < count($allKeys); $a++) 
+					{
+						$len = $allKeys[$a];
+						$start1 = substr($allKeys[$a], 0, ($len - 4));
+						$end1 = substr($allKeys[$a], -4);
+						$start2 = substr($allKeys[$a], 0, ($len - 3));
+						$end2 = substr($allKeys[$a], -3);
+						
+						if ($end1 === "1_id" && $name !== $start1) 
+						{
+							if (array_key_exists($start1, $database->arrayoftables)) 
+							{
+								if (!in_array($start1, $field) && !in_array($start1, $used)) 
+								{
+									$final = $final . "		<relation to=\"" . $start1 . "\" relation_type=\"N:M\" />\n";
+									array_push($field, $start1);
+								}
+							}
+						}
+
+						if ($end2 === "_id" && $name !== $start2) 
+						{
+							if (array_key_exists($start2, $database->arrayoftables)) 
+							{
+								if (!in_array($start2, $field) && !in_array($start2, $used))
+								{
+									$final = $final . "		<relation to=\"" . $start2 . "\" relation_type=\"N:M\" />\n";
+									array_push($field, $start2);
+								}
+							}
+						}
+					}
+				}
+			}	
+		}
+		array_push($used, $name);
+	}
+
+	$field = array_unique($field);
+	$used = array_unique($used);
+
+	$final = recursive_xml2($final, $field, $used, $database);
 	return $final;
 }
 
