@@ -31,6 +31,7 @@ function help_test($argv, $argc)
 		{
 			exit(1);
 		}
+
 		$index++;
 	}
 }
@@ -42,8 +43,10 @@ function parameter_test($parameter)
 	{
 		if (!(strcmp ($parameter, "-a")))
 			return 6;
+
 		if (!(strcmp ($parameter, "-b")))
 			return 7;
+
 		if (!(strcmp ($parameter, "-g")))
 			return 8;
 	}
@@ -55,6 +58,7 @@ function parameter_test($parameter)
 	else
 	{
 		$cropped = substr($parameter, 0, 6);
+
 		if (!(strcmp ($cropped, "--etc=")))
 			return 5;
 	}
@@ -66,6 +70,7 @@ function parameter_test($parameter)
 	else
 	{
 		$cropped = substr($parameter, 0, 8);
+
 		if (!(strcmp ($cropped, "--input=")))
 			return 2;
 	}
@@ -77,8 +82,10 @@ function parameter_test($parameter)
 	else
 	{
 		$cropped = substr($parameter, 0, 9);
+
 		if (!(strcmp ($cropped, "--header=")))
 			return 4;
+
 		if (!(strcmp ($cropped, "--output=")))
 			return 3;		
 	}
@@ -101,58 +108,32 @@ function parameter_value($type, $parameter)
 			parse_str($parameter, $output);
 			$value = $output['--input'];
 			break;
+
 		case ($type === 3):
 			parse_str($parameter, $output);
 			$value = $output['--output'];
 			break;
+
 		case ($type === 4):
 			parse_str($parameter, $output);
 			$value = $output['--header'];
 			break;
+
 		case ($type === 5):
 			parse_str($parameter, $output);
 			$value = $output['--etc'];
+
 			if (!(is_numeric($value)) || (isfloat($value)))
 			{
 				exit(1);
 			}
 			break;
+
 		default:
 			return 1;
 	}
+
 	return $value;
-}
-
-//vytvoreni pole do ktereho se ukladaji hodnoty argumentu
-$types = array("2"=>"-1", "3"=>"-1", "4"=>"-1", "5"=>"-1", "6"=>"-1", "7"=>"-1", "8"=>"-1", );
-
-//switch, ktery zpracovava argumenty pomoci predchozich funkci
-
-for ($i=1; $i < $argc; $i++) 
-{ 
-	if ($argc === 1) 
-		break;
-
-	if ($argc === 2) 
-	{
-		if (!(strcmp ($argv[$i], "--help")))
-		{
-		  	help_print();
-			exit(0);
-		}
-	}
-	else
-		help_test($argv, $argc);
-
-	if ($argc > 7) 
-		exit(1);
-
-	$type = parameter_test($argv[$i]);
-
-	if ($types[$type] === '-1') 
-		$types[$type] = parameter_value($type, $argv[$i]);
-	else
-		exit(1);
 }
 
 //####################################################################################
@@ -206,13 +187,13 @@ function fileload($file, $output)
 		}
 
 		fclose($f);
-		emptyfile($file, '1', $output);  //kontrola prazdnosti souboru
-		$file = simplexml_load_string($file);  //nacteni souboru
+		emptyfile($file, '1', $output);
+		$file = simplexml_load_string($file);
 	}
 	else
 	{
-		emptyfile($file, '0', $output);  //kontrola prazdnosti souboru
-		$file = simplexml_load_file($file);  //nacteni souboru
+		emptyfile($file, '0', $output);
+		$file = simplexml_load_file($file);
 	}
 
 	return $file;
@@ -240,7 +221,7 @@ function print_database($database)
 		$final = add1($final, $val->name);
 		$final = add2($final, $val->primarykeys);
 
-		if ($database->arguments['6'] === '-1')  //osetreni argumentu -a
+		if ($database->arguments['6'] === '-1')
 		{
 			if (count($val->attributes) === 0) 
 			{
@@ -256,6 +237,7 @@ function print_database($database)
 			$final = $final . "\n);\n\n";
 		}
 	}
+
 	output ($final, $database->arguments['3']);
 }
 
@@ -292,6 +274,7 @@ function add2($string, $arr)
 function add3($string, $arr)
 {
 	$allKeys = array_keys($arr);
+
 	for ($i=0; $i < count($arr); $i++) 
 	{ 
 		if (($i+1) === count($allKeys)) 
@@ -372,6 +355,7 @@ class table
 //####################################Parsing XML#####################################
 //####################################################################################
 
+//
 function childrennames ($file)
 {
 	$namescount = $file->count();
@@ -386,6 +370,7 @@ function childrennames ($file)
 	return $namesarr;
 }
 
+//
 function control($val, $type)
 {
 	if (empty($val) || ctype_space($val) || $val == "0" || $val == "1" || !strcasecmp($val, "true")|| !strcasecmp($val, "false")) 
@@ -393,24 +378,26 @@ function control($val, $type)
 		$val = "BIT";
 	}
 	else if (isfloat("$val")) 
-	{
-		$val = "FLOAT";
-	}
+		{
+			$val = "FLOAT";
+		}
 	else if (is_numeric("$val")) 
-	{
-		$val = "INT";
-	}
+		{
+			$val = "INT";
+		}
 	else if ($type === '1') 
-	{
-		$val = "NVARCHAR";
-	}
+		{
+			$val = "NVARCHAR";
+		}
 	else
 	{
 		$val = "NTEXT";
 	}
+
 	return $val;
 }
 
+//
 function attredit($arrdata, $arrnew)
 {
 	$arrdata = array_merge($arrdata, $arrnew);
@@ -432,9 +419,11 @@ function attredit($arrdata, $arrnew)
 			}
 		}
 	}
+
 	return $arrdata;
 }
 
+//
 function attuniq($array, $name, $type)
 {
 	$num = 1;
@@ -462,6 +451,7 @@ function attuniq($array, $name, $type)
 			{
 				$num+=1;
 				$namenumID = $name . $num . "_id";
+
 				if (!(array_key_exists($namenumID, $array))) 
 				{
 					$array[$namenumID] = $type;
@@ -470,10 +460,11 @@ function attuniq($array, $name, $type)
 			}
 		}
 	}
+
 	return $array;
 }
 
-//funkce zatim neumi rearangovat atributy prekracujici etc do svych tabulek
+//
 function etcdesider($name, $arrayprk, $database)
 {
 	$etc = $database->arguments['5'];
@@ -489,19 +480,21 @@ function etcdesider($name, $arrayprk, $database)
 			$database->arrayoftables[$name]->primarykeys = $primarykeys;
 		}	
 	}
+
 	return $database;
 }
 
+//
 function uelements ($database, $file)
 {
 	$countf = count($file);
 	$countd = count($database->arrayoftables);
 	
-	for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+	for ($e=0; $e < $countd; $e++)
 	{
 		$array = array();
-		$array = $database->arrayoftables;  //priradi do array arrayoftebles
-		$val = array_values($array)[$e];  //vybere e-tou hodnotu
+		$array = $database->arrayoftables;
+		$val = array_values($array)[$e];
 
 		for ($i=0; $i < count($file->{$val->name}); $i++)
 		{
@@ -514,7 +507,6 @@ function uelements ($database, $file)
 				$database->arrayoftables[$val->name]->primarykeys["value"] = $value_t;
 			}
 
-
 			if ($database->arguments['6'] === '-1') 
 			{
 				foreach($file->{$val->name}[$i]->attributes() as $a => $b)
@@ -525,9 +517,10 @@ function uelements ($database, $file)
 				}
 			}
 
-			foreach ($file->{$val->name}[$i]->children() as $childreen)  //prochazeni jmen a hodnot country a jinych struktur ktere jsou prvni na rade
+			foreach ($file->{$val->name}[$i]->children() as $childreen)
 			{
 				$name = $childreen->getName();
+
 				if (empty($childreen))
 				{
 					$type = 0;
@@ -537,85 +530,56 @@ function uelements ($database, $file)
 					$type = control($childreen, '0');
 				}
 
-				$array = attuniq($array, $name, $type);  //musime se podivat zdali pole uz hodnotu obsahuje pokud ano, preidexuje se pole
+				$array = attuniq($array, $name, $type);
 			}
 
 			$database = etcdesider($val->name, $array, $database);
 		}
 	}
+
 	return $database;
 }
 
+//
 function recursivegold ($file, $database)
 {
-	$classes = childrennames($file);  //prohledani prvni vrstvy
+	$classes = childrennames($file);
 	$i = 0;
 
 	while (count($classes) > $i) 
 	{
 		$table = new table();
 		$table->set_name($classes[$i]);
+
 		if (!(array_key_exists($classes[$i], $database->arrayoftables)))
 		{
 			$database->addtable($table);
 		}
+
 		$i+=1;
 	}
 
 	$database = uelements ($database, $file);
+
 	foreach ($file->children() as $child) 
 	{
 		$database = recursivegold($child, $database);
 	}
+
 	return $database;
 }
 
-//####################################################################################
-//###########################Samotne telo mocneho programu############################
-//####################################################################################
-
-if ($types['5'] !== '-1')
-{	
-	if ($types['7'] === 1) 
-	{
-		exit(1);
-	}
-}
-
-$file = fileload($types['2'], $types['3']);  //pokud soubor neni zadan, je prijman standartni vstup + kontrola zda-li neni soubor prazdny a existuje
-
-//vytvoreni hlavni struktury databaze, 
-$database = new database();
-$database->init($types);
-
-$database = recursivegold ($file, $database);
-
-$database = correct($database);
-
-
-$database = etcandbcor($database);
-
-attcheck ($database);
-
-if ($database->arguments['8'] === '-1') 
-{
-	print_database($database);
-}
-else
-{
-	xml_print($database);
-}
-
+//
 function xml_print ($database)
 {
 	$final = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<tables>\n";
 
 	$array = array();
-	$array = $database->arrayoftables;  //priradi do array arrayoftebles
+	$array = $database->arrayoftables;
 
 	for ($i=0; $i < count($database->arrayoftables); $i++) 
 	{
-		$val = array_values($array)[$i];  //vybere e-tou hodnotu
+		$val = array_values($array)[$i];
 		$final = $final . "	<table name=\"" . $database->arrayoftables[$val->name]->name . "\">\n";
 		$final = $final . "		<relation to=\"" . $val->name . "\" relation_type=\"1:1\" />\n";
 		$final = xml_relations4($final, $val->name, $database);	
@@ -626,9 +590,11 @@ function xml_print ($database)
 	}
 
 	$final = $final . "</tables>\n";
+
 	output($final, $database->arguments['3']);
 }
 
+//
 function xml_relations4($final, $name, $database)
 {
 	$countd = count($database->arrayoftables);
@@ -643,8 +609,8 @@ function xml_relations4($final, $name, $database)
 	for ($i=0; $i < $countd; $i++) 
 	{ 
 		$array = array();
-		$array = $database->arrayoftables;  //priradi do array arrayoftebles
-		$val = array_values($array)[$i];  //vybere e-tou hodnotu
+		$array = $database->arrayoftables;
+		$val = array_values($array)[$i];
 
 		$other = array_keys($val->primarykeys);
 
@@ -716,9 +682,11 @@ function xml_relations4($final, $name, $database)
 	
 	return $final;
 }
+
+//
 function xml_control($tables, $name, $database)
 {
-	$val = $database->arrayoftables[$name];  //priradi do array arrayoftebles
+	$val = $database->arrayoftables[$name];
 
 	$allKeys = array_keys($val->primarykeys);
 
@@ -754,17 +722,20 @@ function xml_control($tables, $name, $database)
 			}
 		}
 	}	
+
 	return $tables;
 }
+
+//
 function xml_relations3($final, $name, $database)
 {
 	$countd = count($database->arrayoftables);
 
-	for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+	for ($e=0; $e < $countd; $e++)
 	{
 		$array = array();
-		$array = $database->arrayoftables;  //priradi do array arrayoftebles
-		$val = array_values($array)[$e];  //vybere e-tou hodnotu
+		$array = $database->arrayoftables;
+		$val = array_values($array)[$e];
 
 		$allKeys = array_keys($val->primarykeys);
 
@@ -782,20 +753,22 @@ function xml_relations3($final, $name, $database)
 			}
 		}	
 	}
+
 	return $final;
 }
 
+//
 function xml_relations2($final, $name, $database)
 {
 	$countd = count($database->arrayoftables);
 	$field = array();
 	$used = array();
 
-	for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+	for ($e=0; $e < $countd; $e++)
 	{
 		$array = array();
-		$array = $database->arrayoftables;  //priradi do array arrayoftebles
-		$val = array_values($array)[$e];  //vybere e-tou hodnotu
+		$array = $database->arrayoftables;
+		$val = array_values($array)[$e];
 
 		$allKeys = array_keys($val->primarykeys);
 
@@ -851,10 +824,12 @@ function xml_relations2($final, $name, $database)
 		$end1 = substr($allKeys[$a], -4);
 		$start2 = substr($allKeys[$a], 0, ($len - 3));
 		$end2 = substr($allKeys[$a], -3);
+
 		if (array_key_exists($start1, $database->arrayoftables)) 
 		{
 			array_push($field, $start1);
 		}
+
 		if (array_key_exists($start2, $database->arrayoftables)) 
 		{
 			array_push($field, $start2);
@@ -868,9 +843,11 @@ function xml_relations2($final, $name, $database)
 	{
 		$final = recursive_xml2($final, $field, $used, $database);
 	}
+
 	return $final;
 }
 
+//
 function recursive_xml2($final, $field, $used, $database)
 {
 	$countd = count($database->arrayoftables);
@@ -891,14 +868,15 @@ function recursive_xml2($final, $field, $used, $database)
 				$name = $result[$num];
 				break;
 			}
+
 			$num += 1;
 		}
 
-		for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+		for ($e=0; $e < $countd; $e++)
 		{
 			$array = array();
-			$array = $database->arrayoftables;  //priradi do array arrayoftebles
-			$val = array_values($array)[$e];  //vybere e-tou hodnotu
+			$array = $database->arrayoftables;
+			$val = array_values($array)[$e];
 
 			$allKeys = array_keys($val->primarykeys);
 
@@ -951,19 +929,18 @@ function recursive_xml2($final, $field, $used, $database)
 	$field = array_unique($field);
 	$used = array_unique($used);
 
-		$final = recursive_xml2($final, $field, $used, $database);
-
+	$final = recursive_xml2($final, $field, $used, $database);
 
 	return $final;
 }
 
+//
 function xml_relations ($final, $name, $database)
 {
-	$val = $database->arrayoftables[$name];  //priradi do array arrayoftebles
-
+	$val = $database->arrayoftables[$name];
 	$allKeys = array_keys($val->primarykeys);
-	
 	$temp = array();
+
 	for ($i=0; $i < count($allKeys); $i++) 
 	{ 
 		$len = $allKeys[$i];
@@ -996,6 +973,7 @@ function xml_relations ($final, $name, $database)
 	return $final;
 }
 
+//
 function recursive_xml ($final, $array, $database)
 {
 	if (count($array) === '0') 
@@ -1042,15 +1020,16 @@ function recursive_xml ($final, $array, $database)
 	return $final;
 }
 
+//
 function attcheck($database)
 {
 	$countd = count($database->arrayoftables);
 
-	for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+	for ($e=0; $e < $countd; $e++)
 	{
 		$array = array();
-		$array = $database->arrayoftables;  //priradi do array arrayoftebles
-		$val = array_values($array)[$e];  //vybere e-tou hodnotu
+		$array = $database->arrayoftables;
+		$val = array_values($array)[$e];
 
 		$allKeys1 = array_keys($val->attributes);
 		$allKeys2 = array_keys($val->primarykeys);
@@ -1077,21 +1056,22 @@ function attcheck($database)
 	}
 }
 
+//
 function correct($database)
 {
 	$countd = count($database->arrayoftables);
 
-	for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+	for ($e=0; $e < $countd; $e++)
 	{
 		$array = array();
-		$array = $database->arrayoftables;  //priradi do array arrayoftebles
-		$val = array_values($array)[$e];  //vybere e-tou hodnotu
+		$array = $database->arrayoftables;
+		$val = array_values($array)[$e];
 
 		if (count($val->primarykeys) === 0) 
 		{
 			for ($i=0; $i < $countd; $i++) 
 			{
-				$cmp = array_values($array)[$i];  //vybere e-tou hodnotu
+				$cmp = array_values($array)[$i];
 				$allKeys = array_keys($cmp->primarykeys);
 
 				for ($o=0; $o < count($allKeys); $o++) 
@@ -1108,6 +1088,7 @@ function correct($database)
 					{
 						$num = 0;
 						$namenumID = $val->name;
+
 						while (1) 
 						{
 							$num+=1;
@@ -1119,15 +1100,17 @@ function correct($database)
 								$type = typeenum($type, $typetemp);
 							}
 							else
+							{
 								break;
+							}
 						}
 					}
-					//print_r($val->primarykeys);
-					//echo $database->arguments['6'] . "\n";
+
 					if (count($val->primarykeys) === 0 && count($val->attributes) === 0)
 					{
 						$val->primarykeys["value"] = $type;
 					}
+
 					if (array_key_exists("value", $val->primarykeys))
 					{
 							$typetemp = $val->primarykeys["value"];
@@ -1143,18 +1126,18 @@ function correct($database)
 	return $database;
 }
 
-
+//
 function etcandbcor($database)
 {
 	if($database->arguments['7'] === 1)
 	{
 		$countd = count($database->arrayoftables);
 
-		for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+		for ($e=0; $e < $countd; $e++)
 		{
 			$array = array();
-			$array = $database->arrayoftables;  //priradi do array arrayoftebles
-			$val = array_values($array)[$e];  //vybere e-tou hodnotu
+			$array = $database->arrayoftables;
+			$val = array_values($array)[$e];
 
 			$allKeys = array_keys($val->primarykeys);
 
@@ -1167,7 +1150,7 @@ function etcandbcor($database)
 					$len = strlen($allKeys[$i]) - 4;
 					$name = substr($allKeys[$i], 0, $len);
 					$num = 0;
-					$type = "BIT";
+					$type = 0;
 
 					while (1) 
 					{
@@ -1192,7 +1175,6 @@ function etcandbcor($database)
 					$database->arrayoftables[$val->name] = $val;
 				}
 			}
-			
 		}
 	}
 
@@ -1202,19 +1184,19 @@ function etcandbcor($database)
 		{
 			$countd = count($database->arrayoftables);
 
-			for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+			for ($e=0; $e < $countd; $e++)
 			{
 				$array = array();
-				$array = $database->arrayoftables;  //priradi do array arrayoftebles
-				$val = array_values($array)[$e];  //vybere e-tou hodnotu
+				$array = $database->arrayoftables;
+				$val = array_values($array)[$e];
 
 				$nameoftable = $val->name;
 
 				for ($y=0; $y < $countd; $y++) 
 				{
 					$array = array();
-					$array = $database->arrayoftables;  //priradi do array arrayoftebles
-					$cmp = array_values($array)[$y];  //vybere e-tou hodnotu
+					$array = $database->arrayoftables;
+					$cmp = array_values($array)[$y];
 					
 					$allKeys = array_keys($cmp->primarykeys);
 
@@ -1279,11 +1261,11 @@ function etcandbcor($database)
 		{
 			$countd = count($database->arrayoftables);
 
-			for ($e=0; $e < $countd; $e++) //prochazi tabulky v arrayoftables dokud tam nejake jsou
+			for ($e=0; $e < $countd; $e++)
 			{
 				$array = array();
-				$array = $database->arrayoftables;  //priradi do array arrayoftebles
-				$val = array_values($array)[$e];  //vybere e-tou hodnotu
+				$array = $database->arrayoftables;
+				$val = array_values($array)[$e];
 
 				$allKeys = array_keys($val->primarykeys);
 
@@ -1312,6 +1294,7 @@ function etcandbcor($database)
 								break;
 							}
 						}
+
 						if ($database->arguments['5'] < $counter) 
 						{
 							$len = strlen($allKeys[$i]) - 4;
@@ -1344,6 +1327,7 @@ function etcandbcor($database)
 	return $database;
 }
 
+//funkce porovna dva datove typy a vrati ten vetsi
 function typeenum ($type, $typetemp)
 {
 	$typec = $type;
@@ -1375,6 +1359,74 @@ function typeenum ($type, $typetemp)
 		return $typec;
 	else
 		return $typetempc;
+}
+
+//####################################################################################
+//###########################Samotne telo mocneho programu############################
+//####################################################################################
+
+//vytvoreni pole do ktereho se ukladaji hodnoty argumentu
+$types = array("2"=>"-1", "3"=>"-1", "4"=>"-1", "5"=>"-1", "6"=>"-1", "7"=>"-1", "8"=>"-1", );
+
+//cyklus, ktery zpracuje argumenty pomoci jednotlivych funkci pro zpracovani argumentu (help_print, help_test, parameter_test, parameter_value) a pomocne funkce (isfloat)
+for ($i=1; $i < $argc; $i++) 
+{ 
+	if ($argc === 1) 
+		break;
+
+	if ($argc === 2) 
+	{
+		if (!(strcmp ($argv[$i], "--help")))
+		{
+		  	help_print();
+			exit(0);
+		}
+	}
+	else
+		help_test($argv, $argc);
+
+	if ($argc > 7) 
+		exit(1);
+
+	$type = parameter_test($argv[$i]);
+
+	if ($types[$type] === '-1') 
+		$types[$type] = parameter_value($type, $argv[$i]);
+	else
+		exit(1);
+}
+
+if ($types['5'] !== '-1')
+{	
+	if ($types['7'] === 1) 
+	{
+		exit(1);
+	}
+}
+
+//pomoci funkce (fileload) se nacte a rozparseruje vstupni soubor, jako pomocna funkce pro zjisteni existence nebo neexistence souboru slouzi funkce (emptyfile)
+$file = fileload($types['2'], $types['3']);
+
+//vytvori se nova databaze, inicializuji se jeji pole a do promene arguments se vlozi seznam zadanych argumentu skriptu
+$database = new database();
+$database->init($types);
+
+//rekurzivne se pomoci funkce (recursivegold) a pomocnych funkci () projde obsah souboru na vstupu a v hrube podobe se ulozi do databaze
+$database = recursivegold ($file, $database);
+
+$database = correct($database);
+
+$database = etcandbcor($database);
+
+attcheck ($database);
+
+if ($database->arguments['8'] === '-1') 
+{
+	print_database($database);
+}
+else
+{
+	xml_print($database);
 }
 
 ?>
