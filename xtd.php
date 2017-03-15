@@ -507,6 +507,14 @@ function uelements ($database, $file)
 		{
 			$array = array();
 
+			if (!empty($file->{$val->name}[$i]->__toString()) && !ctype_space($file->{$val->name}[$i]->__toString()))
+			{
+				$value_t = control($file->{$val->name}[$i], '0');
+				$value_t = typeenum ($value_t, $database->arrayoftables[$val->name]->primarykeys["value"]);
+				$database->arrayoftables[$val->name]->primarykeys["value"] = $value_t;
+			}
+
+
 			if ($database->arguments['6'] === '-1') 
 			{
 				foreach($file->{$val->name}[$i]->attributes() as $a => $b)
@@ -520,7 +528,6 @@ function uelements ($database, $file)
 			foreach ($file->{$val->name}[$i]->children() as $childreen)  //prochazeni jmen a hodnot country a jinych struktur ktere jsou prvni na rade
 			{
 				$name = $childreen->getName();
-
 				if (empty($childreen))
 				{
 					$type = 0;
@@ -1054,7 +1061,16 @@ function attcheck($database)
 			{ 
 				if (strcasecmp($allKeys1[$o], $allKeys2[$y]) == 0) 
 				{
-					exit(90);
+					if ($allKeys1[$o] === "value") 
+					{
+						$better = typeenum($val->attributes[$allKeys1[$o]], $val->primarykeys[$allKeys2[$y]]);
+						unset($database->arrayoftables[$val->name]->attributes[$allKeys1[$o]]);
+						$database = $database->arrayoftables[$val->name]->primarykeys[$allKeys2[$y]] = $better;
+					}
+					else
+					{
+						exit(90);
+					}
 				}
 			}
 		}
