@@ -168,7 +168,7 @@ function emptyfile($name, $type, $output)
 
 	 	if ($xml->count() === 0) 
 	 	{
-	 		exit(0);
+	 		output ("", $output);
 	 	}
 	}
 	else
@@ -262,7 +262,7 @@ function print_database($database)
 //tiskne zacatek tabulky
 function add1($final, $string)
 {
-	return $string = $final . "CREATE TABLE " . $string . "(\n	prk_" . $string . "_id" .  " INT PRIMARY KEY,\n";
+	return $string = $final . "CREATE TABLE " . $string . "(\n   prk_" . $string . "_id" .  " INT PRIMARY KEY,\n";
 }
 
 //tiskne podelementy tabulky
@@ -274,11 +274,11 @@ function add2($string, $arr)
 	{
 		if ($allKeys[$i] === "value") 
 		{
-			$string = $string . "	" . $allKeys[$i] . " " . $arr[$allKeys[$i]] . ",\n";
+			$string = $string . "   " . $allKeys[$i] . " " . $arr[$allKeys[$i]] . ",\n";
 		}
 		else
 		{
-			$string = $string . "	" . $allKeys[$i] . " INT,\n";
+			$string = $string . "   " . $allKeys[$i] . " INT,\n";
 		}
 	}
 
@@ -292,9 +292,9 @@ function add3($string, $arr)
 	for ($i=0; $i < count($arr); $i++) 
 	{ 
 		if (($i+1) === count($allKeys)) 
-			$string = $string . "	" . $allKeys[$i] . " " . $arr[$allKeys[$i]] . "\n";
+			$string = $string . "   " . $allKeys[$i] . " " . $arr[$allKeys[$i]] . "\n";
 		else
-			$string = $string . "	" . $allKeys[$i] . " " . $arr[$allKeys[$i]] . ",\n";
+			$string = $string . "   " . $allKeys[$i] . " " . $arr[$allKeys[$i]] . ",\n";
 	}
 
 	return $string . ");\n\n";
@@ -385,7 +385,7 @@ function childrennames ($file)
 
 function control($val, $type)
 {
-	if (empty($val) || $val === '0' || $val === '1' || !strcasecmp($val, "true")|| !strcasecmp($val, "false")) 
+	if (empty($val) || ctype_space($val) || $val === "0" || $val === "1" || !strcasecmp($val, "true")|| !strcasecmp($val, "false")) 
 	{
 		$val = "BIT";
 	}
@@ -509,6 +509,7 @@ function uelements ($database, $file)
 				foreach($file->{$val->name}[$i]->attributes() as $a => $b)
 				{
 					$type = control($b, '1');
+					$type = typeenum ($type, $database->arrayoftables[$val->name]->attributes[$a]);
 					$database->arrayoftables[$val->name]->attributes[$a] = $type;
 				}
 			}
@@ -573,6 +574,7 @@ $database->init($types);
 $database = recursivegold ($file, $database);
 
 $database = correct($database);
+
 
 $database = etcandbcor($database);
 
@@ -1062,7 +1064,7 @@ function correct($database)
 		if (count($val->primarykeys) === 0) 
 		{
 			for ($i=0; $i < $countd; $i++) 
-			{ 
+			{
 				$cmp = array_values($array)[$i];  //vybere e-tou hodnotu
 				$allKeys = array_keys($cmp->primarykeys);
 
@@ -1094,8 +1096,9 @@ function correct($database)
 								break;
 						}
 					}
-
-					if (count($val->primarykeys) === 0 && count($val->attributes) === 0) 
+					//print_r($val->primarykeys);
+					//echo $database->arguments['6'] . "\n";
+					if (count($val->primarykeys) === 0 && count($val->attributes) === 0)
 					{
 						$val->primarykeys["value"] = $type;
 					}
