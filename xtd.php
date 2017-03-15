@@ -1408,6 +1408,7 @@ for ($i=1; $i < $argc; $i++)
 		exit(1);
 }
 
+//pokud je zaroven zadan argument skriptu --etc a -b, skript konci s navratovou hodnotou 1
 if ($types['5'] !== '-1')
 {	
 	if ($types['7'] === 1) 
