@@ -358,7 +358,7 @@ function print_database($database)
 //tiskne zacatek tabulky
 function add1($final, $string)
 {
-	return $string = $final . "CREATE TABLE " . $string . " (\n	prk_" . $string . "_id" .  " INT PRIMARY KEY,\n";
+	return $string = $final . "CREATE TABLE " . $string . "(\n	prk_" . $string . "_id" .  " INT PRIMARY KEY,\n";
 }
 
 //tiskne podelementy tabulky
@@ -405,7 +405,17 @@ function output ($final, $parameter)
 	}
 	else
 	{
-		$dir = realpath($parameter);
+		
+
+		$path_parts = pathinfo($parameter);
+		
+		if (!file_exists($path_parts['dirname'])) 
+		{
+    		mkdir($path_parts['dirname'], 0777, true);
+		}
+
+		realpath($parameter);
+		
 		$output = fopen($parameter,'w');
 		fwrite($output, $final);
 		fclose($output);
@@ -1125,7 +1135,7 @@ function attcheck($database)
 		{ 
 			for ($y=0; $y < count($allKeys2); $y++) 
 			{ 
-				if ($allKeys1[$o] === $allKeys2[$y]) 
+				if (strcasecmp($allKeys1[$o], $allKeys2[$y]) == 0) 
 				{
 					exit(90);
 				}
