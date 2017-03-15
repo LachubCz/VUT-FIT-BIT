@@ -182,7 +182,6 @@ function emptyfile($name, $type, $output)
 
 		 	if ($xml->count() === 0)
 		 	{
-		 		//echo "string" . $GLOBALS['out'] . "\n";
 		 		output ("", $output);
 		 	}
 		}
@@ -200,10 +199,12 @@ function fileload($file, $output)
 	{
 		$file = "";
 		$f = fopen( 'php://stdin', 'r' );
+
 		while( $line = fgets($f)) 
 		{
 		  $file = $file . $line;
 		}
+
 		fclose($f);
 		emptyfile($file, '1', $output);  //kontrola prazdnosti souboru
 		$file = simplexml_load_string($file);  //nacteni souboru
@@ -232,8 +233,7 @@ function print_database($database)
 	}
 
 	for ($i=0; $i < count($database->arrayoftables); $i++) 
-	{ 
-		
+	{
 		$array = $database->arrayoftables;
 		$val = array_values($array)[$i];
 
@@ -274,7 +274,10 @@ function add2($string, $arr)
 	{
 		if ($allKeys[$i] === "value") 
 		{
-			$string = $string . "   " . $allKeys[$i] . " " . $arr[$allKeys[$i]] . ",\n";
+			if ($arr[$allKeys[$i]] != "0") 
+			{
+				$string = $string . "   " . $allKeys[$i] . " " . $arr[$allKeys[$i]] . ",\n";
+			}
 		}
 		else
 		{
@@ -517,7 +520,16 @@ function uelements ($database, $file)
 			foreach ($file->{$val->name}[$i]->children() as $childreen)  //prochazeni jmen a hodnot country a jinych struktur ktere jsou prvni na rade
 			{
 				$name = $childreen->getName();
-				$type = control($childreen, '0');
+
+				if (empty($childreen))
+				{
+					$type = 0;
+				}
+				else
+				{
+					$type = control($childreen, '0');
+				}
+
 				$array = attuniq($array, $name, $type);  //musime se podivat zdali pole uz hodnotu obsahuje pokud ano, preidexuje se pole
 			}
 
@@ -554,8 +566,6 @@ function recursivegold ($file, $database)
 //####################################################################################
 //###########################Samotne telo mocneho programu############################
 //####################################################################################
-
-//$GLOBALS['out'] = $types['3'];
 
 if ($types['5'] !== '-1')
 {	
@@ -1070,7 +1080,7 @@ function correct($database)
 
 				for ($o=0; $o < count($allKeys); $o++) 
 				{
-					$type = "BIT";
+					$type = "";
 					$namenumID = $val->name . "_id";
 
 					if(array_key_exists($namenumID, $cmp->primarykeys))
