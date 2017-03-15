@@ -385,7 +385,7 @@ function childrennames ($file)
 
 function control($val, $type)
 {
-	if (empty($val) || ctype_space($val) || $val === "0" || $val === "1" || !strcasecmp($val, "true")|| !strcasecmp($val, "false")) 
+	if (empty($val) || ctype_space($val) || $val == "0" || $val == "1" || !strcasecmp($val, "true")|| !strcasecmp($val, "false")) 
 	{
 		$val = "BIT";
 	}
