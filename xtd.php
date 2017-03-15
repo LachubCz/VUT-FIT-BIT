@@ -127,136 +127,40 @@ function parameter_value($type, $parameter)
 $types = array("2"=>"-1", "3"=>"-1", "4"=>"-1", "5"=>"-1", "6"=>"-1", "7"=>"-1", "8"=>"-1", );
 
 //switch, ktery zpracovava argumenty pomoci predchozich funkci
-switch(true)
-{
-	case ($argc === 1):
+
+for ($i=1; $i < $argc; $i++) 
+{ 
+	if ($argc === 1) 
 		break;
 
-	case ($argc === 2):
-	  	if (!(strcmp ($argv[1], "--help")))
-	  	{
-	  	  	help_print();
-	  		exit(0);
-	  	}
-
-	  	$type1 = parameter_test($argv[1]);
-	  	$types[$type1] = parameter_value($type1, $argv[1]);
-	  	break;
-
-	case ($argc === 3):
+	if ($argc === 2) 
+	{
+		if (!(strcmp ($argv[$i], "--help")))
+		{
+		  	help_print();
+			exit(0);
+		}
+	}
+	else
 		help_test($argv, $argc);
 
-		$type1 = parameter_test($argv[1]);
-		$types[$type1] = parameter_value($type1, $argv[1]);
+	if ($argc > 7) 
+		exit(1);
 
-		$type2 = parameter_test($argv[2]);
-		$types[$type2] = parameter_value($type2, $argv[2]);
-	    break;
+	$type = parameter_test($argv[$i]);
 
-	case ($argc === 4):
-		help_test($argv, $argc);
-
-		$type1 = parameter_test($argv[1]);
-		$types[$type1] = parameter_value($type1, $argv[1]);
-
-		$type2 = parameter_test($argv[2]);
-		$types[$type2] = parameter_value($type2, $argv[2]);
-
-		$type3 = parameter_test($argv[3]);
-		$types[$type3] = parameter_value($type3, $argv[3]);
-	    break;
-
-	case ($argc === 5):
-		help_test($argv, $argc);
-
-		$type1 = parameter_test($argv[1]);
-		$types[$type1] = parameter_value($type1, $argv[1]);
-
-		$type2 = parameter_test($argv[2]);
-		$types[$type2] = parameter_value($type2, $argv[2]);
-
-		$type3 = parameter_test($argv[3]);
-		$types[$type3] = parameter_value($type3, $argv[3]);
-
-		$type4 = parameter_test($argv[4]);
-		$types[$type4] = parameter_value($type4, $argv[4]);
-	    break;
-
-	case ($argc === 6):
-		help_test($argv, $argc);
-
-		$type1 = parameter_test($argv[1]);
-		$types[$type1] = parameter_value($type1, $argv[1]);
-
-		$type2 = parameter_test($argv[2]);
-		$types[$type2] = parameter_value($type2, $argv[2]);
-
-		$type3 = parameter_test($argv[3]);
-		$types[$type3] = parameter_value($type3, $argv[3]);
-
-		$type4 = parameter_test($argv[4]);
-		$types[$type4] = parameter_value($type4, $argv[4]);
-
-		$type5 = parameter_test($argv[5]);
-		$types[$type5] = parameter_value($type5, $argv[5]);
-	    break;
-
-	case ($argc === 7):
-		help_test($argv, $argc);
-
-		$type1 = parameter_test($argv[1]);
-		$types[$type1] = parameter_value($type1, $argv[1]);
-
-		$type2 = parameter_test($argv[2]);
-		$types[$type2] = parameter_value($type2, $argv[2]);
-
-		$type3 = parameter_test($argv[3]);
-		$types[$type3] = parameter_value($type3, $argv[3]);
-
-		$type4 = parameter_test($argv[4]);
-		$types[$type4] = parameter_value($type4, $argv[4]);
-
-		$type5 = parameter_test($argv[5]);
-		$types[$type5] = parameter_value($type5, $argv[5]);
-
-		$type6 = parameter_test($argv[6]);
-		$types[$type6] = parameter_value($type6, $argv[6]);
-	    break;
-
-	case ($argc === 8):
-		help_test($argv, $argc);
-
-		$type1 = parameter_test($argv[1]);
-		$types[$type1] = parameter_value($type1, $argv[1]);
-
-		$type2 = parameter_test($argv[2]);
-		$types[$type2] = parameter_value($type2, $argv[2]);
-
-		$type3 = parameter_test($argv[3]);
-		$types[$type3] = parameter_value($type3, $argv[3]);
-
-		$type4 = parameter_test($argv[4]);
-		$types[$type4] = parameter_value($type4, $argv[4]);
-
-		$type5 = parameter_test($argv[5]);
-		$types[$type5] = parameter_value($type5, $argv[5]);
-
-		$type6 = parameter_test($argv[6]);
-		$types[$type6] = parameter_value($type6, $argv[6]);
-
-		$type7 = parameter_test($argv[7]);
-		$types[$type7] = parameter_value($type7, $argv[7]);
-	    break;
-
-	default:
+	if ($types[$type] === '-1') 
+		$types[$type] = parameter_value($type, $argv[$i]);
+	else
 		exit(1);
 }
+
 //####################################################################################
 //############################Zpracovani vstupniho souboru############################
 //####################################################################################
 
 //kontrola prazdnosti souboru a vstupu STDIN + kontrola existence souboru
-function emptyfile($name, $type)
+function emptyfile($name, $type, $output)
 {
 	if ($type === '1') 
 	{
@@ -272,25 +176,25 @@ function emptyfile($name, $type)
 		if (file_exists($name)) 
 		{
 			if (filesize($name) === 0)
-				output ("", $GLOBALS['out']);
+				output ("", $output);
 
 		    $xml = simplexml_load_file($name);
 
 		 	if ($xml->count() === 0)
 		 	{
 		 		//echo "string" . $GLOBALS['out'] . "\n";
-		 		output ("", $GLOBALS['out']);
+		 		output ("", $output);
 		 	}
 		}
 		else
 		{
-			exit(1);
+			exit(2);
 		}
 	}
 }
 
 //nacteni a rozparserovani souboru, pokud neni soubor zadan nacteni dat ze STDIN a jejich rozparserovani
-function fileload($file)
+function fileload($file, $output)
 {
 	if ($file === '-1') 
 	{
@@ -301,12 +205,12 @@ function fileload($file)
 		  $file = $file . $line;
 		}
 		fclose($f);
-		emptyfile($file, '1');  //kontrola prazdnosti souboru
+		emptyfile($file, '1', $output);  //kontrola prazdnosti souboru
 		$file = simplexml_load_string($file);  //nacteni souboru
 	}
 	else
 	{
-		emptyfile($file, '0');  //kontrola prazdnosti souboru
+		emptyfile($file, '0', $output);  //kontrola prazdnosti souboru
 		$file = simplexml_load_file($file);  //nacteni souboru
 	}
 
@@ -341,7 +245,7 @@ function print_database($database)
 			if (count($val->attributes) === 0) 
 			{
 				$final = substr($final, 0, -2);
-				$final = $final . "\n);\n";
+				$final = $final . "\n);\n\n";
 			}
 			else
 				$final = add3($final, $val->attributes);
@@ -349,7 +253,7 @@ function print_database($database)
 		else
 		{
 			$final = substr($final, 0, -2);
-			$final = $final . "\n);\n";
+			$final = $final . "\n);\n\n";
 		}
 	}
 	output ($final, $database->arguments['3']);
@@ -405,7 +309,8 @@ function output ($final, $parameter)
 	}
 	else
 	{
-		
+		if (file_exists($parameter))
+			exit(3);
 
 		$path_parts = pathinfo($parameter);
 		
@@ -415,7 +320,7 @@ function output ($final, $parameter)
 		}
 
 		realpath($parameter);
-		
+
 		$output = fopen($parameter,'w');
 		fwrite($output, $final);
 		fclose($output);
@@ -649,7 +554,7 @@ function recursivegold ($file, $database)
 //###########################Samotne telo mocneho programu############################
 //####################################################################################
 
-$GLOBALS['out'] = $types['3'];
+//$GLOBALS['out'] = $types['3'];
 
 if ($types['5'] !== '-1')
 {	
@@ -659,7 +564,7 @@ if ($types['5'] !== '-1')
 	}
 }
 
-$file = fileload($types['2']);  //pokud soubor neni zadan, je prijman standartni vstup + kontrola zda-li neni soubor prazdny a existuje
+$file = fileload($types['2'], $types['3']);  //pokud soubor neni zadan, je prijman standartni vstup + kontrola zda-li neni soubor prazdny a existuje
 
 //vytvoreni hlavni struktury databaze, 
 $database = new database();
