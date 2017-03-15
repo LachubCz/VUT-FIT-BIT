@@ -4,7 +4,7 @@
  */
 
 //####################################################################################
-//############################Zpracovani argumentu skriptu############################
+//######################Funkce pro zpracovani argumentu skriptu#######################
 //####################################################################################
 
 //tisk cele napovedy
@@ -93,12 +93,6 @@ function parameter_test($parameter)
 	exit(1);
 }
 
-//kontrola cisla, zda-li je float
-function isfloat($value)
-{
-	return is_float($value + 0);
-}
-
 //vraci hodnoty parametru skriptu, pokud je hodnota nespravna program konci "exit(1)"
 function parameter_value($type, $parameter)
 {	
@@ -137,7 +131,7 @@ function parameter_value($type, $parameter)
 }
 
 //####################################################################################
-//############################Zpracovani vstupniho souboru############################
+//######################Funkce pro zpracovani vstupniho souboru#######################
 //####################################################################################
 
 //kontrola prazdnosti souboru a vstupu STDIN + kontrola existence souboru
@@ -200,7 +194,7 @@ function fileload($file, $output)
 }
 
 //####################################################################################
-//##################################Funkce pro tisk###################################
+//##############Funkce pro tisknuti SQL prikazu pro tvorbu tabulek####################
 //####################################################################################
 
 //tiskne tabulku volanim funkci add1, add2, add3
@@ -286,34 +280,6 @@ function add3($string, $arr)
 	return $string . ");\n\n";
 }
 
-function output ($final, $parameter)
-{
-	if ($parameter === '-1') 
-	{
-		echo $final;
-		exit(0);
-	}
-	else
-	{
-		if (file_exists($parameter))
-			exit(3);
-
-		$path_parts = pathinfo($parameter);
-		
-		if (!file_exists($path_parts['dirname'])) 
-		{
-    		mkdir($path_parts['dirname'], 0777, true);
-		}
-
-		realpath($parameter);
-
-		$output = fopen($parameter,'w');
-		fwrite($output, $final);
-		fclose($output);
-		exit(0);
-	}
-}
-
 //####################################################################################
 //#############################Tridy pro ukladani hodnot##############################
 //####################################################################################
@@ -352,11 +318,11 @@ class table
 }
 
 //####################################################################################
-//####################################Parsing XML#####################################
+//########################Funkce pro ukladani XML do databaze#########################
 //####################################################################################
 
 //
-function childrennames ($file)
+function children_names ($file)
 {
 	$namescount = $file->count();
 	$namesarr = array();
@@ -398,7 +364,7 @@ function control($val, $type)
 }
 
 //
-function attredit($arrdata, $arrnew)
+function prkedit($arrdata, $arrnew)
 {
 	$arrdata = array_merge($arrdata, $arrnew);
 	$allKeys = array_keys($arrdata);
@@ -424,7 +390,7 @@ function attredit($arrdata, $arrnew)
 }
 
 //
-function attuniq($array, $name, $type)
+function prkuniq($array, $name, $type)
 {
 	$num = 1;
 	$namenumID = $name . $num . "_id";
@@ -465,9 +431,8 @@ function attuniq($array, $name, $type)
 }
 
 //
-function etcdesider($name, $arrayprk, $database)
+function arraytodb($name, $arrayprk, $database)
 {
-	$etc = $database->arguments['5'];
 	$array = $database->arrayoftables;
 
 	for ($i=0; $i < count($database->arrayoftables); $i++) 
@@ -476,7 +441,7 @@ function etcdesider($name, $arrayprk, $database)
 
 		if ($val->name === $name) 
 		{
-			$primarykeys = attredit($val->primarykeys, $arrayprk);
+			$primarykeys = prkedit($val->primarykeys, $arrayprk);
 			$database->arrayoftables[$name]->primarykeys = $primarykeys;
 		}	
 	}
@@ -530,10 +495,10 @@ function uelements ($database, $file)
 					$type = control($childreen, '0');
 				}
 
-				$array = attuniq($array, $name, $type);
+				$array = prkuniq($array, $name, $type);
 			}
 
-			$database = etcdesider($val->name, $array, $database);
+			$database = arraytodb($val->name, $array, $database);
 		}
 	}
 
@@ -543,7 +508,7 @@ function uelements ($database, $file)
 //
 function recursivegold ($file, $database)
 {
-	$classes = childrennames($file);
+	$classes = children_names($file);
 	$i = 0;
 
 	while (count($classes) > $i) 
@@ -568,6 +533,10 @@ function recursivegold ($file, $database)
 
 	return $database;
 }
+
+//####################################################################################
+//##############################Funkce pro tisknuti XML###############################
+//####################################################################################
 
 //
 function xml_print ($database)
@@ -1020,6 +989,10 @@ function recursive_xml ($final, $array, $database)
 	return $final;
 }
 
+//####################################################################################
+//########################Funkce pro opraveni chyb v databazi#########################
+//####################################################################################
+
 //
 function attcheck($database)
 {
@@ -1327,6 +1300,16 @@ function etcandbcor($database)
 	return $database;
 }
 
+//####################################################################################
+//##################################Ostatni funkce####################################
+//####################################################################################
+
+//kontrola cisla, zda-li je float
+function isfloat($value)
+{
+	return is_float($value + 0);
+}
+
 //funkce porovna dva datove typy a vrati ten vetsi
 function typeenum ($type, $typetemp)
 {
@@ -1359,6 +1342,35 @@ function typeenum ($type, $typetemp)
 		return $typec;
 	else
 		return $typetempc;
+}
+
+//
+function output ($final, $parameter)
+{
+	if ($parameter === '-1') 
+	{
+		echo $final;
+		exit(0);
+	}
+	else
+	{
+		if (file_exists($parameter))
+			exit(3);
+
+		$path_parts = pathinfo($parameter);
+		
+		if (!file_exists($path_parts['dirname'])) 
+		{
+    		mkdir($path_parts['dirname'], 0777, true);
+		}
+
+		realpath($parameter);
+
+		$output = fopen($parameter,'w');
+		fwrite($output, $final);
+		fclose($output);
+		exit(0);
+	}
 }
 
 //####################################################################################
