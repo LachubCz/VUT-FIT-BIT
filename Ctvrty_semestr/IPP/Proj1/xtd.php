@@ -2,7 +2,7 @@
 /**
  * @author Petr Buchal(xbucha02)
  */
-
+//mb_internal_encoding('UTF-8');
 //####################################################################################
 //######################Funkce pro zpracovani argumentu skriptu#######################
 //####################################################################################
@@ -1030,77 +1030,7 @@ function attcheck($database)
 }
 
 //
-function correct($database)
-{
-	$countd = count($database->arrayoftables);
-
-	for ($e=0; $e < $countd; $e++)
-	{
-		$array = array();
-		$array = $database->arrayoftables;
-		$val = array_values($array)[$e];
-
-		if (count($val->primarykeys) === 0) 
-		{
-			for ($i=0; $i < $countd; $i++) 
-			{
-				$cmp = array_values($array)[$i];
-				$allKeys = array_keys($cmp->primarykeys);
-
-				for ($o=0; $o < count($allKeys); $o++) 
-				{
-					$type = "";
-					$namenumID = $val->name . "_id";
-
-					if(array_key_exists($namenumID, $cmp->primarykeys))
-					{
-						$typetemp = $cmp->primarykeys[$namenumID];
-						$type = typeenum($type, $typetemp);
-					}
-					else
-					{
-						$num = 0;
-						$namenumID = $val->name;
-
-						while (1) 
-						{
-							$num+=1;
-							$namenumID = $namenumID . $num . "_id";
-
-							if (array_key_exists($namenumID, $cmp->primarykeys))
-							{
-								$typetemp = $cmp->primarykeys[$namenumID];
-								$type = typeenum($type, $typetemp);
-							}
-							else
-							{
-								break;
-							}
-						}
-					}
-
-					if (count($val->primarykeys) === 0 && count($val->attributes) === 0)
-					{
-						$val->primarykeys["value"] = $type;
-					}
-
-					if (array_key_exists("value", $val->primarykeys))
-					{
-							$typetemp = $val->primarykeys["value"];
-							$type = typeenum ($type, $typetemp);
-							$val->primarykeys["value"] = $type;
-					}
-					
-				}
-			}
-			$database->arrayoftables[$val->name] = $val;
-		}
-	}
-	return $database;
-}
-
-//
-function etcandbcor($database)
+function etc_b_correction($database)
 {
 	if($database->arguments['7'] === 1)
 	{
@@ -1349,7 +1279,12 @@ function output ($final, $parameter)
 {
 	if ($parameter === '-1') 
 	{
+		//$final = iconv(mb_detect_encoding($final, mb_detect_order(), true), "UTF-8", $final);
+		//$final =  mb_strtolower ($final ,  'UTF-8');
 		echo $final;
+		//$out = fopen('php://output', 'w');
+		//fputs($out, $final);
+		//fclose($out);
 		exit(0);
 	}
 	else
@@ -1417,19 +1352,21 @@ if ($types['5'] !== '-1')
 	}
 }
 
+
+
+//vytvori se nova databaze
+$database = new database();
+
 //pomoci funkce (fileload) se nacte a rozparseruje vstupni soubor, jako pomocna funkce pro zjisteni existence nebo neexistence souboru slouzi funkce (emptyfile)
 $file = fileload($types['2'], $types['3']);
 
-//vytvori se nova databaze, inicializuji se jeji pole a do promene arguments se vlozi seznam zadanych argumentu skriptu
-$database = new database();
+//inicializuji se pole databaze a do promene arguments se vlozi seznam zadanych argumentu skriptu
 $database->init($types);
 
-//rekurzivne se pomoci funkce (recursivegold) a pomocnych funkci () projde obsah souboru na vstupu a v hrube podobe se ulozi do databaze
+//rekurzivne pomoci funkce (recursivegold) a pomocnych funkci (uelements, arraytodb, prkuniq, prkedit, control, children_names) projde obsah souboru na vstupu a v hrube podobe se ulozi do databaze
 $database = recursivegold ($file, $database);
 
-$database = correct($database);
-
-$database = etcandbcor($database);
+$database = etc_b_correction($database);
 
 attcheck ($database);
 
