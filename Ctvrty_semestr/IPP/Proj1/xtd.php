@@ -930,7 +930,7 @@ function case_insensitive_merge($first, $second, $database)
 ####################################################################################
 
 /**
- * [funkce tiskne tabulku volanim funkci add1, add2, add3 a output]
+ * [funkce tiskne prikazy pro vznik tabulek volanim funkci add1, add2, add3 a output]
  * @param  [database] $database [databaze]
  * @return [void]
  */
@@ -1035,7 +1035,11 @@ function add3($string, $arr)
 ##############################Funkce pro tisknuti XML###############################
 ####################################################################################
 
-//
+/**
+ * [funkce tiskne XML soubor vztahu tabulek volanim funkci xml_relationsN1, xml_relations1N a output]
+ * @param  [database] $database [databaze]
+ * @return [void]
+ */
 function xml_print ($database)
 {
 	$final = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<tables>\n";
@@ -1049,7 +1053,7 @@ function xml_print ($database)
 		$final = $final . "	<table name=\"" . $database->arrayoftables[$val->name]->name . "\">\n";
 		$final = $final . "		<relation to=\"" . $val->name . "\" relation_type=\"1:1\" />\n";
 		$final = xml_relations4($final, $val->name, $database);	
-		$final = xml_relations3($final, $val->name, $database);
+		$final = xml_relations1N($final, $val->name, $database);
 		$final = xml_relations2($final, $val->name, $database);
 		$final = xml_relationsN1($final, $val->name, $database);
 		$final = $final . "	</table>\n";
@@ -1192,12 +1196,16 @@ function xml_control($tables, $name, $database)
 	return $tables;
 }
 
-//
-function xml_relations3($final, $name, $database)
+/**
+ * [funkce hleda v databazi rekurzivne vztahy 1:N]
+ * @param  [string] $final    [string, ktery se bude tisknout]
+ * @param  [string] $name     [jmeno tabulky, pro kterou se zkouma shoda]
+ * @param  [database] $database [databaze]
+ * @return [string]           [obohaceny string, ktery se bude tisknout]
+ */
+function xml_relations1N($final, $name, $database)
 {
-	$countd = count($database->arrayoftables);
-
-	for ($e=0; $e < $countd; $e++)
+	for ($e=0; $e < count($database->arrayoftables); $e++)
 	{
 		$array = array();
 		$array = $database->arrayoftables;
@@ -1214,7 +1222,7 @@ function xml_relations3($final, $name, $database)
 			if ($name === $end1 || $name === $end2) 
 			{
 				$final = $final . "		<relation to=\"" . $val->name . "\" relation_type=\"1:N\" />\n";
-				$final = xml_relations3($final, $val->name, $database);
+				$final = xml_relations1N($final, $val->name, $database);
 				break;
 			}
 		}	
@@ -1403,7 +1411,7 @@ function recursive_xml2($final, $field, $used, $database)
 /**
  * [funkce hleda v databazi rekurzivne vztahy N:1]
  * @param  [string] $final    [string, ktery se bude tisknout]
- * @param  [string] $name     [jmeno tabulky, jejiz primary kes se budou tisknout]
+ * @param  [string] $name     [jmeno tabulky, jejiz primary keys se budou tisknout]
  * @param  [database] $database [databaze]
  * @return [string]           [obohaceny string, ktery se bude tisknout]
  */
