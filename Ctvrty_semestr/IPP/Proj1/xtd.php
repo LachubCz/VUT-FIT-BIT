@@ -117,6 +117,10 @@ $database = recursivegold ($file, $database);
 //case_insensitive_cmp odstrani chyby vznikle case sensitive ukladanim nekterych dat ve funkcich recursivegold a uelements
 $database = case_insensitive_cmp($database);
 
+$database = case_insentive_db_edit($database);
+
+//print_r($database);
+
 //databaze se pozmeni do finalni formy podle argumentu --etc a -b
 $database = etc_b_correction($database);
 
@@ -924,6 +928,25 @@ function case_insensitive_merge($first, $second, $database)
 
 	unset($database->arrayoftables[$second]);
 	return $database;
+}
+
+function case_insentive_db_edit ($database)
+{
+	$array = array();
+	$temp = new database();
+	$temp->init($database->arguments);
+
+	for ($i=0; $i < count($database->arrayoftables); $i++) 
+	{
+		$array = $database->arrayoftables;
+		$val = array_values($array)[$i];
+
+		$lower_name = mb_strtolower ($database->arrayoftables[$val->name]->name, 'UTF-8');
+		$temp->arrayoftables[$lower_name] = $database->arrayoftables[$val->name];
+		$temp->arrayoftables[$lower_name]->name = $lower_name;
+	}
+
+	return $temp;
 }
 
 ####################################################################################
