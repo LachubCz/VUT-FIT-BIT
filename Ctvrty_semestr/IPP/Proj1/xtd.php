@@ -102,8 +102,6 @@ if ($types['5'] !== '-1')
 	}
 }
 
-$GLOBALS['array'] = array();
-
 //vytvori se nova databaze
 $database = new database();
 
@@ -132,6 +130,7 @@ if ($database->arguments['8'] === '-1')
 }
 else
 {
+	$GLOBALS['array'] = array();  //globalni promena vytvorena pro zaznamenani jiz vytisknutych vztahu mezi funkcemi
 	xml_print($database);
 }
 
@@ -1053,6 +1052,7 @@ function xml_print ($database)
 	{
 		$val = array_values($array)[$i];
 
+		unset($GLOBALS['array']);
 		$GLOBALS['array'] = array();
 		array_push($GLOBALS['array'], $val->name);
 
