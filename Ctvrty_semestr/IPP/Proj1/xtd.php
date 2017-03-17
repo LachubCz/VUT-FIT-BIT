@@ -360,9 +360,9 @@ function fileload($file, $output)
 ####################################################################################
 
 /**
- * [children_names description]
- * @param  [type] $file [description]
- * @return [type]       [description]
+ * [funkce vrati pole jmen podelemetu daneho SimpleXMLElementu]
+ * @param  [SimpleXMLElement] $file [SimpleXMLElement]
+ * @return [array]       [pole jmen podelementu]
  */
 function children_names ($file)
 {
@@ -379,10 +379,10 @@ function children_names ($file)
 }
 
 /**
- * [control description]
- * @param  [type] $val  [description]
- * @param  [type] $type [description]
- * @return [type]       [description]
+ * [funkce urci jakeho datoveho typu je hodnota predana v parametru $val]
+ * @param  [string] $val  [$string u jehoz obsahu se zjistuje datovy typ]
+ * @param  [int] $type [mod, zdali se jedna o atribut nebo o klic]
+ * @return [string]       [hledany datovy typ]
  */
 function control($val, $type)
 {
@@ -411,10 +411,10 @@ function control($val, $type)
 }
 
 /**
- * [prkedit description]
- * @param  [type] $arrdata [description]
- * @param  [type] $arrnew  [description]
- * @return [type]          [description]
+ * [funkce odstranuje prvky typu "item_id" pokud je v poli zaroven i prvek "item1_id"]
+ * @param  [array] $arrdata [stare pole prvku]
+ * @param  [array] $arrnew  [nove pole prvku]
+ * @return [array]          [mergenute pole ochuzene o nechtene prvky]
  */
 function prkedit($arrdata, $arrnew)
 {
@@ -442,11 +442,11 @@ function prkedit($arrdata, $arrnew)
 }
 
 /**
- * [prkuniq description]
- * @param  [type] $array [description]
- * @param  [type] $name  [description]
- * @param  [type] $type  [description]
- * @return [type]        [description]
+ * [vklada do pole novy prvek, pokud prvek daneho nazvu existuje, vsem prvkum priradi odpovidajici indexy]
+ * @param  [array] $array [pole prvku]
+ * @param  [string] $name  [jmeno nove vkladaneho prvku]
+ * @param  [string] $type  [datovy typ vkladaneho prku]
+ * @return [array]        [pole obohacene o vladany prvek]
  */
 function prkuniq($array, $name, $type)
 {
@@ -489,11 +489,11 @@ function prkuniq($array, $name, $type)
 }
 
 /**
- * [arraytodb description]
- * @param  [type] $name     [description]
- * @param  [type] $arrayprk [description]
- * @param  [type] $database [description]
- * @return [type]           [description]
+ * [funkce vklada do tabulky v databazi aktualizovane pole primarykeys]
+ * @param  [string] $name     [jmeno tabulky]
+ * @param  [array] $arrayprk [pole primarykeys ziskane z posledniho zkoumaneho prvku]
+ * @param  [database] $database [databaze pred aktualizaci]
+ * @return [database]           [aktualizovana databaze]
  */
 function arraytodb($name, $arrayprk, $database)
 {
@@ -514,10 +514,10 @@ function arraytodb($name, $arrayprk, $database)
 }
 
 /**
- * [uelements description]
- * @param  [type] $database [description]
- * @param  [type] $file     [description]
- * @return [type]           [description]
+ * [prochazi SimpleXMLElement a pro kazdou tabulku v databazi zkouma, zdali neobsahuje element s jeho jmenem, pokud ano, dochazi k aktualizaci hodnot v databazi pro danou tabulku]
+ * @param  [database] $database [aktualni databaze]
+ * @param  [SimpleXMLElement] $file     [SimpleXMLElement]
+ * @return [database]           [obohacena databaze]
  */
 function uelements ($database, $file)
 {
@@ -582,10 +582,10 @@ function uelements ($database, $file)
 }
 
 /**
- * [recursivegold description]
- * @param  [type] $file     [description]
- * @param  [type] $database [description]
- * @return [type]           [description]
+ * [rekurzivne prochazi SimpleXMLElement, zjistuje jmena podelementu (pomoci children_names), vytvari pro ne tabulky a nasledne do nich nahrava data (pomoci uelements), vse se uklada do database]
+ * @param  [SimpleXMLElement] $file     [SimpleXMLElement]
+ * @param  [database] $database [aktualni database]
+ * @return [database]           [database]
  */
 function recursivegold ($file, $database)
 {
