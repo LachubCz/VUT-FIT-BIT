@@ -117,9 +117,8 @@ $database = recursivegold ($file, $database);
 //case_insensitive_cmp odstrani chyby vznikle case sensitive ukladanim nekterych dat ve funkcich recursivegold a uelements
 $database = case_insensitive_cmp($database);
 
+//case_insentive_db_edit zmeni vsechny pismena v nazvu tabulek na mala
 $database = case_insentive_db_edit($database);
-
-//print_r($database);
 
 //databaze se pozmeni do finalni formy podle argumentu --etc a -b
 $database = etc_b_correction($database);
@@ -930,6 +929,11 @@ function case_insensitive_merge($first, $second, $database)
 	return $database;
 }
 
+/**
+ * [funkce zmeni vsechna pismena nazvu tabulek na male]
+ * @param  [database] $database [databaze]
+ * @return [database]           [databaze pouze s malymi pismeny]
+ */
 function case_insentive_db_edit ($database)
 {
 	$array = array();
