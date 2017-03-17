@@ -4,6 +4,137 @@
  */
 
 ####################################################################################
+#############################Tridy pro ukladani hodnot##############################
+####################################################################################
+
+/**
+ * trida na ulozeni pole tabulek
+ */
+class database
+{
+	var $arrayoftables;  //pole tabulek
+	var $arguments;  //pole argumentu skriptu
+
+	/**
+	 * [metoda inicializuje pole v instanci tridy database]
+	 * @param  [array] $types [argumenty skriptu]
+	 * @return [void]
+	 */
+	function init($types)
+	{
+		$this->arrayoftables = array();
+		$this->arguments = $types;
+	}
+
+	/**
+	 * [metoda pridava tabulku do arrayoftables]
+	 * @param  [table] $table [tabulka]
+	 * @return [void]
+	 */
+	function addtable ($table)
+	{
+		$this->arrayoftables[$table->name] = $table;
+	}
+}
+
+/**
+ * trida na ulozeni jednotlivych tabulek 
+ */
+class table
+{
+	var $name;  //jmeno tabulky
+	var $primarykeys;  //pole jmen podelementu
+	var $attributes;  //pole atributu
+
+	/**
+	 * [metoda inicializuje pole a nastavi jmeno instance tridy]
+	 * @param [string] $name [jmeno tabulky]
+	 */
+	function set_name($name)
+	{
+		$this->name = $name;
+		$this->primarykeys = array();
+		$this->attributes = array();
+	}
+}
+
+
+####################################################################################
+###########################Samotne telo mocneho programu############################
+####################################################################################
+
+//vytvoreni pole do ktereho se ukladaji hodnoty argumentu
+$types = array("2"=>"-1", "3"=>"-1", "4"=>"-1", "5"=>"-1", "6"=>"-1", "7"=>"-1", "8"=>"-1", );
+
+//cyklus, ktery zpracuje argumenty pomoci jednotlivych funkci na zpracovani argumentu (help_print, help_test, parameter_test, parameter_value) a pomocne funkce (isfloat)
+for ($i=1; $i < $argc; $i++) 
+{ 
+	if ($argc === 1) 
+		break;
+
+	if ($argc === 2) 
+	{
+		if (!(strcmp ($argv[$i], "--help")))
+		{
+		  	help_print();
+			exit(0);
+		}
+	}
+	else
+		help_test($argv, $argc);
+
+	if ($argc > 7) 
+		exit(1);
+
+	$type = parameter_test($argv[$i]);
+
+	if ($types[$type] === '-1') 
+		$types[$type] = parameter_value($type, $argv[$i]);
+	else
+		exit(1);
+}
+
+//pokud je zaroven zadan argument skriptu --etc a -b, skript konci s navratovou hodnotou 1
+if ($types['5'] !== '-1')
+{	
+	if ($types['7'] === 1) 
+	{
+		exit(1);
+	}
+}
+
+//vytvori se nova databaze
+$database = new database();
+
+//pomoci funkce (fileload) se nacte a rozparseruje vstupni soubor, jako pomocna funkce pro zjisteni existence nebo neexistence souboru slouzi funkce (emptyfile)
+$file = fileload($types['2'], $types['3']);
+
+//inicializuji se pole databaze a do promene arguments se vlozi seznam zadanych argumentu skriptu
+$database->init($types);
+
+//rekurzivne pomoci funkce (recursivegold) a pomocnych funkci (uelements, arraytodb, prkuniq, prkedit, control, children_names) projde obsah souboru na vstupu a v hrube podobe se ulozi do databaze
+$database = recursivegold ($file, $database);
+
+//case_insensitive_cmp odstrani chyby vznikle case sensitive ukladanim nekterych dat ve funkcich recursivegold a uelements
+$database = case_insensitive_cmp($database);
+
+//databaze se pozmeni do finalni formy podle argumentu --etc a -b
+$database = etc_b_correction($database);
+
+//kontrola zda-li neni shoda ve jmene atributu a jmene podelementu
+attcheck ($database);
+
+//pokud byl zadan parametr -g tiskne se XML soubor, pokud zadan nebyl tisknou se SQL prikazy
+if ($database->arguments['8'] === '-1') 
+{
+	print_database($database);
+}
+else
+{
+	xml_print($database);
+}
+
+####################################################################################
 ######################Funkce pro zpracovani argumentu skriptu#######################
 ####################################################################################
 
@@ -25,7 +156,7 @@ function help_print()
 
 /**
  * [pokud je nektery z argumentu "--help" a argumentu je vic nez dva, ukoncuje program "exit(1)"]
- * @param  [array_of_strings] $argv [pole argumentu]
+ * @param  [array] $argv [pole argumentu]
  * @param  [int] $argc [pocet argumentu]
  * @return [void]
  */
@@ -147,11 +278,17 @@ function parameter_value($type, $parameter)
 	return $value;
 }
 
-//####################################################################################
-//######################Funkce pro zpracovani vstupniho souboru#######################
-//####################################################################################
+####################################################################################
+######################Funkce pro zpracovani vstupniho souboru#######################
+####################################################################################
 
-//kontrola prazdnosti souboru a vstupu STDIN + kontrola existence souboru
+/**
+ * [kontrola prazdnosti souboru a vstupu STDIN + kontrola existence souboru]
+ * @param  [string] $name   [jmeno souboru, popripade stringu]
+ * @param  [int] $type   [mod, ktery urcuje, zda-li se jedna o string nebo o soubor]
+ * @param  [string] $output [destinace, kam by se popripade tiskl prazdny soubor]
+ * @return [void]
+ */
 function emptyfile($name, $type, $output)
 {
 	if ($type === '1') 
@@ -168,7 +305,9 @@ function emptyfile($name, $type, $output)
 		if (file_exists($name)) 
 		{
 			if (filesize($name) === 0)
+			{
 				output ("", $output);
+			}
 
 		    $xml = simplexml_load_file($name);
 
@@ -184,7 +323,12 @@ function emptyfile($name, $type, $output)
 	}
 }
 
-//nacteni a rozparserovani souboru, pokud neni soubor zadan nacteni dat ze STDIN a jejich rozparserovani
+/**
+ * [nacteni a rozparserovani souboru, pokud neni soubor zadan nacteni dat ze STDIN a jejich rozparserovani]
+ * @param  [string] $file   [hodnota argumentu --input]
+ * @param  [string] $output [destinace, kam by se popripade tiskl prazdny soubor]
+ * @return [SimpleXMLElement]         [funkce vraci rozparserovany soubor, popripade string]
+ */
 function fileload($file, $output)
 {
 	if ($file === '-1') 
@@ -199,15 +343,11 @@ function fileload($file, $output)
 
 		fclose($f);
 
-		//$file =  mb_strtolower ($file, 'UTF-8');
-
 		emptyfile($file, '1', $output);
 		$file = simplexml_load_string($file);
 	}
 	else
 	{
-		//$file =  mb_strtolower ($file, 'UTF-8');
-
 		emptyfile($file, '0', $output);
 		$file = simplexml_load_file($file);
 	}
@@ -215,9 +355,562 @@ function fileload($file, $output)
 	return $file;
 }
 
-//####################################################################################
-//##############Funkce pro tisknuti SQL prikazu pro tvorbu tabulek####################
-//####################################################################################
+####################################################################################
+########################Funkce pro ukladani XML do databaze#########################
+####################################################################################
+
+/**
+ * [children_names description]
+ * @param  [type] $file [description]
+ * @return [type]       [description]
+ */
+function children_names ($file)
+{
+	$namescount = $file->count();
+	$namesarr = array();
+	
+	foreach ($file->children() as $child)
+	{
+		$name = $child->getName();
+		array_push($namesarr, $name);
+	}
+
+	return $namesarr;
+}
+
+/**
+ * [control description]
+ * @param  [type] $val  [description]
+ * @param  [type] $type [description]
+ * @return [type]       [description]
+ */
+function control($val, $type)
+{
+	if (empty($val) || ctype_space($val) || $val == "0" || $val == "1" || !strcasecmp($val, "true")|| !strcasecmp($val, "false")) 
+	{
+		$val = "BIT";
+	}
+	else if (isfloat("$val")) 
+		{
+			$val = "FLOAT";
+		}
+	else if (is_numeric("$val")) 
+		{
+			$val = "INT";
+		}
+	else if ($type === '1') 
+		{
+			$val = "NVARCHAR";
+		}
+	else
+	{
+		$val = "NTEXT";
+	}
+
+	return $val;
+}
+
+/**
+ * [prkedit description]
+ * @param  [type] $arrdata [description]
+ * @param  [type] $arrnew  [description]
+ * @return [type]          [description]
+ */
+function prkedit($arrdata, $arrnew)
+{
+	$arrdata = array_merge($arrdata, $arrnew);
+	$allKeys = array_keys($arrdata);
+	
+	for ($i=0; $i < count($allKeys); $i++) 
+	{ 
+		$substing = substr($allKeys[$i], -4);
+
+		if ($substing === "1_id") 
+		{
+			$len = strlen($allKeys[$i]) - 4;
+			$delstr = substr($allKeys[$i], 0, $len);
+			$delstr .= "_id";
+			
+			if (array_key_exists($delstr, $arrdata)) 
+			{
+				unset($arrdata[$delstr]);
+			}
+		}
+	}
+
+	return $arrdata;
+}
+
+/**
+ * [prkuniq description]
+ * @param  [type] $array [description]
+ * @param  [type] $name  [description]
+ * @param  [type] $type  [description]
+ * @return [type]        [description]
+ */
+function prkuniq($array, $name, $type)
+{
+	$num = 1;
+	$namenumID = $name . $num . "_id";
+	$nameID = $name . "_id";
+
+	if (array_key_exists($nameID, $array))
+	{
+		$temp = $array[$nameID];
+		unset($array[$nameID]);
+		$array[$namenumID] = $temp;
+		$num+=1;
+		$namenumID = $name . $num . "_id";
+		$array[$namenumID] = $type;
+	}
+	else
+	{
+		if (!(array_key_exists($namenumID, $array))) 
+		{
+			$array[$nameID] = $type;
+		}
+		else
+		{
+			while (1) 
+			{
+				$num+=1;
+				$namenumID = $name . $num . "_id";
+
+				if (!(array_key_exists($namenumID, $array))) 
+				{
+					$array[$namenumID] = $type;
+					break;
+				}
+			}
+		}
+	}
+
+	return $array;
+}
+
+/**
+ * [arraytodb description]
+ * @param  [type] $name     [description]
+ * @param  [type] $arrayprk [description]
+ * @param  [type] $database [description]
+ * @return [type]           [description]
+ */
+function arraytodb($name, $arrayprk, $database)
+{
+	$array = $database->arrayoftables;
+
+	for ($i=0; $i < count($database->arrayoftables); $i++) 
+	{ 
+		$val = array_values($array)[$i];
+
+		if ($val->name === $name) 
+		{
+			$primarykeys = prkedit($val->primarykeys, $arrayprk);
+			$database->arrayoftables[$name]->primarykeys = $primarykeys;
+		}	
+	}
+
+	return $database;
+}
+
+/**
+ * [uelements description]
+ * @param  [type] $database [description]
+ * @param  [type] $file     [description]
+ * @return [type]           [description]
+ */
+function uelements ($database, $file)
+{
+	$countf = count($file);
+	$countd = count($database->arrayoftables);
+	
+	for ($e=0; $e < $countd; $e++)
+	{
+		$array = array();
+		$array = $database->arrayoftables;
+		$val = array_values($array)[$e];
+
+		for ($i=0; $i < count($file->{$val->name}); $i++)
+		{
+			$array = array();
+
+			if (!empty($file->{$val->name}[$i]->__toString()) && !ctype_space($file->{$val->name}[$i]->__toString()))
+			{
+				$value_t = control($file->{$val->name}[$i], '0');
+				$value_t = typeenum ($value_t, $database->arrayoftables[$val->name]->primarykeys["value"]);
+				$database->arrayoftables[$val->name]->primarykeys["value"] = $value_t;
+			}
+
+			if ($database->arguments['6'] === '-1') 
+			{
+				foreach($file->{$val->name}[$i]->attributes() as $a => $b)
+				{
+					$type = control($b, '1');
+					$a =  mb_strtolower ($a, 'UTF-8');
+
+					if (array_key_exists($a, $database->arrayoftables[$val->name]->attributes)) 
+					{
+						$type = typeenum ($type, $database->arrayoftables[$val->name]->attributes[$a]);
+					}
+
+					$database->arrayoftables[$val->name]->attributes[$a] = $type;
+				}
+			}
+
+			foreach ($file->{$val->name}[$i]->children() as $childreen)
+			{
+				$name = $childreen->getName();
+				$name =  mb_strtolower ($name, 'UTF-8');
+
+				if (empty($childreen))
+				{
+					$type = 0;
+				}
+				else
+				{
+					$type = control($childreen, '0');
+				}
+
+				$array = prkuniq($array, $name, $type);
+			}
+
+			$database = arraytodb($val->name, $array, $database);
+		}
+	}
+
+	return $database;
+}
+
+/**
+ * [recursivegold description]
+ * @param  [type] $file     [description]
+ * @param  [type] $database [description]
+ * @return [type]           [description]
+ */
+function recursivegold ($file, $database)
+{
+	$classes = children_names($file);
+	$i = 0;
+
+	while (count($classes) > $i) 
+	{
+		$table = new table();
+		$table->set_name($classes[$i]);
+
+		if (!(array_key_exists($classes[$i], $database->arrayoftables)))
+		{
+			$database->addtable($table);
+		}
+
+		$i+=1;
+	}
+
+	$database = uelements ($database, $file);
+
+	foreach ($file->children() as $child) 
+	{
+		$database = recursivegold($child, $database);
+	}
+
+	return $database;
+}
+
+####################################################################################
+########################Funkce pro opraveni chyb v databazi#########################
+####################################################################################
+
+//
+function attcheck($database)
+{
+	$countd = count($database->arrayoftables);
+
+	for ($e=0; $e < $countd; $e++)
+	{
+		$array = array();
+		$array = $database->arrayoftables;
+		$val = array_values($array)[$e];
+
+		$allKeys1 = array_keys($val->attributes);
+		$allKeys2 = array_keys($val->primarykeys);
+
+		for ($o=0; $o < count($allKeys1); $o++) 
+		{ 
+			for ($y=0; $y < count($allKeys2); $y++) 
+			{ 
+				if (strcasecmp($allKeys1[$o], $allKeys2[$y]) == 0) 
+				{
+					if ($allKeys1[$o] === "value") 
+					{
+						$better = typeenum($val->attributes[$allKeys1[$o]], $val->primarykeys[$allKeys2[$y]]);
+						unset($database->arrayoftables[$val->name]->attributes[$allKeys1[$o]]);
+						$database = $database->arrayoftables[$val->name]->primarykeys[$allKeys2[$y]] = $better;
+					}
+					else
+					{
+						exit(90);
+					}
+				}
+			}
+		}
+	}
+}
+
+//
+function etc_b_correction($database)
+{
+	if($database->arguments['7'] === 1)
+	{
+		$countd = count($database->arrayoftables);
+
+		for ($e=0; $e < $countd; $e++)
+		{
+			$array = array();
+			$array = $database->arrayoftables;
+			$val = array_values($array)[$e];
+
+			$allKeys = array_keys($val->primarykeys);
+
+			for ($i=0; $i < count($allKeys); $i++) 
+			{ 
+				$end = substr($allKeys[$i], -4);
+
+				if ($end === "1_id") 
+				{
+					$len = strlen($allKeys[$i]) - 4;
+					$name = substr($allKeys[$i], 0, $len);
+					$num = 0;
+					$type = 0;
+
+					while (1) 
+					{
+						$num+=1;
+						$name = substr($allKeys[$i], 0, $len);
+						$name = $name . $num . "_id";
+
+						if (array_key_exists($name, $val->primarykeys))
+						{
+							$typetemp = $val->primarykeys[$name];
+							$type = typeenum($type, $typetemp);
+							unset($val->primarykeys[$name]);
+						}
+						else
+						{
+							$name = substr($allKeys[$i], 0, $len);
+							$name = $name . "_id";
+							$val->primarykeys[$name] = $type;
+							break;
+						}
+					}
+					$database->arrayoftables[$val->name] = $val;
+				}
+			}
+		}
+	}
+
+	if ($database->arguments['5'] !== '-1') 
+	{
+		if ($database->arguments['5'] === '0') 
+		{
+			$countd = count($database->arrayoftables);
+
+			for ($e=0; $e < $countd; $e++)
+			{
+				$array = array();
+				$array = $database->arrayoftables;
+				$val = array_values($array)[$e];
+
+				$nameoftable = $val->name;
+
+				for ($y=0; $y < $countd; $y++) 
+				{
+					$array = array();
+					$array = $database->arrayoftables;
+					$cmp = array_values($array)[$y];
+					
+					$allKeys = array_keys($cmp->primarykeys);
+
+					for ($i=0; $i < count($allKeys); $i++) 
+					{ 
+						$len = strlen($allKeys[$i]) - 4;
+						$name = substr($allKeys[$i], 0, $len);
+						$end1 = substr($allKeys[$i], 0, $len);
+						$len = strlen($allKeys[$i]) - 3;
+						$end2 = substr($allKeys[$i], 0, $len);
+
+						if ($end1 === $nameoftable || $end2 === $nameoftable) 
+						{
+							$name = $cmp->name . "_id"; 
+							$database->arrayoftables[$val->name]->primarykeys[$name] = "INT";
+
+							if ($end2 === $nameoftable) 
+							{
+								$value = typeenum($val->primarykeys["value"], $cmp->primarykeys[$allKeys[$i]]);
+
+								if (array_key_exists('value', $database->arrayoftables[$val->name]->primarykeys))
+								{
+									$database->arrayoftables[$val->name]->primarykeys['value'] = $value;
+								}
+								
+								unset($database->arrayoftables[$cmp->name]->primarykeys[$allKeys[$i]]);
+							}
+							else
+							{				
+								$len = strlen($allKeys[$i]) - 4;
+								$num = 0;
+
+								while (1) 
+								{
+									$num+=1;
+									$name = substr($allKeys[$i], 0, $len);
+									$name = $name . $num . "_id";
+
+									if (array_key_exists($name, $cmp->primarykeys))
+									{
+										$value = typeenum($database->arrayoftables[$val->name]->primarykeys['value'], $cmp->primarykeys[$allKeys[$i]]);
+
+										if (array_key_exists('value', $database->arrayoftables[$val->name]->primarykeys))
+										{
+											$database->arrayoftables[$val->name]->primarykeys['value'] = $value;
+										}				
+
+										unset($database->arrayoftables[$cmp->name]->primarykeys[$name]);
+									}
+									else
+									{
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			$countd = count($database->arrayoftables);
+
+			for ($e=0; $e < $countd; $e++)
+			{
+				$array = array();
+				$array = $database->arrayoftables;
+				$val = array_values($array)[$e];
+
+				$allKeys = array_keys($val->primarykeys);
+
+				for ($i=0; $i < count($allKeys); $i++) 
+				{
+					$end = substr($allKeys[$i], -4);
+
+					if ($end === "1_id") 
+					{
+						$len = strlen($allKeys[$i]) - 4;
+						$num = 0;
+						$counter = 0;
+
+						while (1) 
+						{
+							$num+=1;
+							$name = substr($allKeys[$i], 0, $len);
+							$name = $name . $num . "_id";
+
+							if (array_key_exists($name, $val->primarykeys))
+							{
+								$counter+=1; 
+							}
+							else
+							{
+								break;
+							}
+						}
+
+						if ($database->arguments['5'] < $counter) 
+						{
+							$len = strlen($allKeys[$i]) - 4;
+							$num = 0;
+
+							while (1) 
+							{
+								$num+=1;
+								$name = substr($allKeys[$i], 0, $len);
+								$name = $name . $num . "_id";
+
+								if (array_key_exists($name, $val->primarykeys))
+								{
+									$nametemp = substr($allKeys[$i], 0, $len);
+									$putter = $val->name . "_id";
+									$database->arrayoftables[$nametemp]->primarykeys[$putter] = "INT";
+									unset($database->arrayoftables[$val->name]->primarykeys[$name]);
+								}
+								else
+								{
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return $database;
+}
+
+//
+function case_insensitive_cmp($database)
+{
+	$array = array();
+
+	for ($e=0; $e < count($database->arrayoftables); $e++)
+	{
+		$array = $database->arrayoftables;
+		$val = array_values($array)[$e];
+
+		for ($i=($e + 1); $i < count($database->arrayoftables); $i++) 
+		{ 
+			$array = $database->arrayoftables;
+			$cmp = array_values($array)[$i];
+
+			if (!strcasecmp($cmp->name, $val->name)) 
+			{
+				$database = case_insensitive_merge($cmp->name, $val->name, $database);
+				$e = -1;
+			}
+		}
+	}
+
+	return $database;
+}
+
+//
+function case_insensitive_merge($first, $second, $database)
+{
+	$table1 = $database->arrayoftables[$first];
+	$table2 = $database->arrayoftables[$second];
+
+	$allKeys = array_keys($table2->primarykeys);
+
+	for ($i=0; $i < count($table2->primarykeys); $i++) 
+	{ 
+		$type = typeenum($database->arrayoftables[$first]->primarykeys[$allKeys[$i]], $database->arrayoftables[$second]->primarykeys[$allKeys[$i]]);
+		$database->arrayoftables[$first]->primarykeys[$allKeys[$i]] = $type;
+	}
+
+	$allKeys = array_keys($table2->attributes);
+
+	for ($i=0; $i < count($table2->primarykeys); $i++) 
+	{ 
+		$type = typeenum($database->arrayoftables[$first]->attributes[$allKeys[$i]], $database->arrayoftables[$second]->attributes[$allKeys[$i]]);
+		$database->arrayoftables[$first]->attributes[$allKeys[$i]] = $type;
+	}
+
+	unset($database->arrayoftables[$second]);
+	return $database;
+}
+
+####################################################################################
+###############Funkce pro tisknuti SQL prikazu na tvorbu tabulek####################
+####################################################################################
 
 //tiskne tabulku volanim funkci add1, add2, add3
 function print_database($database)
@@ -302,271 +995,10 @@ function add3($string, $arr)
 	return $string . ");\n\n";
 }
 
-//####################################################################################
-//#############################Tridy pro ukladani hodnot##############################
-//####################################################################################
 
-//trida na ulozeni pole tabulek
-class database
-{
-	var $arrayoftables;
-	var $arguments;
-
-	function init($types)
-	{
-		$this->arrayoftables = array();
-		$this->arguments = $types;
-	}
-
-	function addtable ($table)
-	{
-		$this->arrayoftables[$table->name] = $table;
-	}
-}
-
-//trida na ulozeni jednotlivych tabulek 
-class table
-{
-	var $name;
-	var $primarykeys;
-	var $attributes;
-
-	function set_name($name)
-	{
-		$this->name = $name;
-		$this->primarykeys = array();
-		$this->attributes = array();
-	}
-}
-
-//####################################################################################
-//########################Funkce pro ukladani XML do databaze#########################
-//####################################################################################
-
-//
-function children_names ($file)
-{
-	$namescount = $file->count();
-	$namesarr = array();
-	
-	foreach ($file->children() as $child)
-	{
-		$name = $child->getName();
-		//$name =  mb_strtolower ($name, 'UTF-8');
-		array_push($namesarr, $name);
-	}
-
-	return $namesarr;
-}
-
-//
-function control($val, $type)
-{
-	if (empty($val) || ctype_space($val) || $val == "0" || $val == "1" || !strcasecmp($val, "true")|| !strcasecmp($val, "false")) 
-	{
-		$val = "BIT";
-	}
-	else if (isfloat("$val")) 
-		{
-			$val = "FLOAT";
-		}
-	else if (is_numeric("$val")) 
-		{
-			$val = "INT";
-		}
-	else if ($type === '1') 
-		{
-			$val = "NVARCHAR";
-		}
-	else
-	{
-		$val = "NTEXT";
-	}
-
-	return $val;
-}
-
-//
-function prkedit($arrdata, $arrnew)
-{
-	$arrdata = array_merge($arrdata, $arrnew);
-	$allKeys = array_keys($arrdata);
-	
-	for ($i=0; $i < count($allKeys); $i++) 
-	{ 
-		$substing = substr($allKeys[$i], -4);
-
-		if ($substing === "1_id") 
-		{
-			$len = strlen($allKeys[$i]) - 4;
-			$delstr = substr($allKeys[$i], 0, $len);
-			$delstr .= "_id";
-			
-			if (array_key_exists($delstr, $arrdata)) 
-			{
-				unset($arrdata[$delstr]);
-			}
-		}
-	}
-
-	return $arrdata;
-}
-
-//
-function prkuniq($array, $name, $type)
-{
-	$num = 1;
-	$namenumID = $name . $num . "_id";
-	$nameID = $name . "_id";
-
-	if (array_key_exists($nameID, $array))
-	{
-		$temp = $array[$nameID];
-		unset($array[$nameID]);
-		$array[$namenumID] = $temp;
-		$num+=1;
-		$namenumID = $name . $num . "_id";
-		$array[$namenumID] = $type;
-	}
-	else
-	{
-		if (!(array_key_exists($namenumID, $array))) 
-		{
-			$array[$nameID] = $type;
-		}
-		else
-		{
-			while (1) 
-			{
-				$num+=1;
-				$namenumID = $name . $num . "_id";
-
-				if (!(array_key_exists($namenumID, $array))) 
-				{
-					$array[$namenumID] = $type;
-					break;
-				}
-			}
-		}
-	}
-
-	return $array;
-}
-
-//
-function arraytodb($name, $arrayprk, $database)
-{
-	$array = $database->arrayoftables;
-
-	for ($i=0; $i < count($database->arrayoftables); $i++) 
-	{ 
-		$val = array_values($array)[$i];
-
-		if ($val->name === $name) 
-		{
-			$primarykeys = prkedit($val->primarykeys, $arrayprk);
-			$database->arrayoftables[$name]->primarykeys = $primarykeys;
-		}	
-	}
-
-	return $database;
-}
-
-//
-function uelements ($database, $file)
-{
-	$countf = count($file);
-	$countd = count($database->arrayoftables);
-	
-	for ($e=0; $e < $countd; $e++)
-	{
-		$array = array();
-		$array = $database->arrayoftables;
-		$val = array_values($array)[$e];
-
-		for ($i=0; $i < count($file->{$val->name}); $i++)
-		{
-			$array = array();
-
-			if (!empty($file->{$val->name}[$i]->__toString()) && !ctype_space($file->{$val->name}[$i]->__toString()))
-			{
-				$value_t = control($file->{$val->name}[$i], '0');
-				$value_t = typeenum ($value_t, $database->arrayoftables[$val->name]->primarykeys["value"]);
-				$database->arrayoftables[$val->name]->primarykeys["value"] = $value_t;
-			}
-
-			if ($database->arguments['6'] === '-1') 
-			{
-				foreach($file->{$val->name}[$i]->attributes() as $a => $b)
-				{
-					$type = control($b, '1');
-					$a =  mb_strtolower ($a, 'UTF-8');
-
-					if (array_key_exists($a, $database->arrayoftables[$val->name]->attributes)) 
-					{
-						$type = typeenum ($type, $database->arrayoftables[$val->name]->attributes[$a]);
-					}
-
-					$database->arrayoftables[$val->name]->attributes[$a] = $type;
-				}
-			}
-
-			foreach ($file->{$val->name}[$i]->children() as $childreen)
-			{
-				$name = $childreen->getName();
-				$name =  mb_strtolower ($name, 'UTF-8');
-
-				if (empty($childreen))
-				{
-					$type = 0;
-				}
-				else
-				{
-					$type = control($childreen, '0');
-				}
-
-				$array = prkuniq($array, $name, $type);
-			}
-
-			$database = arraytodb($val->name, $array, $database);
-		}
-	}
-
-	return $database;
-}
-
-//
-function recursivegold ($file, $database)
-{
-	$classes = children_names($file);
-	$i = 0;
-
-	while (count($classes) > $i) 
-	{
-		$table = new table();
-		$table->set_name($classes[$i]);
-
-		if (!(array_key_exists($classes[$i], $database->arrayoftables)))
-		{
-			$database->addtable($table);
-		}
-
-		$i+=1;
-	}
-
-	$database = uelements ($database, $file);
-
-	foreach ($file->children() as $child) 
-	{
-		$database = recursivegold($child, $database);
-	}
-
-	return $database;
-}
-
-//####################################################################################
-//##############################Funkce pro tisknuti XML###############################
-//####################################################################################
+####################################################################################
+##############################Funkce pro tisknuti XML###############################
+####################################################################################
 
 //
 function xml_print ($database)
@@ -1019,302 +1451,9 @@ function recursive_xml ($final, $array, $database)
 	return $final;
 }
 
-//####################################################################################
-//########################Funkce pro opraveni chyb v databazi#########################
-//####################################################################################
-
-//
-function attcheck($database)
-{
-	$countd = count($database->arrayoftables);
-
-	for ($e=0; $e < $countd; $e++)
-	{
-		$array = array();
-		$array = $database->arrayoftables;
-		$val = array_values($array)[$e];
-
-		$allKeys1 = array_keys($val->attributes);
-		$allKeys2 = array_keys($val->primarykeys);
-
-		for ($o=0; $o < count($allKeys1); $o++) 
-		{ 
-			for ($y=0; $y < count($allKeys2); $y++) 
-			{ 
-				if (strcasecmp($allKeys1[$o], $allKeys2[$y]) == 0) 
-				{
-					if ($allKeys1[$o] === "value") 
-					{
-						$better = typeenum($val->attributes[$allKeys1[$o]], $val->primarykeys[$allKeys2[$y]]);
-						unset($database->arrayoftables[$val->name]->attributes[$allKeys1[$o]]);
-						$database = $database->arrayoftables[$val->name]->primarykeys[$allKeys2[$y]] = $better;
-					}
-					else
-					{
-						exit(90);
-					}
-				}
-			}
-		}
-	}
-}
-
-//
-function etc_b_correction($database)
-{
-	if($database->arguments['7'] === 1)
-	{
-		$countd = count($database->arrayoftables);
-
-		for ($e=0; $e < $countd; $e++)
-		{
-			$array = array();
-			$array = $database->arrayoftables;
-			$val = array_values($array)[$e];
-
-			$allKeys = array_keys($val->primarykeys);
-
-			for ($i=0; $i < count($allKeys); $i++) 
-			{ 
-				$end = substr($allKeys[$i], -4);
-
-				if ($end === "1_id") 
-				{
-					$len = strlen($allKeys[$i]) - 4;
-					$name = substr($allKeys[$i], 0, $len);
-					$num = 0;
-					$type = 0;
-
-					while (1) 
-					{
-						$num+=1;
-						$name = substr($allKeys[$i], 0, $len);
-						$name = $name . $num . "_id";
-
-						if (array_key_exists($name, $val->primarykeys))
-						{
-							$typetemp = $val->primarykeys[$name];
-							$type = typeenum($type, $typetemp);
-							unset($val->primarykeys[$name]);
-						}
-						else
-						{
-							$name = substr($allKeys[$i], 0, $len);
-							$name = $name . "_id";
-							$val->primarykeys[$name] = $type;
-							break;
-						}
-					}
-					$database->arrayoftables[$val->name] = $val;
-				}
-			}
-		}
-	}
-
-	if ($database->arguments['5'] !== '-1') 
-	{
-		if ($database->arguments['5'] === '0') 
-		{
-			$countd = count($database->arrayoftables);
-
-			for ($e=0; $e < $countd; $e++)
-			{
-				$array = array();
-				$array = $database->arrayoftables;
-				$val = array_values($array)[$e];
-
-				$nameoftable = $val->name;
-
-				for ($y=0; $y < $countd; $y++) 
-				{
-					$array = array();
-					$array = $database->arrayoftables;
-					$cmp = array_values($array)[$y];
-					
-					$allKeys = array_keys($cmp->primarykeys);
-
-					for ($i=0; $i < count($allKeys); $i++) 
-					{ 
-						$len = strlen($allKeys[$i]) - 4;
-						$name = substr($allKeys[$i], 0, $len);
-						$end1 = substr($allKeys[$i], 0, $len);
-						$len = strlen($allKeys[$i]) - 3;
-						$end2 = substr($allKeys[$i], 0, $len);
-
-						if ($end1 === $nameoftable || $end2 === $nameoftable) 
-						{
-							$name = $cmp->name . "_id"; 
-							$database->arrayoftables[$val->name]->primarykeys[$name] = "INT";
-
-							if ($end2 === $nameoftable) 
-							{
-								$value = typeenum($val->primarykeys["value"], $cmp->primarykeys[$allKeys[$i]]);
-
-								if (array_key_exists('value', $database->arrayoftables[$val->name]->primarykeys))
-								{
-									$database->arrayoftables[$val->name]->primarykeys['value'] = $value;
-								}
-								
-								unset($database->arrayoftables[$cmp->name]->primarykeys[$allKeys[$i]]);
-							}
-							else
-							{				
-								$len = strlen($allKeys[$i]) - 4;
-								$num = 0;
-
-								while (1) 
-								{
-									$num+=1;
-									$name = substr($allKeys[$i], 0, $len);
-									$name = $name . $num . "_id";
-
-									if (array_key_exists($name, $cmp->primarykeys))
-									{
-										$value = typeenum($database->arrayoftables[$val->name]->primarykeys['value'], $cmp->primarykeys[$allKeys[$i]]);
-
-										if (array_key_exists('value', $database->arrayoftables[$val->name]->primarykeys))
-										{
-											$database->arrayoftables[$val->name]->primarykeys['value'] = $value;
-										}				
-
-										unset($database->arrayoftables[$cmp->name]->primarykeys[$name]);
-									}
-									else
-									{
-										break;
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		else
-		{
-			$countd = count($database->arrayoftables);
-
-			for ($e=0; $e < $countd; $e++)
-			{
-				$array = array();
-				$array = $database->arrayoftables;
-				$val = array_values($array)[$e];
-
-				$allKeys = array_keys($val->primarykeys);
-
-				for ($i=0; $i < count($allKeys); $i++) 
-				{
-					$end = substr($allKeys[$i], -4);
-
-					if ($end === "1_id") 
-					{
-						$len = strlen($allKeys[$i]) - 4;
-						$num = 0;
-						$counter = 0;
-
-						while (1) 
-						{
-							$num+=1;
-							$name = substr($allKeys[$i], 0, $len);
-							$name = $name . $num . "_id";
-
-							if (array_key_exists($name, $val->primarykeys))
-							{
-								$counter+=1; 
-							}
-							else
-							{
-								break;
-							}
-						}
-
-						if ($database->arguments['5'] < $counter) 
-						{
-							$len = strlen($allKeys[$i]) - 4;
-							$num = 0;
-
-							while (1) 
-							{
-								$num+=1;
-								$name = substr($allKeys[$i], 0, $len);
-								$name = $name . $num . "_id";
-
-								if (array_key_exists($name, $val->primarykeys))
-								{
-									$nametemp = substr($allKeys[$i], 0, $len);
-									$putter = $val->name . "_id";
-									$database->arrayoftables[$nametemp]->primarykeys[$putter] = "INT";
-									unset($database->arrayoftables[$val->name]->primarykeys[$name]);
-								}
-								else
-								{
-									break;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	return $database;
-}
-
-//
-function case_insensitive_cmp($database)
-{
-	$array = array();
-
-	for ($e=0; $e < count($database->arrayoftables); $e++)
-	{
-		$array = $database->arrayoftables;
-		$val = array_values($array)[$e];
-
-		for ($i=($e + 1); $i < count($database->arrayoftables); $i++) 
-		{ 
-			$array = $database->arrayoftables;
-			$cmp = array_values($array)[$i];
-
-			if (!strcasecmp($cmp->name, $val->name)) 
-			{
-				$database = case_insensitive_merge($cmp->name, $val->name, $database);
-				$e = -1;
-			}
-		}
-	}
-
-	return $database;
-}
-
-//
-function case_insensitive_merge($first, $second, $database)
-{
-	$table1 = $database->arrayoftables[$first];
-	$table2 = $database->arrayoftables[$second];
-
-	$allKeys = array_keys($table2->primarykeys);
-
-	for ($i=0; $i < count($table2->primarykeys); $i++) 
-	{ 
-		$type = typeenum($database->arrayoftables[$first]->primarykeys[$allKeys[$i]], $database->arrayoftables[$second]->primarykeys[$allKeys[$i]]);
-		$database->arrayoftables[$first]->primarykeys[$allKeys[$i]] = $type;
-	}
-
-	$allKeys = array_keys($table2->attributes);
-
-	for ($i=0; $i < count($table2->primarykeys); $i++) 
-	{ 
-		$type = typeenum($database->arrayoftables[$first]->attributes[$allKeys[$i]], $database->arrayoftables[$second]->attributes[$allKeys[$i]]);
-		$database->arrayoftables[$first]->attributes[$allKeys[$i]] = $type;
-	}
-
-	unset($database->arrayoftables[$second]);
-	return $database;
-}
-
-//####################################################################################
-//##################################Ostatni funkce####################################
-//####################################################################################
+####################################################################################
+##################################Ostatni funkce####################################
+####################################################################################
 
 //kontrola cisla, zda-li je float
 function isfloat($value)
@@ -1383,79 +1522,6 @@ function output ($final, $parameter)
 		fclose($output);
 		exit(0);
 	}
-}
-
-//####################################################################################
-//###########################Samotne telo mocneho programu############################
-//####################################################################################
-
-//vytvoreni pole do ktereho se ukladaji hodnoty argumentu
-$types = array("2"=>"-1", "3"=>"-1", "4"=>"-1", "5"=>"-1", "6"=>"-1", "7"=>"-1", "8"=>"-1", );
-
-//cyklus, ktery zpracuje argumenty pomoci jednotlivych funkci pro zpracovani argumentu (help_print, help_test, parameter_test, parameter_value) a pomocne funkce (isfloat)
-for ($i=1; $i < $argc; $i++) 
-{ 
-	if ($argc === 1) 
-		break;
-
-	if ($argc === 2) 
-	{
-		if (!(strcmp ($argv[$i], "--help")))
-		{
-		  	help_print();
-			exit(0);
-		}
-	}
-	else
-		help_test($argv, $argc);
-
-	if ($argc > 7) 
-		exit(1);
-
-	$type = parameter_test($argv[$i]);
-
-	if ($types[$type] === '-1') 
-		$types[$type] = parameter_value($type, $argv[$i]);
-	else
-		exit(1);
-}
-
-//pokud je zaroven zadan argument skriptu --etc a -b, skript konci s navratovou hodnotou 1
-if ($types['5'] !== '-1')
-{	
-	if ($types['7'] === 1) 
-	{
-		exit(1);
-	}
-}
-
-
-
-//vytvori se nova databaze
-$database = new database();
-
-//pomoci funkce (fileload) se nacte a rozparseruje vstupni soubor, jako pomocna funkce pro zjisteni existence nebo neexistence souboru slouzi funkce (emptyfile)
-$file = fileload($types['2'], $types['3']);
-
-//inicializuji se pole databaze a do promene arguments se vlozi seznam zadanych argumentu skriptu
-$database->init($types);
-
-//rekurzivne pomoci funkce (recursivegold) a pomocnych funkci (uelements, arraytodb, prkuniq, prkedit, control, children_names) projde obsah souboru na vstupu a v hrube podobe se ulozi do databaze
-$database = recursivegold ($file, $database);
-
-$database = case_insensitive_cmp($database);
-
-$database = etc_b_correction($database);
-
-attcheck ($database);
-
-if ($database->arguments['8'] === '-1') 
-{
-	print_database($database);
-}
-else
-{
-	xml_print($database);
 }
 
 ?>
