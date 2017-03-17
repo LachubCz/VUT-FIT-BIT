@@ -102,6 +102,8 @@ if ($types['5'] !== '-1')
 	}
 }
 
+$GLOBALS['array'] = array();
+
 //vytvori se nova databaze
 $database = new database();
 
@@ -1050,150 +1052,20 @@ function xml_print ($database)
 	for ($i=0; $i < count($database->arrayoftables); $i++) 
 	{
 		$val = array_values($array)[$i];
+
+		$GLOBALS['array'] = array();
+		array_push($GLOBALS['array'], $val->name);
+
 		$final = $final . "	<table name=\"" . $database->arrayoftables[$val->name]->name . "\">\n";
 		$final = $final . "		<relation to=\"" . $val->name . "\" relation_type=\"1:1\" />\n";
-		$final = xml_relations4($final, $val->name, $database);	
 		$final = xml_relations1N($final, $val->name, $database);
-		$final = xml_relations2($final, $val->name, $database);
 		$final = xml_relationsN1($final, $val->name, $database);
+		$final = xml_relationsNM($final, $database);
 		$final = $final . "	</table>\n";
 	}
-
 	$final = $final . "</tables>\n";
 
 	output($final, $database->arguments['3']);
-}
-
-//
-function xml_relations4($final, $name, $database)
-{
-	$countd = count($database->arrayoftables);
-
-	$tables = array_keys($database->arrayoftables);
-	$tables = array_diff($tables, array($name));
-
-	$allKeys = array_keys($database->arrayoftables[$name]->primarykeys);
-
-	$end1 = $name . "_id";
-	$end2 = $name . "1_id";
-	for ($i=0; $i < $countd; $i++) 
-	{ 
-		$array = array();
-		$array = $database->arrayoftables;
-		$val = array_values($array)[$i];
-
-		$other = array_keys($val->primarykeys);
-
-		if (in_array($end1, $other) || in_array($end2, $other))
-		{
-			$tables = array_diff($tables, array($val->name));
-			$allKeys = array_merge($allKeys, $other);
-		}
-	}
-
-	while(0 != count($allKeys) && 0 != count($tables)) 
-	{ 
-		$key = array_values($allKeys)[0]; 
-		$len = strlen($key);
-		$end1 = substr($key, 0, ($len - 4));
-		$end2 = substr($key, 0, ($len - 3));
-
-		if (array_key_exists($end1, $database->arrayoftables))
-		{
-			if (in_array($end1, $tables)) 
-			{
-				$temp = array_keys($database->arrayoftables[$end1]->primarykeys);
-				$tables = array_diff($tables, array($end1));
-				$allKeys = array_merge($allKeys, $temp);
-				$allKeys = array_diff($allKeys, array($key, "value"));	
-				array_unique($allKeys);			
-			}
-			else
-			{	
-				$allKeys = array_diff($allKeys, array($key, "value"));
-			}
-		}
-		else if (array_key_exists($end2, $database->arrayoftables)) 
-			{
-				if (in_array($end2, $tables)) 
-				{
-					$temp = array_keys($database->arrayoftables[$end2]->primarykeys);
-					$tables = array_diff($tables, array($end2));
-					$allKeys = array_merge($allKeys, $temp);
-					$allKeys = array_diff($allKeys, array($key, "value"));	
-					array_unique($allKeys);
-				}
-				else
-				{
-					$allKeys = array_diff($allKeys, array($key, "value"));
-				}
-			}
-		else
-		{
-			$allKeys = array_diff($allKeys, array($key, "value"));
-		}
-	}
-
-	if ($database->arguments['5'] === '-1') 
-	{
-		$temp = $tables;
-		for ($i=0; $i < count($temp); $i++) 
-		{ 
-			$name = array_values($temp)[$i];
-			$tables = xml_control($tables, $name, $database);
-		}
-	}
-
-	for ($i=0; $i < count($tables); $i++) 
-	{ 
-		$name = array_values($tables)[$i];
-		$final = $final . "		<relation to=\"" . $name . "\" relation_type=\"N:M\" />\n";
-	}
-	
-	return $final;
-}
-
-//
-function xml_control($tables, $name, $database)
-{
-	$val = $database->arrayoftables[$name];
-
-	$allKeys = array_keys($val->primarykeys);
-
-	for ($u=0; $u < count($allKeys); $u++) 
-	{
-		$len = $allKeys[$u];
-		$end1 = substr($allKeys[$u], 0, ($len - 4));
-		$end2 = substr($allKeys[$u], 0, ($len - 3));
-
-		if (array_key_exists($end1, $database->arrayoftables)) 
-		{
-			if (!in_array($end1, $tables)) 
-			{
-				$tables = array_diff($tables, array($name));
-				return $tables;
-			}
-			else
-			{
-				$tables = xml_control($tables, $end1, $database);
-			}
-		}
-
-		if (array_key_exists($end2, $database->arrayoftables)) 
-		{
-			if (!in_array($end2, $tables)) 
-			{
-				$tables = array_diff($tables, array($name));
-				return $tables;
-			}
-			else
-			{
-				$tables = xml_control($tables, $end2, $database);
-			}
-		}
-	}	
-
-	return $tables;
 }
 
 /**
@@ -1221,189 +1093,13 @@ function xml_relations1N($final, $name, $database)
 
 			if ($name === $end1 || $name === $end2) 
 			{
+				array_push($GLOBALS['array'], $val->name);
 				$final = $final . "		<relation to=\"" . $val->name . "\" relation_type=\"1:N\" />\n";
 				$final = xml_relations1N($final, $val->name, $database);
 				break;
 			}
 		}	
 	}
-
-	return $final;
-}
-
-//
-function xml_relations2($final, $name, $database)
-{
-	$countd = count($database->arrayoftables);
-	$field = array();
-	$used = array();
-
-	for ($e=0; $e < $countd; $e++)
-	{
-		$array = array();
-		$array = $database->arrayoftables;
-		$val = array_values($array)[$e];
-
-		$allKeys = array_keys($val->primarykeys);
-
-		for ($u=0; $u < count($allKeys); $u++) 
-		{
-			$len = $allKeys[$u];
-			$end1 = substr($allKeys[$u], 0, ($len - 4));
-			$end2 = substr($allKeys[$u], 0, ($len - 3));
-
-			if ($name === $end1 || $name === $end2) 
-			{
-				for ($a=0; $a < count($allKeys); $a++) 
-				{
-					$len = $allKeys[$a];
-					$start1 = substr($allKeys[$a], 0, ($len - 4));
-					$end1 = substr($allKeys[$a], -4);
-					$start2 = substr($allKeys[$a], 0, ($len - 3));
-					$end2 = substr($allKeys[$a], -3);
-					
-					if ($end1 === "1_id" && $name !== $start1) 
-					{
-						if (array_key_exists($start1, $database->arrayoftables)) 
-						{
-							$final = $final . "		<relation to=\"" . $start1 . "\" relation_type=\"N:M\" />\n";
-							array_push($field, $start1);
-							array_push($field, $name);
-							array_push($used, $name);
-						}
-					}
-
-					if ($end2 === "_id" && $name !== $start2) 
-					{
-						if (array_key_exists($start2, $database->arrayoftables)) 
-						{
-							$final = $final . "		<relation to=\"" . $start2 . "\" relation_type=\"N:M\" />\n";
-							array_push($field, $start2);
-							array_push($field, $name);
-							array_push($used, $name);
-						}
-					}
-				}
-				break;
-			}
-		}	
-	}
-
-	$allKeys = array_keys($database->arrayoftables[$name]->primarykeys);
-	
-	for ($a=0; $a < count($allKeys); $a++) 
-	{
-		$len = $allKeys[$a];
-		$start1 = substr($allKeys[$a], 0, ($len - 4));
-		$end1 = substr($allKeys[$a], -4);
-		$start2 = substr($allKeys[$a], 0, ($len - 3));
-		$end2 = substr($allKeys[$a], -3);
-
-		if (array_key_exists($start1, $database->arrayoftables)) 
-		{
-			array_push($field, $start1);
-		}
-
-		if (array_key_exists($start2, $database->arrayoftables)) 
-		{
-			array_push($field, $start2);
-		}
-	}
-
-	$field = array_unique($field);
-	$used = array_unique($used);
-
-	if ($database->arguments['5'] === '-1') 
-	{
-		$final = recursive_xml2($final, $field, $used, $database);
-	}
-
-	return $final;
-}
-
-//
-function recursive_xml2($final, $field, $used, $database)
-{
-	$countd = count($database->arrayoftables);
-	$result = array_diff($field, $used);
-
-	if (empty ($result)) 
-	{
-		return $final;
-	}
-
-	$num = 0;
-	for ($y=0; $y < count($result); $y++) 
-	{ 
-		while (1) 
-		{	
-			if (in_array($result[$num], $result))
-			{
-				$name = $result[$num];
-				break;
-			}
-
-			$num += 1;
-		}
-
-		for ($e=0; $e < $countd; $e++)
-		{
-			$array = array();
-			$array = $database->arrayoftables;
-			$val = array_values($array)[$e];
-
-			$allKeys = array_keys($val->primarykeys);
-
-			for ($u=0; $u < count($allKeys); $u++) 
-			{
-				$len = $allKeys[$u];
-				$end1 = substr($allKeys[$u], 0, ($len - 4));
-				$end2 = substr($allKeys[$u], 0, ($len - 3));
-
-				if ($name === $end1 || $name === $end2) 
-				{
-					for ($a=0; $a < count($allKeys); $a++) 
-					{
-						$len = $allKeys[$a];
-						$start1 = substr($allKeys[$a], 0, ($len - 4));
-						$end1 = substr($allKeys[$a], -4);
-						$start2 = substr($allKeys[$a], 0, ($len - 3));
-						$end2 = substr($allKeys[$a], -3);
-						
-						if ($end1 === "1_id" && $name !== $start1) 
-						{
-							if (array_key_exists($start1, $database->arrayoftables)) 
-							{
-								if (!in_array($start1, $field) && !in_array($start1, $used)) 
-								{
-									$final = $final . "		<relation to=\"" . $start1 . "\" relation_type=\"N:M\" />\n";
-									array_push($field, $start1);
-								}
-							}
-						}
-
-						if ($end2 === "_id" && $name !== $start2) 
-						{
-							if (array_key_exists($start2, $database->arrayoftables)) 
-							{
-								if (!in_array($start2, $field) && !in_array($start2, $used))
-								{
-									$final = $final . "		<relation to=\"" . $start2 . "\" relation_type=\"N:M\" />\n";
-									array_push($field, $start2);
-								}
-							}
-						}
-					}
-				}
-			}	
-		}
-		array_push($used, $name);
-	}
-
-	$field = array_unique($field);
-	$used = array_unique($used);
-
-	$final = recursive_xml2($final, $field, $used, $database);
 
 	return $final;
 }
@@ -1446,11 +1142,42 @@ function xml_relationsN1 ($final, $name, $database)
 
 		if (array_key_exists($val, $database->arrayoftables)) 
 		{
+			array_push($GLOBALS['array'], $val);
 			$final = $final . "		<relation to=\"" . $val . "\" relation_type=\"N:1\" />\n";
 			$final = xml_relationsN1($final, $val, $database);
 		}
 	}
 
+	return $final;
+}
+
+/**
+ * [jelikoz predchozi fce prohledali kardinality 1:N a N:1, vsechny ostatni jsou N:M, a ty uklada do stringu tahle fce]
+ * @param  [string] $final    [string, ktery se bude tisknout]
+ * @param  [database] $database [databaze]
+ * @return [string]           [obohaceny string, ktery se bude tisknout]
+ */
+function xml_relationsNM ($final, $database)
+{
+	$allKeys = array();
+
+	for ($i=0; $i < count($database->arrayoftables); $i++) 
+	{ 
+		$array = array();
+		$array = $database->arrayoftables;
+		$val = array_values($array)[$i];
+		array_push($allKeys, $val->name);
+	}
+
+	$allKeys = array_keys($database->arrayoftables);
+
+	$result = array_diff($allKeys, $GLOBALS['array']);
+	for ($i=0; $i < count($result); $i++) 
+	{ 
+		$name = array_values($result)[$i];
+		$final = $final . "		<relation to=\"" . $name . "\" relation_type=\"N:M\" />\n";
+	}
+	
 	return $final;
 }
 
