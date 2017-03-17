@@ -2,12 +2,15 @@
 /**
  * @author Petr Buchal(xbucha02)
  */
-//mb_internal_encoding('UTF-8');
-//####################################################################################
-//######################Funkce pro zpracovani argumentu skriptu#######################
-//####################################################################################
 
-//tisk cele napovedy
+####################################################################################
+######################Funkce pro zpracovani argumentu skriptu#######################
+####################################################################################
+
+/**
+ * [tisk cele napovedy]
+ * @return [void]
+ */
 function help_print()
 {
 	echo "--help viz společné zadání všech úloh"; echo"\n";
@@ -20,7 +23,12 @@ function help_print()
  	echo "-g lze jej uplatnit v kombinaci s jakýmikoliv jinými přepínači vyjma --help. Při jeho aktivaci bude výstupním souborem pouze XML"; echo"\n";
 }
 
-//pokud je nektery z argumentu "--help" a argumentu je vic nez dva, ukoncuje program "exit(1)"
+/**
+ * [pokud je nektery z argumentu "--help" a argumentu je vic nez dva, ukoncuje program "exit(1)"]
+ * @param  [array_of_strings] $argv [pole argumentu]
+ * @param  [int] $argc [pocet argumentu]
+ * @return [void]
+ */
 function help_test($argv, $argc)
 {
 	$index = 1;
@@ -36,7 +44,11 @@ function help_test($argv, $argc)
 	}
 }
 
-//vraci hodnotu parametru, pokud je parametr jiny nez v zadani ukoncuje program "exit(1)"
+/**
+ * [vraci hodnotu parametru, pokud je parametr jiny nez v zadani ukoncuje program "exit(1)"]
+ * @param  [string] $parameter [parametr]
+ * @return [int]            [cislo, ktere pozdeji parametr reprezentuje]
+ */
 function parameter_test($parameter)
 {
 	if (strlen($parameter) === 2)
@@ -93,7 +105,12 @@ function parameter_test($parameter)
 	exit(1);
 }
 
-//vraci hodnoty parametru skriptu, pokud je hodnota nespravna program konci "exit(1)"
+/**
+ * [vraci hodnoty parametru skriptu, pokud je hodnota nespravna program konci "exit(1)"]
+ * @param  [int] $type      [ciselny typ parametru]
+ * @param  [string] $parameter [parametr]
+ * @return [string]            [hodnota parametru]
+ */
 function parameter_value($type, $parameter)
 {	
 	switch(true)
