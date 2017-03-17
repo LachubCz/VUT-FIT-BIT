@@ -584,8 +584,8 @@ function uelements ($database, $file)
 /**
  * [rekurzivne prochazi SimpleXMLElement, zjistuje jmena podelementu (pomoci children_names), vytvari pro ne tabulky a nasledne do nich nahrava data (pomoci uelements), vse se uklada do database]
  * @param  [SimpleXMLElement] $file     [SimpleXMLElement]
- * @param  [database] $database [aktualni database]
- * @return [database]           [database]
+ * @param  [database] $database [aktualni databaze]
+ * @return [database]           [databaze]
  */
 function recursivegold ($file, $database)
 {
@@ -619,7 +619,11 @@ function recursivegold ($file, $database)
 ########################Funkce pro opraveni chyb v databazi#########################
 ####################################################################################
 
-//
+/**
+ * [funkce kontroluje zdali nekoliduje jmeno atributu s klicem]
+ * @param  [database] $database [databaze]
+ * @return [void]
+ */
 function attcheck($database)
 {
 	$countd = count($database->arrayoftables);
@@ -655,7 +659,11 @@ function attcheck($database)
 	}
 }
 
-//
+/**
+ * [funkce opravuje databazi podle argumentu --etc a -b, pri argumentu -b bude kazdy nazev v tabulce mit pouze jedno zastoupeni, pri --etc se redukuji sloupce, pokud pocet sloupcu se stejnym nazvem presahne --etc (zaroven se vytvori odkaz na aktualni tabulku v tabulce s nazvem mazanych sloupcu)]
+ * @param  [database] $database [databaze]
+ * @return [database]           [aktualizovana databaze]
+ */
 function etc_b_correction($database)
 {
 	if($database->arguments['7'] === 1)
@@ -856,7 +864,11 @@ function etc_b_correction($database)
 	return $database;
 }
 
-//
+/**
+ * [funkce kontroluje zdali se nachazi v databazi nejake tabulky, ktere jsou stejne pokud jejich nazvy uvazujeme case insensitive]
+ * @param  [database] $database [databaze]
+ * @return [database]           [databaze]
+ */
 function case_insensitive_cmp($database)
 {
 	$array = array();
@@ -882,7 +894,13 @@ function case_insensitive_cmp($database)
 	return $database;
 }
 
-//
+/**
+ * [funkce spoji dve case insensiteve tabulky do jedne a tu druhou odstrani]
+ * @param  [string] $first    [jmeno prvi tabulky]
+ * @param  [string] $second   [jmeno druhe tabulky]
+ * @param  [database] $database [databaze]
+ * @return [database]           [aktualizovana databaze]
+ */
 function case_insensitive_merge($first, $second, $database)
 {
 	$table1 = $database->arrayoftables[$first];
@@ -912,7 +930,11 @@ function case_insensitive_merge($first, $second, $database)
 ###############Funkce pro tisknuti SQL prikazu na tvorbu tabulek####################
 ####################################################################################
 
-//tiskne tabulku volanim funkci add1, add2, add3
+/**
+ * [funkce tiskne tabulku volanim funkci add1, add2, add3 a output]
+ * @param  [database] $database [databaze]
+ * @return [void]
+ */
 function print_database($database)
 {
 	$final = "";
@@ -950,13 +972,23 @@ function print_database($database)
 	output ($final, $database->arguments['3']);
 }
 
-//tiskne zacatek tabulky
+/**
+ * [tiskne zacatek tabulky]
+ * @param  [string] $final  [string, ktery se bude tisknout]
+ * @param  [string] $string [jmeno tabulky]
+ * @return [string]         [obohaceny string, ktery se bude tisknout]
+ */
 function add1($final, $string)
 {
 	return $string = $final . "CREATE TABLE " . $string . "(\n   prk_" . $string . "_id" .  " INT PRIMARY KEY,\n";
 }
 
-//tiskne podelementy tabulky
+/**
+ * [tiskne podelementy tabulky]
+ * @param  [string] $string [string, ktery se bude tisknout]
+ * @param  [array] $arr    [pole obsahujici podelementy dane tabulky a jejich datove typy]
+ * @return [string]         [obohaceny string, ktery se bude tisknout]
+ */
 function add2($string, $arr)
 {
 	$allKeys = array_keys($arr);
@@ -979,7 +1011,12 @@ function add2($string, $arr)
 	return $string;
 }
 
-//tiskne atributy tabulky
+/**
+ * [tiskne atributy tabulky]
+ * @param  [string] $string [string, ktery se bude tisknout]
+ * @param  [array] $arr    [pole obsahujici atributy dane tabulky a jejich datove typy]
+ * @return [string]         [obohaceny string, ktery se bude tisknout]
+ */
 function add3($string, $arr)
 {
 	$allKeys = array_keys($arr);
@@ -994,7 +1031,6 @@ function add3($string, $arr)
 
 	return $string . ");\n\n";
 }
-
 
 ####################################################################################
 ##############################Funkce pro tisknuti XML###############################
@@ -1455,13 +1491,22 @@ function recursive_xml ($final, $array, $database)
 ##################################Ostatni funkce####################################
 ####################################################################################
 
-//kontrola cisla, zda-li je float
+/**
+ * [kontrola cisla, zda-li je float]
+ * @param  [float] $value [kontrolovana hodnota]
+ * @return [bool]        [pokud je cislo float, vraci true, jinak false]
+ */
 function isfloat($value)
 {
 	return is_float($value + 0);
 }
 
-//funkce porovna dva datove typy a vrati ten vetsi
+/**
+ * [funkce porovna dva datove typy a vrati ten vetsi]
+ * @param  [string] $type     [prvni porovnavany datovy typ]
+ * @param  [string] $typetemp [druhy porovnavany datovy typ]
+ * @return [string]           [vetsi porovnavany datovy typ]
+ */
 function typeenum ($type, $typetemp)
 {
 	$typec = $type;
@@ -1495,7 +1540,12 @@ function typeenum ($type, $typetemp)
 		return $typetempc;
 }
 
-//
+/**
+ * [finalni funkce pro tisk jak SQL prikazu, tak XML souboru, je to jedno jelikoz funkce dostava na vstup pouze naformatovany string]
+ * @param  [string] $final     [string pro tisk]
+ * @param  [string] $parameter [parametr --ouput]
+ * @return [void]
+ */
 function output ($final, $parameter)
 {
 	if ($parameter === '-1') 
