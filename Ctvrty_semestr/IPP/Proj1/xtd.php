@@ -181,11 +181,16 @@ function fileload($file, $output)
 		}
 
 		fclose($f);
+
+		//$file =  mb_strtolower ($file, 'UTF-8');
+
 		emptyfile($file, '1', $output);
 		$file = simplexml_load_string($file);
 	}
 	else
 	{
+		//$file =  mb_strtolower ($file, 'UTF-8');
+
 		emptyfile($file, '0', $output);
 		$file = simplexml_load_file($file);
 	}
@@ -330,6 +335,7 @@ function children_names ($file)
 	foreach ($file->children() as $child)
 	{
 		$name = $child->getName();
+		//$name =  mb_strtolower ($name, 'UTF-8');
 		array_push($namesarr, $name);
 	}
 
@@ -477,7 +483,13 @@ function uelements ($database, $file)
 				foreach($file->{$val->name}[$i]->attributes() as $a => $b)
 				{
 					$type = control($b, '1');
-					$type = typeenum ($type, $database->arrayoftables[$val->name]->attributes[$a]);
+					$a =  mb_strtolower ($a, 'UTF-8');
+
+					if (array_key_exists($a, $database->arrayoftables[$val->name]->attributes)) 
+					{
+						$type = typeenum ($type, $database->arrayoftables[$val->name]->attributes[$a]);
+					}
+
 					$database->arrayoftables[$val->name]->attributes[$a] = $type;
 				}
 			}
@@ -485,6 +497,7 @@ function uelements ($database, $file)
 			foreach ($file->{$val->name}[$i]->children() as $childreen)
 			{
 				$name = $childreen->getName();
+				$name =  mb_strtolower ($name, 'UTF-8');
 
 				if (empty($childreen))
 				{
@@ -1230,6 +1243,58 @@ function etc_b_correction($database)
 	return $database;
 }
 
+//
+function case_insensitive_cmp($database)
+{
+	$array = array();
+
+	for ($e=0; $e < count($database->arrayoftables); $e++)
+	{
+		$array = $database->arrayoftables;
+		$val = array_values($array)[$e];
+
+		for ($i=($e + 1); $i < count($database->arrayoftables); $i++) 
+		{ 
+			$array = $database->arrayoftables;
+			$cmp = array_values($array)[$i];
+
+			if (!strcasecmp($cmp->name, $val->name)) 
+			{
+				$database = case_insensitive_merge($cmp->name, $val->name, $database);
+				$e = -1;
+			}
+		}
+	}
+
+	return $database;
+}
+
+//
+function case_insensitive_merge($first, $second, $database)
+{
+	$table1 = $database->arrayoftables[$first];
+	$table2 = $database->arrayoftables[$second];
+
+	$allKeys = array_keys($table2->primarykeys);
+
+	for ($i=0; $i < count($table2->primarykeys); $i++) 
+	{ 
+		$type = typeenum($database->arrayoftables[$first]->primarykeys[$allKeys[$i]], $database->arrayoftables[$second]->primarykeys[$allKeys[$i]]);
+		$database->arrayoftables[$first]->primarykeys[$allKeys[$i]] = $type;
+	}
+
+	$allKeys = array_keys($table2->attributes);
+
+	for ($i=0; $i < count($table2->primarykeys); $i++) 
+	{ 
+		$type = typeenum($database->arrayoftables[$first]->attributes[$allKeys[$i]], $database->arrayoftables[$second]->attributes[$allKeys[$i]]);
+		$database->arrayoftables[$first]->attributes[$allKeys[$i]] = $type;
+	}
+
+	unset($database->arrayoftables[$second]);
+	return $database;
+}
+
 //####################################################################################
 //##################################Ostatni funkce####################################
 //####################################################################################
@@ -1279,12 +1344,7 @@ function output ($final, $parameter)
 {
 	if ($parameter === '-1') 
 	{
-		//$final = iconv(mb_detect_encoding($final, mb_detect_order(), true), "UTF-8", $final);
-		//$final =  mb_strtolower ($final ,  'UTF-8');
 		echo $final;
-		//$out = fopen('php://output', 'w');
-		//fputs($out, $final);
-		//fclose($out);
 		exit(0);
 	}
 	else
@@ -1365,6 +1425,8 @@ $database->init($types);
 
 //rekurzivne pomoci funkce (recursivegold) a pomocnych funkci (uelements, arraytodb, prkuniq, prkedit, control, children_names) projde obsah souboru na vstupu a v hrube podobe se ulozi do databaze
 $database = recursivegold ($file, $database);
+
+$database = case_insensitive_cmp($database);
 
 $database = etc_b_correction($database);
 
