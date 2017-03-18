@@ -3,17 +3,14 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <netinet/in.h>
 
 #define MAX_PATH 1024 //maximalni delka path
+#define BUFFER 2048 //velikost dat nacitanych ze socketu do bufferu
 
-int PORT; //
-char ROOT_FOLDER[MAX_PATH]; //
+int PORT; 
+char ROOT_FOLDER[MAX_PATH];
 
-/**
- * [number_from_string description]
- * @param  str [description]
- * @return     [description]
- */
 int number_from_string(const char *str)
 {
 	int i = 0, number;
@@ -22,7 +19,8 @@ int number_from_string(const char *str)
 	{
 		if (!isdigit(str[i]))
 		{
-			exit(0);
+			fprintf(stderr, "Chyba pri zadani argumentu.\n");
+			exit(1);
 		}
 		i++;
 	}
@@ -30,69 +28,123 @@ int number_from_string(const char *str)
 	number = atoi(str);
 	return number;
 }
-/**
- * [arguments description]
- * TODO osetrit vetsi nez 1024 delka path; osetrit stav kdyz je jeden parametr zadan dvakrat
- * @param argc [description]
- * @param argv [description]
- */
+
+//TODO osetrit vetsi nez 1024 delka path; osetrit stav kdyz je jeden parametr zadan dvakrat
 void arguments(int argc, char const *argv[])
 {
 	PORT = 6677;
 	getcwd(ROOT_FOLDER, sizeof(ROOT_FOLDER));
 
-	if (argc == 3)
+	if (argc == 1)
 	{
-		if (!strcmp(argv[1], "-r"))
-		{
-			strcpy(ROOT_FOLDER, argv[2]);
-		}
-		else if (!strcmp(argv[1], "-p"))
-			{
-				PORT = number_from_string(argv[2]);
-			}
-		else
-		{
-			exit(1);
-		}
+		return;
 	}
+	else if (argc == 3)
+		{
+			if (!strcmp(argv[1], "-r"))
+			{
+				strcpy(ROOT_FOLDER, argv[2]);
+			}
+			else if (!strcmp(argv[1], "-p"))
+				{
+					PORT = number_from_string(argv[2]);
+				}
+			else
+			{
+				fprintf(stderr, "Chyba pri zadani argumentu.\n");
+				exit(1);
+			}
+		}
 	else if (argc == 5)
-	{
-		if (!strcmp(argv[1], "-r"))
 		{
-			strcpy(ROOT_FOLDER, argv[2]);
-		}
-		else if (!strcmp(argv[1], "-p"))
+			if (!strcmp(argv[1], "-r"))
 			{
-				PORT = number_from_string(argv[2]);
+				strcpy(ROOT_FOLDER, argv[2]);
 			}
-		else
-		{
-			exit(1);
-		}
+			else if (!strcmp(argv[1], "-p"))
+				{
+					PORT = number_from_string(argv[2]);
+				}
+			else
+			{
+				fprintf(stderr, "Chyba pri zadani argumentu.\n");
+				exit(1);
+			}
 
-		if (!strcmp(argv[3], "-r"))
-		{
-			strcpy(ROOT_FOLDER, argv[4]);
-		}
-		else if (!strcmp(argv[3], "-p"))
+			if (!strcmp(argv[3], "-r"))
 			{
-				PORT = number_from_string(argv[4]);
+				strcpy(ROOT_FOLDER, argv[4]);
 			}
-		else
-		{
-			exit(1);
+			else if (!strcmp(argv[3], "-p"))
+				{
+					PORT = number_from_string(argv[4]);
+				}
+			else
+			{
+				fprintf(stderr, "Chyba pri zadani argumentu.\n");
+				exit(1);
+			}
 		}
-	}
 	else
 	{
+		fprintf(stderr, "Chyba pri zadani argumentu.\n");
 		exit(1);
 	}
+
+	return;
 }
 
 int main(int argc, char const *argv[])
 {
-	arguments(argc, argv);
+	int socket_fd, socket_fd2;
+
+	char buffer[BUFFER];
+	bzero(buffer, BUFFER);
+
+	struct sockaddr_in server_addr, client_addr; //sockaddr_in je struktura obsahujici internetovou adresu
+	
+	arguments(argc, argv); //funkce na zpracovani argumentu
+
+	socket_fd = socket(AF_INET, SOCK_STREAM, 0); //inicializace socketu
+	if (socket_fd < 0) 
+	{
+		fprintf(stderr, "Chyba pri otvirani socketu.\n");
+		exit(2);
+	}
+
+	bzero((char *) &server_addr, sizeof(server_addr)); //nastavi vsechny hodnoty v bufferu na nulu
+
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_addr.s_addr = INADDR_ANY;
+	server_addr.sin_port = htons(PORT);
+
+	if ((bind(socket_fd, (struct sockaddr *) &server_addr, sizeof(server_addr))) < 0)
+	{
+		fprintf(stderr, "Chyba pri bindovani socketu.\n");
+		exit(3);
+	}
+
+	listen(socket_fd, 5);
+
+	int cl_addr_size = sizeof(client_addr);
+	socket_fd2 = accept(socket_fd, (struct sockaddr *) &client_addr, &cl_addr_size);
+	if (socket_fd2 < 0)
+	{
+		fprintf(stderr, "Chyba pri prijmani socketu.\n");
+		exit(4);
+	}
+
+	if ((read(socket_fd2, buffer, BUFFER)) < 0)
+	{
+		fprintf(stderr, "Chyba pri cteni ze socketu.\n");
+		exit(5);
+	}
+
+	if ((write(socket_fd2, "Hello svete.", 12)) < 0)
+	{
+		fprintf(stderr, "Chyba pri cteni ze socketu.\n");
+		exit(6);
+	}
 
 	return 0;
 }
