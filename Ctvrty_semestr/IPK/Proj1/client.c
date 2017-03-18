@@ -4,17 +4,16 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <netinet/in.h>
+#include <netdb.h>
 
-#define MAX_PATH 1024 //
+#define MAX_PATH 1024
+#define BUFFER 2048 //velikost dat nacitanych ze socketu do bufferu
 
-char COMMAND[4]; //
-char REMOTE_PATH[MAX_PATH]; //
-char LOCAL_PATH[MAX_PATH]; //
+char COMMAND[4];
+char REMOTE_PATH[MAX_PATH];
+char LOCAL_PATH[MAX_PATH];
 
-/**
- * [err_print description]
- * @param err_code [description]
- */
 void err_print(int err_code)
 {
 	switch(err_code)
@@ -43,11 +42,6 @@ void err_print(int err_code)
 	}
 }
 
-/**
- * [check_command description]
- * @param  cmd [description]
- * @return     [description]
- */
 int check_command(const char *cmd)
 {
 	if (strcmp(cmd, "del") == 0)
@@ -86,17 +80,13 @@ int check_command(const char *cmd)
 	}
 }
 
-/**
- * [arguments  description]
- * @param argc [description]
- * @param argv [description]
- */
 void arguments (int argc, char const *argv[])
 {
 	bool fourth_argument;
 
 	if (argc > 4 || argc < 3)
 	{
+		fprintf(stderr, "Chyba pri zadani argumentu.\n");
 		exit(1);
 	}
 
@@ -113,7 +103,7 @@ void arguments (int argc, char const *argv[])
 	{
 		if (!fourth_argument)
 		{
-			printf("yshir\n");
+			fprintf(stderr, "Chyba pri zadani argumentu.\n");
 			exit(1);
 		}
 		else
@@ -131,6 +121,7 @@ void arguments (int argc, char const *argv[])
 
 	if (strcmp(COMMAND, "get") != 0 && strcmp(COMMAND, "put") != 0 && fourth_argument)
 	{
+		fprintf(stderr, "Chyba pri zadani argumentu.\n");
 		exit(1);
 	}
 }
@@ -138,6 +129,63 @@ void arguments (int argc, char const *argv[])
 int main(int argc, char const *argv[])
 {
 	arguments(argc, argv);
+
+	int port = 1061; //bude nahrazeno rozparserovanym prikazem
+
+	int socket_fd;
+
+	char buffer[BUFFER];
+	bzero(buffer, BUFFER);
+
+	struct sockaddr_in server_addr;
+	struct hostent *server;
+
+	socket_fd = socket(AF_INET, SOCK_STREAM, 0); //inicializace socketu
+	if (socket_fd < 0) 
+	{
+		fprintf(stderr, "Chyba pri otvirani socketu.\n");
+		exit(2);
+	}
+
+	server = gethostbyname("localhost");
+	if (server == NULL)
+	{
+		fprintf(stderr, "Server neexituje.");
+		exit(3);
+	}
+
+	bzero((char *) &server_addr, sizeof(server_addr));
+
+	server_addr.sin_family = AF_INET;
+
+	bcopy((char *) server->h_addr, (char *) &server_addr.sin_addr.s_addr, server->h_length);
+
+	server_addr.sin_port = htons(port);
+
+	if ((connect(socket_fd, (struct sockaddr *) &server_addr, sizeof(server_addr))) < 0)
+	{
+		fprintf(stderr, "K serveru se nelze pripojit.");
+		exit(4);
+	}
+
+	printf("Napis Zpravu: ");
+	fgets(buffer, BUFFER, stdin);
+
+	if ((write(socket_fd, buffer, strlen(buffer))) < 0)
+	{
+		fprintf(stderr, "Chyba pri zapisovani do socketu.\n");
+		exit(5);
+	}
+
+	bzero(buffer, BUFFER);
+
+	if ((read(socket_fd, buffer, BUFFER)) < 0)
+	{
+		fprintf(stderr, "Chyba pri cteni ze socketu.\n");
+		exit(6);
+	}
+
+	printf("%s", buffer);
 
 	return 0;
 }
