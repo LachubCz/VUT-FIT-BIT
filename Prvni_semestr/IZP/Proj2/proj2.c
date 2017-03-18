@@ -40,7 +40,7 @@ double taylor_log(double x, unsigned int n)  //funkce pro vypocet prirozeneho lo
 
     if (x < 0.8)  //zvolena mez pro pocitani jednotlivych polynomu
         {
-            x = 1 - x;  //zvoleni vhodného x pro vypocet logaritmu
+            x = 1 - x;  //zvoleni vhodnÃ©ho x pro vypocet logaritmu
             while (i < n)  //
             {
                 i = i + 1;
@@ -52,7 +52,7 @@ double taylor_log(double x, unsigned int n)  //funkce pro vypocet prirozeneho lo
         }
     else
     {
-        x = ((x-1)/x);  //zvoleni vhodného x pro vypocet logaritmu
+        x = ((x-1)/x);  //zvoleni vhodnÃ©ho x pro vypocet logaritmu
         while (i < n)
         {
             i = i + 1;
@@ -129,7 +129,7 @@ int epscalcul (double x, double n)  //funkce pro vypocet minimalniho poctu itera
 
     if (x < 0.8)  //zvolena mez pro pocitani jednotlivych polynomu
         {
-            x = 1 - x;  //zvoleni vhodného x pro vypocet logaritmu
+            x = 1 - x;  //zvoleni vhodnÃ©ho x pro vypocet logaritmu
             while (t >= n)
             {
                 i = i + 1;
@@ -141,7 +141,7 @@ int epscalcul (double x, double n)  //funkce pro vypocet minimalniho poctu itera
         }
     else
     {
-        x = ((x-1)/x);  //zvoleni vhodného x pro vypocet logaritmu
+        x = ((x-1)/x);  //zvoleni vhodnÃ©ho x pro vypocet logaritmu
         while (t >= n)
         {
             i = i + 1;
