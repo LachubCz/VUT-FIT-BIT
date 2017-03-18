@@ -1,0 +1,320 @@
+#!/bin/sh
+
+# IOS - Projekt 1, skript dirstat
+# Autor: Petr Buchal (xbucha02)
+#------------------------------------------------------------
+#zpracování argumentu
+
+if [ $# -gt 3 ]; then  #pokud je zadano vic nez tri argumenty skript skonci
+  >&2 echo "invalid number of arguments"
+  exit 1
+fi
+
+dir="$1"  #algoritmus na zakladni rozebrani argumentu
+if [ "$1" = "-i" ]; then
+  if [ -z "$2" ]; then
+    >&2 echo "invalid argument"
+    exit 1
+  fi
+  file_ere="$2"
+  dir="$3"
+fi
+
+if [ -z "$dir" ]; then  #pokud je dir prazdny, skript se uskutecni v pracovnim adresari
+  dir="$PWD"
+fi
+
+if [ -d "$dir" ]; then  #pokud je neplatna adresa, skript se ukonci
+  cd "$dir"
+else
+  >&2 echo "invalid path"
+  exit 1
+fi
+
+if [ "$2" = "-i" ]; then  #algoritmus na sekundarni rozebrani argumentu
+  if [ -z "$3" ]; then
+    >&2 echo "invalid argument"
+    exit 1
+  fi
+  file_ere="$3"
+fi
+
+if [ "$file_ere" = "$dir" ]; then  #pokud regularni vyraz odpovida korenove slozce, skript se ukonci
+  >&2 echo "invalid arguments"
+  exit 1
+fi
+
+#------------------------------------------------------------
+#zakladni vypocty pro dalsi prubeh skriptu
+
+fullinfo=$(find ./ -type f -printf '%s;%p \n' | sort -n)  #vypise "velikost;cesta/soubor"
+povolene=$(find ./ \! -name "$file_ere" -regextype posix-extended -printf '%s;%p \n')  #vypise obsah, ktery neobsahuje regularni vyrazy
+
+#cyklus, ktery maze soubory obsahujici regularni vyraz
+linenum=0  #pocitani radku ktere cyklus prochazi (venkovni)
+filecounttemp=$(echo "$fullinfo" | wc -l)  #predani poctu souboru (venkovni)
+fullinfo=$(while [ $filecounttemp -ge 1 ]
+do
+  linenum="$((linenum + 1))"  #nastaveni radku
+  linenumin=0  #pocitani radku ktere cyklus prochazi (vnitrni)
+  povfilecounttemp=$(echo "$povolene" | wc -l)  #predani poctu souboru (vnitrni)
+  nepovoleny=$(echo -n "$fullinfo" | sed -n "${linenum}p")  #nacteni radku
+
+    while [ $povfilecounttemp -ge 1 ]
+    do
+      linenumin="$((linenumin + 1))"  #nastaveni radku
+      povoleny=$(echo -n "$povolene" | sed -n "${linenumin}p")  #nacteni radku
+      if [ "$nepovoleny" = "$povoleny" ]; then  #porovnavani vyrazu, pokud je platny ulozi se
+          echo "$nepovoleny"
+      fi
+      povfilecounttemp="$((povfilecounttemp - 1))"  #odcitani zbyvajicich souboru
+    done
+
+  filecounttemp="$((filecounttemp - 1))"  #odcitani zbyvajicich souboru
+done)
+
+prvnicut=$(echo "$fullinfo" | rev | cut -d"." -f1)  #prevracene koncovky od tecky
+prvnicut=$(echo "$prvnicut" | rev)  #normalni koncovky od tecky
+pomezeru=$(echo "$fullinfo" | rev | cut -d"/" -f1 ) #prevracene koncovky od lomitka
+pomezeru=$(echo "$pomezeru" | rev)  #normalni koncovky od lomitka
+druhycut=$(echo "$fullinfo" | cut -d";" -f1)  #velikost jednotlivych souboru
+
+#------------------------------------------------------------
+#zakladni vypocty pro vypis
+
+#standartni situaci
+dircount=$(find ./ -type d \! -name "$file_ere" -regextype posix-extended | wc -l)  #pocet adresaru
+depthcount=$(find ./ -type d \! -name "$file_ere" -regextype posix-extended | sed 's/[^/]//g' | awk '{ print length + 1}' | sort -r | sed '1!d')  #maximalni hloubka adresaru
+filecount=$(echo "$fullinfo" | wc -l)  #pocet souboru
+averagecount=$(echo "$filecount / $dircount" | bc)  #prumerny pocet souboru
+
+#nestandartni situace - explicitni nastaveni
+if [ "$dircount" -eq 1 ]; then  #pokud je nalezen jen jeden adresar, hloubka je explicitne 1
+    depthcount=1
+fi
+
+if [ "$fullinfo" = "" ]; then  #v pripade prazdneho adresare se hodnoty nastavuji explicitne
+  depthcount=1
+  averagecount=0
+  filecount=0
+  largest="N/A"
+  average="N/A"
+  median="N/A"
+else  #pokud neni adresar prazdny provadeji se dalsi operace
+
+#------------------------------------------------------------
+  #vypocet largest, average, median
+
+  #vypocet largest
+  linenumin=0  #pocitani radku ktere cyklus prochazi
+  filecounttemp=$(echo "$prvnicut" | wc -l)  #predani poctu souboru
+  largest=0  #nastaveni vychozi velikosti na 0
+  while [ $filecounttemp -ge 1 ]
+  do
+    linenumin="$((linenumin + 1))"  #nastaveni radku
+    line=$(echo -n "$druhycut" | sed -n "${linenumin}p")  #nacteni velikost
+    if [ $line -gt $largest ]; then  #porovnavani dvou poslednich velikosti
+        largest=$(echo "$line");
+    fi
+    filecounttemp="$((filecounttemp - 1))"  #odcitani zbyvajicich souboru
+  done
+
+  #vypocet average
+  linenumin=0  #pocitani radku ktere cyklus prochazi
+  filecounttemp=$(echo "$prvnicut" | wc -l)  #predani poctu souboru
+  average=0  #nastaveni vychozi velikosti na 0
+  while [ $filecounttemp -ge 1 ]
+  do
+    linenumin="$((linenumin + 1))"  #nastaveni radku
+    line=$(echo -n "$druhycut" | sed -n "${linenumin}p")  #nacteni velikosti
+    average="$((average + line))"  #scitani velikosti
+    filecounttemp="$((filecounttemp - 1))"  #odcitani zbyvajicich souboru
+  done
+    average="$((average / filecount))"  #finalni vysledek pro average
+
+  #vypocet median
+  filecounttemp=$(echo "$prvnicut" | wc -l)  #predani poctu souboru
+  druhycutso=$(echo "$druhycut" | sort -n) #nastaveni hodnot od nejmensi po nejvetsi
+  medtest="$(($filecount % 2))"  #test na lichy/sudy pocet souboru
+  if [ $medtest -eq "0" ]; then  #pokud je pocet souboru sudy
+    filecounttemp="$((filecounttemp / 2))"  #nastaveni indexu pro prvni cislo
+    medone=$(echo -n "$druhycutso" | sed -n "${filecounttemp}p")  #prvni cislo
+    filecounttemp="$((filecounttemp + 1))"  #nastaveni indexu pro druhe cislo
+    medtwo=$(echo -n "$druhycutso" | sed -n "${filecounttemp}p")  #druhe cislo
+    median="$((medone + medtwo))"  #secteni cisel
+    median="$((median / 2))"  #vydeleni cisel, finalni median
+  else  #pokud je pocet souboru lichy
+    filecounttemp="$((filecounttemp / 2))"  #vydeleni dvema
+    filecounttemp="$((filecounttemp + 1))"  #pricteni jedne, dostani vysledneho indexu
+    median=$(echo -n "$druhycutso" | sed -n "${filecounttemp}p")  #vysledny median
+  fi
+
+  #------------------------------------------------------------
+  #odstranovani souboru, ktere nebudou zahrnovany v casti tykajici se koncovek
+
+  #odstraneni souboru bez koncovky
+  linenumin=1  #pocitani radku ktere cyklus prochazi
+  filecounttemp=$(echo "$prvnicut" | wc -l)  #predani poctu radku
+  while [ $filecounttemp -ge 1 ]
+  do
+    tecka=$(echo "$prvnicut" | sed -n "${linenumin}p" | sed 's/[^/]//g' | wc -c)  #nacteni poctu znaku
+    if [ $tecka -gt 1 ]; then  #pokud se na radku nachazi '/' promenna tecka bude vetsi nez 1 a radek se vymaze
+        prvnicut=$(echo "$prvnicut" | sed -e "${linenumin}d")  #vymazani radku
+        pomezeru=$(echo "$pomezeru" | sed -e "${linenumin}d")  #vymazani radku
+        druhycut=$(echo "$druhycut" | sed -e "${linenumin}d")  #vymazani radku
+        filecounttemp="$((filecounttemp - 1))"  #zbyvajici pocet cyklu
+      else
+        linenumin="$((linenumin + 1))"  #nastaveni radku
+        filecounttemp="$((filecounttemp - 1))"  #zbyvajici pocet cyklu
+      fi
+  done
+
+  #odstraneni souboru s prazdnou koncovkou 'soubor.'
+  linenumin=1  #pocitani radku ktere cyklus prochazi
+  filecounttemp=$(echo "$prvnicut" | wc -l)  #predani poctu radku
+  while [ $filecounttemp -ge 1 ]
+  do
+    tecka=$(echo "$prvnicut" | sed -n "${linenumin}p" | wc -c)  #nacteni poctu znaku
+    if [ $tecka -eq 2 ]; then  #pokud jsou na radku jenom dva znaky, soubor se smaze
+        prvnicut=$(echo "$prvnicut" | sed -e "${linenumin}d")  #vymazani radku
+        pomezeru=$(echo "$pomezeru" | sed -e "${linenumin}d")  #vymazani radku
+        druhycut=$(echo "$druhycut" | sed -e "${linenumin}d")  #vymazani radku
+        filecounttemp="$((filecounttemp - 1))"  #zbyvajici pocet cyklu
+      else
+        linenumin="$((linenumin + 1))"  #nastaveni radku
+        filecounttemp="$((filecounttemp - 1))"  #zbyvajici pocet cyklu
+      fi
+  done
+
+  #odstraneni skryteho souboru bez koncovky
+  linenumin=1  #pocitani radku ktere cyklus prochazi
+  filecounttemp=$(echo "$prvnicut" | wc -l)  #predani poctu radku
+  while [ $filecounttemp -ge 1 ]
+  do
+    tecka=$(echo "$prvnicut" | sed -n "${linenumin}p" | wc -c)  #nacteni poctu znaku
+    mezera=$(echo "$pomezeru" | sed -n "${linenumin}p" | wc -c)  #nacteni poctu znaku
+    rozdil="$((mezera - tecka))"
+    if [ $rozdil -eq 1 ]; then  #pokud je rozdil 1, znamena to, ze soubor je skryty bez koncovky a tedy se maze; '.../.soubor'
+        prvnicut=$(echo "$prvnicut" | sed -e "${linenumin}d")  #vymazani radku
+        pomezeru=$(echo "$pomezeru" | sed -e "${linenumin}d")  #vymazani radku
+        druhycut=$(echo "$druhycut" | sed -e "${linenumin}d")  #vymazani radku
+        filecounttemp="$((filecounttemp - 1))"  #zbyvajici pocet cyklu
+      else
+        linenumin="$((linenumin + 1))"  #nastaveni radku
+        filecounttemp="$((filecounttemp - 1))"  #zbyvajici pocet cyklu
+      fi
+  done
+
+  #mezivypocty pro ziskani druhu koncovek do vypisu
+  druhykoncovek=$(echo "$prvnicut" | sort | uniq)  #priprava pro vypis
+  druhykoncovekmain=$(echo $druhykoncovek | tr ' ' ',')  #hotovo pro vypis
+fi  
+
+#------------------------------------------------------------
+#tisk prvni casti reportu
+
+echo "Root directory: $PWD"
+echo "Directories: $dircount"
+echo "Max depth: $depthcount"
+echo "Average no. of files: $averagecount"
+echo "All files: $filecount"
+echo -n '  Largest file: ';echo "$largest"
+echo -n '  Average file size: ';echo "$average"
+echo -n '  File size median: ';echo "$median"
+if [ "$fullinfo" != "" ]; then  #pokud neni adresar prazdny vypisuje se cast s koncovkami, jinak program konci
+  echo -n "File extensions: ";echo $druhykoncovekmain
+else
+  exit 0
+fi
+
+#------------------------------------------------------------
+#mezivypocty pro vypis casti s jednotlivymy koncovkami
+
+lolikut=$(echo "$prvnicut" | sort | uniq -c | less | cut -d" " -f7)  #zobrazeni poctu jednotlivych koncovek
+types=$(echo "$lolikut"| wc -l)  #pocet unikatnich koncovek
+
+#------------------------------------------------------------
+#cyklus pro vypis casti pro jednotlive koncovky
+
+linenum=0  #pocitani radku ktere cyklus prochazi
+while [ $types -ge 1 ]
+do
+  linenum="$((linenum + 1))"  #nastaveni radku
+  line=$(echo "$druhykoncovek" | sed -n "${linenum}p")  #koncovka souboru
+  extcount=$(echo "$lolikut" | sed -n "${linenum}p")  #pocet souboru daneho typu
+
+  #-----------------------------------------------------------
+  #vybrani velikosti pro dany typ souboru
+  linenumin=1  #pocitani radku ktere cyklus prochazi
+  filecounttemp=$(echo "$prvnicut" | wc -l)  #predani poctu radku
+  velikosti=$(while [ $filecounttemp -ge 1 ]
+  do
+  koncovka=$(echo "$prvnicut" | sed -n "${linenumin}p")  #ziskani koncovky ze seznamu vsech
+  if [ "$line" = "$koncovka" ]; then  #pokud jsou koncovky totozne zapisuje se velikost do seznamu
+        echo "$druhycut" | sed -n "${linenumin}p"  #hodnota patri k danemu typu souboru
+  fi
+        linenumin="$((linenumin + 1))"  #nastaveni radku
+        filecounttemp="$((filecounttemp - 1))"  #zbyvajici pocet cyklu
+  done)
+  velikosti=$(echo "$velikosti" | sort -n)  #nastaveni hodnot od nejmensi po nejvetsi
+
+  #-----------------------------------------------------------
+
+  #vypocet LEXT
+  linenumin=0  #pocitani radku ktere cyklus prochazi
+  filecounttemp=$(echo "$extcount")  #predani poctu souboru
+  LEXT=0  #nastaveni vychozi velikosti na 0
+  while [ $filecounttemp -ge 1 ]
+  do
+    linenumin="$((linenumin + 1))"  #nastaveni radku
+    aktualni=$(echo -n "$velikosti" | sed -n "${linenumin}p")  #nacteni velikosti
+    if [ $aktualni -gt $LEXT ]; then  #porovnavani dvou poslednich velikosti
+        LEXT=$(echo "$aktualni");
+    fi
+    filecounttemp="$((filecounttemp - 1))"  #odcitani zbyvajicich souboru
+  done
+
+  #vypocet AEXT
+  linenumin=0  #pocitani radku ktere cyklus prochazi
+  filecounttemp=$(echo "$extcount")  #predani poctu souboru
+  AEXT=0  #nastaveni vychozi velikosti na 0
+  while [ $filecounttemp -ge 1 ]
+  do
+    linenumin="$((linenumin + 1))"  #nastaveni radku
+    aktualni=$(echo -n "$velikosti" | sed -n "${linenumin}p")  #nacteni velikost
+    AEXT="$((AEXT + aktualni))"  #scitani velikosti
+    filecounttemp="$((filecounttemp - 1))"  #odcitani zbyvajicich souboru
+  done
+    AEXT="$((AEXT / extcount))"  #finalni vysledek pro AEXT
+
+  #vypocet median
+  filecounttemp=$(echo "$extcount")  #predani poctu souboru
+  medtest="$(($extcount % 2))"  #test na lichy/sudy pocet souboru
+  if [ $medtest -eq "0" ]; then  #pokud je pocet souboru sudy
+    filecounttemp="$((filecounttemp / 2))"  #nastaveni indexu pro prvni cislo
+    medone=$(echo -n "$velikosti" | sed -n "${filecounttemp}p")  #prvni cislo
+    filecounttemp="$((filecounttemp + 1))"  #nastaveni indexu pro druhe cislo
+    medtwo=$(echo -n "$velikosti" | sed -n "${filecounttemp}p")  #druhe cislo
+    MEXT="$((medone + medtwo))"  #secteni cisel
+    MEXT="$((MEXT / 2))"  #vydeleni cisel, finalni median
+  else  #pokud je pocet souboru lichy
+    filecounttemp="$((filecounttemp / 2))"  #vydeleni dvema
+    filecounttemp="$((filecounttemp + 1))"  #pricteni jedne, dostani vysledneho indexu
+    MEXT=$(echo -n "$velikosti" | sed -n "${filecounttemp}p")  #finalni median
+  fi
+
+  #-----------------------------------------------------------
+  #uprava pro vypis
+  line=$(echo "$line" | cut -d" " -f1)
+
+  #-----------------------------------------------------------
+  #samotny vypis casti s koncovkami
+
+  echo "Files .$line: $extcount"
+  echo -n '  Largest file .';echo -n "$line: ";echo "$LEXT"
+  echo -n '  Average file size .';echo -n "$line: ";echo "$AEXT"
+  echo -n '  File size median .';echo -n "$line: ";echo "$MEXT"
+  #-----------------------------------------------------------
+  
+  types="$((types - 1))"  #pocet zbyvajicich radku
+done

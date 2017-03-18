@@ -1,0 +1,24 @@
+--- dirstat.odevzdany	2016-03-28 22:46:42.000000000 +0200
++++ dirstat	2016-04-14 11:14:29.000000000 +0200
+@@ -213,17 +213,18 @@
+ #------------------------------------------------------------
+ #tisk prvni casti reportu
+ 
+-echo "Root directory: $PWD"
++echo -n 'Root directory: '; echo "${PWD##*/}"
+ echo "Directories: $dircount"
+ echo "Max depth: $depthcount"
+ echo "Average no. of files: $averagecount"
+ echo "All files: $filecount"
+-echo -n '  Largest file: ';echo "$largest"
++echo -n '  Largest file: '; if [ "$largest" = "N/A" ]; then echo "$largest";elif [ $largest -eq 0 ]; then echo 'N/A'; else echo "$largest"; fi
+ echo -n '  Average file size: ';echo "$average"
+ echo -n '  File size median: ';echo "$median"
+-if [ "$fullinfo" != "" ]; then  #pokud neni adresar prazdny vypisuje se cast s koncovkami, jinak program konci
++if [ "$druhykoncovekmain" != "" ]; then  #pokud neni adresar prazdny vypisuje se cast s koncovkami, jinak program konci
+   echo -n "File extensions: ";echo $druhykoncovekmain
+ else
++  echo "File extensions: ";
+   exit 0
+ fi
+ 
