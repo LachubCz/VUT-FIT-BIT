@@ -140,9 +140,11 @@ int main(int argc, char const *argv[])
 		exit(5);
 	}
 
-	if ((write(socket_fd2, "Hello svete.", 12)) < 0)
+	printf("%s", buffer);
+
+	if ((write(socket_fd2, "Hello from the server side.", 27)) < 0)
 	{
-		fprintf(stderr, "Chyba pri cteni ze socketu.\n");
+		fprintf(stderr, "Chyba pri zapisovani do socketu.\n");
 		exit(6);
 	}
 
