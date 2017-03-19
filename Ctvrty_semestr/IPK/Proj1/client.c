@@ -190,7 +190,7 @@ void getPath(char **Path, int loc_or_rem)
 	free(temp);
 }
 
-char * getHeader (char *ServerName, char *Path, int fof)
+char * getHeader (char *ServerName, char *Path, int fof, int binary_file_len)
 {
 	char *type = "?.type=";
 
@@ -231,7 +231,7 @@ char * getHeader (char *ServerName, char *Path, int fof)
 	}
 	else
 	{
-		sprintf(Header, "%s %s%s%s %s\n%s%s\n%s%s\n%s\n%s\n%s\n%s\n", COMMAND, Path, type, file, http, host, ServerName, date, act_time, accept, accept_en, con_type, con_len);
+		sprintf(Header, "%s %s%s%s %s\n%s%s\n%s%s\n%s\n%s\n%s\n%s%d\n", COMMAND, Path, type, file, http, host, ServerName, date, act_time, accept, accept_en, con_type, con_len, binary_file_len);
 	}
 	
 	return Header;
@@ -294,45 +294,110 @@ int file_or_folder(char *Path, int mode)
 int main(int argc, char const *argv[])
 {
 	int socket_fd;
-
+	int binary_file_len = 0;
 	char buffer[BUFFER];
+	char *binary_file;
+	char *final_message;
 	bzero(buffer, BUFFER);
-
 	struct sockaddr_in server_addr;
 	struct hostent *server;
 
+
 	arguments(argc, argv);
+
 
 	char *Port = malloc(sizeof(char) * BUFFER);
 	getPort(&Port);
-
 	char *ServerName = malloc(sizeof(char) * BUFFER);
 	getServerName(&ServerName);
-
 	char *Path = malloc(sizeof(char) * BUFFER);
 	getPath(&Path, 0);
-
 	char *LocalPath = malloc(sizeof(char) * BUFFER);
 	getPath(&LocalPath, 1);
 
+
 	int fof = file_or_folder(Path, 0);
 
-	char *header = getHeader(ServerName, Path, fof);  //opet vznika problem s path
 
-	printf("%s\n", header);
-
-	if (strcmp(COMMAND, "PUT") == 0)
+	if (strcmp(COMMAND, "DEL") == 0)
 	{
-		getFile(LocalPath);
+		if (fof == 0)
+		{
+			fprintf(stderr, "Nejedna se o soubor, ale o slozku.(1)\n");
+			exit(9);
+		}
+	}
+	else if (strcmp(COMMAND, "GET") == 0)
+		{
+			if (fof == 0)
+			{
+				fprintf(stderr, "Nejedna se o soubor, ale o slozku.(2)\n");
+				exit(9);
+			}
+		}
+	else if (strcmp(COMMAND, "PUT") == 0)
+		{
+			if (fof == 1)
+			{
+				fprintf(stderr, "Nejedna se o slozku, ale o soubor.(4)\n");
+				exit(9);
+			}
+
+			binary_file = getFile(LocalPath);
+			binary_file_len = strlen();
+		}
+	else if (strcmp(COMMAND, "LST") == 0)
+		{
+			if (fof == 1)
+			{
+				fprintf(stderr, "Nejedna se o slozku, ale o soubor.(1)\n");
+				exit(8);
+			}
+		}
+	else if (strcmp(COMMAND, "MKD") == 0)
+		{
+			if (fof == 1)
+			{
+				fprintf(stderr, "Nejedna se o slozku, ale o soubor.(2)\n");
+				exit(8);
+			}
+		}
+	else if (strcmp(COMMAND, "RMD") == 0)
+		{
+			if (fof == 1)
+			{
+				fprintf(stderr, "Nejedna se o slozku, ale o soubor.(3)\n");
+				exit(8);
+			}
+		}
+
+
+	char *header = getHeader(ServerName, Path, fof, binary_file_len);  //opet vznika problem s path
+
+	if (argc == 3)
+	{
+		final_message = malloc(strlen(header)*sizeof(char));
+		sprintf(final_message, "%s", header);
+	}
+	else
+	{
+		final_message = malloc(strlen(header)*sizeof(char) + strlen(binary_file) * sizeof(char));
+		sprintf(final_message, "%s\n%s", header, binary_file);
 	}
 	
-	socket_fd = socket(AF_INET, SOCK_STREAM, 0); //inicializace socketu
+
+
+	//inicializace socketu
+	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_fd < 0) 
 	{
 		fprintf(stderr, "Chyba pri otvirani socketu.\n");
 		exit(2);
 	}
 
+
+
+	//gethostbyname
 	server = gethostbyname(ServerName);
 	if (server == NULL)
 	{
@@ -340,40 +405,39 @@ int main(int argc, char const *argv[])
 		exit(3);
 	}
 
+
+
+	//connect
 	bzero((char *) &server_addr, sizeof(server_addr));
-
 	server_addr.sin_family = AF_INET;
-
 	bcopy((char *) server->h_addr, (char *) &server_addr.sin_addr.s_addr, server->h_length);
-
 	int port = atoi(Port);
-	
 	server_addr.sin_port = htons(port);
-
 	if ((connect(socket_fd, (struct sockaddr *) &server_addr, sizeof(server_addr))) < 0)
 	{
 		fprintf(stderr, "K serveru se nelze pripojit.\n");
 		exit(4);
 	}
 
-	//printf("Napis Zpravu: ");
-	//fgets(buffer, BUFFER, stdin);
 
-	if ((write(socket_fd, header, strlen(header))) < 0)
+
+	//odesilani dat na server
+	if ((write(socket_fd, final_message, strlen(final_message))) < 0)
 	{
 		fprintf(stderr, "Chyba pri zapisovani do socketu.\n");
 		exit(5);
 	}
 
-	bzero(buffer, BUFFER);
 
+
+	//prijmani dat zpet
+	bzero(buffer, BUFFER);
 	if ((read(socket_fd, buffer, BUFFER)) < 0)
 	{
 		fprintf(stderr, "Chyba pri cteni ze socketu.\n");
 		exit(6);
 	}
 
-	//printf("%s", buffer);
-
+	printf("\n%s\n", buffer);
 	return 0;
 }
