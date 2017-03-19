@@ -9,12 +9,14 @@
 #include <time.h>
 
 #define MAX_PATH 1024
-#define BUFFER 2048 //velikost dat nacitanych ze socketu do bufferu
+#define BUFFER 2048
 
+//globalni promenne pro ulozeni argumentu
 char COMMAND[4];
 char REMOTE_PATH[MAX_PATH];
 char LOCAL_PATH[MAX_PATH];
 
+//vypisovani chybovych hlaseni
 void err_print(int err_code)
 {
 	switch(err_code)
@@ -43,6 +45,7 @@ void err_print(int err_code)
 	}
 }
 
+//kontrola spravnosti operace
 int check_command(const char *cmd)
 {
 	if (strcmp(cmd, "del") == 0)
@@ -81,6 +84,7 @@ int check_command(const char *cmd)
 	}
 }
 
+//kontrola spravnosti argumentu
 void arguments (int argc, char const *argv[])
 {
 	bool fourth_argument;
@@ -128,6 +132,7 @@ void arguments (int argc, char const *argv[])
 	}
 }
 
+//ziskani cisla portu vzdaleneho serveru
 void getPort(char **Port)
 {
 	char Balast[BUFFER];
@@ -145,6 +150,7 @@ void getPort(char **Port)
 	free(temp);
 }
 
+//ziskani jmena vzdaleneho serveru
 void getServerName(char **ServerName)
 {
 	char Balast[BUFFER];
@@ -161,6 +167,7 @@ void getServerName(char **ServerName)
 	free(temp);
 }
 
+//ziskani cesty k souboru/slozce
 void getPath(char **Path, int loc_or_rem)
 {
 	char Balast[BUFFER];
@@ -181,7 +188,6 @@ void getPath(char **Path, int loc_or_rem)
 		}
 	}
 
-
 	*Path = strtok(Balast, ":");
 	*Path = strtok(NULL,"/");
 	*Path = strtok(NULL, "\0");
@@ -190,12 +196,10 @@ void getPath(char **Path, int loc_or_rem)
 	free(temp);
 }
 
+//vytvoreni hlavicky, ktera se posila na stranu serveru
 char * getHeader (char *ServerName, char *Path, int fof, int binary_file_len)
 {
-	char *type = "?.type=";
-
 	char *file;
-
 	if (fof == 1)
 	{
 		file = "file";
@@ -204,7 +208,8 @@ char * getHeader (char *ServerName, char *Path, int fof, int binary_file_len)
 	{
 		file = "folder";
 	}
-	
+
+	char *type = "?.type=";
 	char *http = "HTTP/1.1";
 	char *host = "Host: ";
 	char *date = "Date: ";
@@ -237,6 +242,7 @@ char * getHeader (char *ServerName, char *Path, int fof, int binary_file_len)
 	return Header;
 }
 
+//nacteni souboru pro prikaz put
 char * getFile()
 {
 	char *ptr = LOCAL_PATH;
@@ -265,11 +271,12 @@ char * getFile()
 	return buffer;
 }
 
+
 int main(int argc, char const *argv[])
 {
 	int socket_fd;
 	int binary_file_len = 0;
-	int fof;// = file_or_folder(Path, 0);
+	int fof;
 	char buffer[BUFFER];
 	char *binary_file;
 	char *final_message;
@@ -277,10 +284,10 @@ int main(int argc, char const *argv[])
 	struct sockaddr_in server_addr;
 	struct hostent *server;
 
-
+	//kontrola argumentu
 	arguments(argc, argv);
 
-
+	//ziskani informaci o serveru
 	char *Port = malloc(sizeof(char) * BUFFER);
 	getPort(&Port);
 	char *ServerName = malloc(sizeof(char) * BUFFER);
@@ -290,7 +297,7 @@ int main(int argc, char const *argv[])
 	char *LocalPath = malloc(sizeof(char) * BUFFER);
 	getPath(&LocalPath, 1);
 
-
+	//prevedeni prikazu zadanych uzivatelem na prikazy odesilane na server
 	if (strcmp(COMMAND, "DEL") == 0)
 	{
 		fof = 1; //1 pro file
@@ -308,23 +315,24 @@ int main(int argc, char const *argv[])
 		}
 	else if (strcmp(COMMAND, "LST") == 0)
 		{
-			fof = 0;
+			fof = 0; //0 pro folder
 			strcpy(COMMAND, "GET");
 		}
 	else if (strcmp(COMMAND, "MKD") == 0)
 		{
-			fof = 0;
+			fof = 0; //0 pro folder
 			strcpy(COMMAND, "PUT");
 		}
 	else if (strcmp(COMMAND, "RMD") == 0)
 		{
-			fof = 0;
+			fof = 0; //0 pro folder
 			strcpy(COMMAND, "DEL");
 		}
 
+	//TODO path_error
+	char *header = getHeader(ServerName, Path, fof, binary_file_len); //ziskani hlavicky pro vzdaleny server
 
-	char *header = getHeader(ServerName, Path, fof, binary_file_len);  //opet vznika problem s path
-
+	//pripojeni/nepripojeni nacteneho souboru pro vzdaleny server
 	if (argc == 3)
 	{
 		final_message = malloc(strlen(header)*sizeof(char));
@@ -336,8 +344,6 @@ int main(int argc, char const *argv[])
 		sprintf(final_message, "%s%s", header, binary_file);
 	}
 	
-
-
 	//inicializace socketu
 	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_fd < 0) 
@@ -346,8 +352,6 @@ int main(int argc, char const *argv[])
 		exit(2);
 	}
 
-
-
 	//gethostbyname
 	server = gethostbyname(ServerName);
 	if (server == NULL)
@@ -355,8 +359,6 @@ int main(int argc, char const *argv[])
 		fprintf(stderr, "Server neexituje.\n");
 		exit(3);
 	}
-
-
 
 	//connect
 	bzero((char *) &server_addr, sizeof(server_addr));
@@ -378,13 +380,22 @@ int main(int argc, char const *argv[])
 	}
 
 	//prijmani dat zpet
-	bzero(buffer, BUFFER);
-	if ((read(socket_fd, buffer, BUFFER)) < 0)
+	
+	if (!(strcmp(COMMAND, "GET") == 0))
 	{
-		fprintf(stderr, "Chyba pri cteni ze socketu.\n");
-		exit(6);
+		bzero(buffer, BUFFER);
+		if ((read(socket_fd, buffer, BUFFER)) < 0)
+		{
+			fprintf(stderr, "Chyba pri cteni ze socketu.\n");
+			exit(6);
+		}
+		printf("%s\n", buffer);
+	}
+	else
+	{
+		//TODO prijem souboru a dat
+		printf("%s\n", buffer);  
 	}
 
-	printf("%s\n", buffer);
 	return 0;
 }
