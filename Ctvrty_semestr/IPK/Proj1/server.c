@@ -11,9 +11,12 @@
 #define MAX_PATH 1024 //maximalni delka path
 #define BUFFER 2048 //velikost dat nacitanych ze socketu do bufferu
 
+//TODO navratove hodnoty anglicky
+//globalni promenne pro ulozeni argumentu
 int PORT; 
 char ROOT_FOLDER[MAX_PATH];
 
+//struktura pro praci s prijatou hlavicku
 typedef struct {
 	char *command;
 	char *path;
@@ -26,6 +29,7 @@ typedef struct {
 	char *con_len;
 } Header;
 
+//kontrola cisla portu a jeho prevedeni na int
 int number_from_string(const char *str)
 {
 	int i = 0, number;
@@ -34,7 +38,7 @@ int number_from_string(const char *str)
 	{
 		if (!isdigit(str[i]))
 		{
-			fprintf(stderr, "Chyba pri zadani argumentu.\n");
+			fprintf(stderr, "Argument error.\n");
 			exit(1);
 		}
 		i++;
@@ -45,6 +49,7 @@ int number_from_string(const char *str)
 }
 
 //TODO osetrit vetsi nez 1024 delka path; osetrit stav kdyz je jeden parametr zadan dvakrat
+//kontrola argumentu serveru a jejich nahrani do globalnich promennych
 void arguments(int argc, char const *argv[])
 {
 	PORT = 6677;
@@ -66,7 +71,7 @@ void arguments(int argc, char const *argv[])
 				}
 			else
 			{
-				fprintf(stderr, "Chyba pri zadani argumentu.\n");
+				fprintf(stderr, "Argument error.\n");
 				exit(1);
 			}
 		}
@@ -82,7 +87,7 @@ void arguments(int argc, char const *argv[])
 				}
 			else
 			{
-				fprintf(stderr, "Chyba pri zadani argumentu.\n");
+				fprintf(stderr, "Argument error.\n");
 				exit(1);
 			}
 
@@ -96,19 +101,20 @@ void arguments(int argc, char const *argv[])
 				}
 			else
 			{
-				fprintf(stderr, "Chyba pri zadani argumentu.\n");
+				fprintf(stderr, "Argument error.\n");
 				exit(1);
 			}
 		}
 	else
 	{
-		fprintf(stderr, "Chyba pri zadani argumentu.\n");
+		fprintf(stderr, "Argument error.\n");
 		exit(1);
 	}
 
 	return;
 }
 
+//ziskani hlavicky, ktera se odesila zpet klientovi
 char * getHeader (int message, int num_con_len)
 {
 	char *ret_text;
@@ -150,6 +156,7 @@ char * getHeader (int message, int num_con_len)
 	return Header;
 }
 
+//odeslani hlavicky/hlavicky se souborem klientovi zpet pres socket
 void send_state(int socket_fd2, char *message)
 {
 	if ((write(socket_fd2, message, strlen(message))) < 0)
@@ -159,6 +166,8 @@ void send_state(int socket_fd2, char *message)
 	}
 }
 
+//TODO vyhazovani chyb podle errno
+//operace smazat soubor
 void DEL(Header *header, int socket_fd2)
 {
 	char *path = malloc(MAX_PATH*sizeof(char));
@@ -178,9 +187,10 @@ void DEL(Header *header, int socket_fd2)
 	free(path);
 }
 
+//TODO vyhazovani chyb podle errno
+//operace ziskat soubor
 void GET(Header *header, int socket_fd2)
 {
-	//char *ptr = header->path;
 	char *path = malloc(MAX_PATH*sizeof(char));
 	sprintf(path,"%s%s", ROOT_FOLDER, header->path);
 	
@@ -204,14 +214,12 @@ void GET(Header *header, int socket_fd2)
 	}
 	else
 	{
-		fprintf(stderr, "Soubor nenalezen.\n");
+		fprintf(stderr, "File not found.\n");
 		exit(7);
 	}
 
 	int len = strlen(buffer);
-
 	char *header_str = getHeader(0, len);
-
 	final_message = malloc(strlen(header_str)*sizeof(char) + strlen(buffer) * sizeof(char) + 16 * sizeof(char));
 
 	sprintf(final_message, "%s%s", header_str, buffer);
@@ -220,6 +228,8 @@ void GET(Header *header, int socket_fd2)
 	free(path);
 }
 
+//TODO vyhazovani chyb podle errno
+//operace vlozit soubor
 void PUT(Header *header, int socket_fd2)
 {
 	int length = atoi (header->con_len);
@@ -239,7 +249,6 @@ void PUT(Header *header, int socket_fd2)
 	}
 
 	char *path = malloc(MAX_PATH*sizeof(char));
-
 	sprintf(path,"%s%s", ROOT_FOLDER, header->path);
 
 	FILE *file = fopen(path, "w");
@@ -248,6 +257,7 @@ void PUT(Header *header, int socket_fd2)
 		fprintf(stderr, "Chyba pri zapisu souboru.\n");
 		exit(10);
 	}
+
 	fprintf(file, "%s", binary_file);
 	fclose(file);
 
@@ -257,19 +267,26 @@ void PUT(Header *header, int socket_fd2)
 	free(path);
 }
 
+//TODO cela funkce
+//operace vypsani obsahu adresare
 void LST(Header *header, int socket_fd2)
 {
 	char *path = malloc(MAX_PATH*sizeof(char));
 	sprintf(path,"%s%s", ROOT_FOLDER, header->path);
-	//int errCheck = ls(path);
+	
+	char *header_str = getHeader(2, 0);
+	send_state(socket_fd2, header_str);
+	free(path);
 }
 
+//TODO vyhazovani chyb podle errno
+//operace vytvorit slozku
 void MKD(Header *header, int socket_fd2)
 {
 	char *path = malloc(MAX_PATH*sizeof(char));
 	sprintf(path,"%s%s", ROOT_FOLDER, header->path);
 	int errCheck = mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-	if (errCheck == -1)  //doplnit errno
+	if (errCheck == -1)
 	{
 		char *header_str = getHeader(1, 0);
 		send_state(socket_fd2, header_str);
@@ -282,6 +299,8 @@ void MKD(Header *header, int socket_fd2)
 	free(path);
 }
 
+//TODO vyhazovani chyb podle errno
+//operace smazat slozku
 void RMD(Header *header, int socket_fd2)
 {
 	char *path = malloc(MAX_PATH*sizeof(char));
@@ -300,6 +319,7 @@ void RMD(Header *header, int socket_fd2)
 	free(path);
 }
 
+//funkce rozhoduje o tom ktera funkce se vykona
 void cmd_switch(Header *header, int socket_fd2)
 {
 	if (strcmp(header->command, "DEL") == 0)
@@ -338,6 +358,7 @@ void cmd_switch(Header *header, int socket_fd2)
 	}
 }
 
+//funkce rozparseruje prichozi hlavicku a nahraje ji do struktury vyse
 void HeaderParser(char *header_str, int socket_fd2)
 {
 	Header *header = malloc(sizeof(Header));
@@ -363,6 +384,7 @@ void HeaderParser(char *header_str, int socket_fd2)
 	cmd_switch(header, socket_fd2);
 }
 
+//nacteni hlavicky zpravy od klienta
 void ClientRequest(int socket_fd2)
 {
 	int buffer_limit = BUFFER;
@@ -408,38 +430,39 @@ void ClientRequest(int socket_fd2)
 int main(int argc, char const *argv[])
 {
 	int socket_fd, socket_fd2;
-
 	char buffer[BUFFER];
 	bzero(buffer, BUFFER);
-
-	struct sockaddr_in server_addr, client_addr; //sockaddr_in je struktura obsahujici internetovou adresu
+	struct sockaddr_in server_addr, client_addr; 
 	
-	arguments(argc, argv); //funkce na zpracovani argumentu
+	arguments(argc, argv);
 
-	socket_fd = socket(AF_INET, SOCK_STREAM, 0); //inicializace socketu
+	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_fd < 0) 
 	{
 		fprintf(stderr, "Chyba pri otvirani socketu.\n");
 		exit(2);
 	}
 
-	bzero((char *) &server_addr, sizeof(server_addr)); //nastavi vsechny hodnoty v bufferu na nulu
+	bzero((char *) &server_addr, sizeof(server_addr));
 
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = INADDR_ANY;
 	server_addr.sin_port = htons(PORT);
 
+	//bind
 	if ((bind(socket_fd, (struct sockaddr *) &server_addr, sizeof(server_addr))) < 0)
 	{
 		fprintf(stderr, "Chyba pri bindovani socketu.\n");
 		exit(3);
 	}
 
+	//listen
 	listen(socket_fd, 5);
 	int cl_addr_size = sizeof(client_addr);
 
+	//cyklus ktery ceka na zpravy od klientu
 	while(true)
-	{
+	{	//accept
 		socket_fd2 = accept(socket_fd, (struct sockaddr *) &client_addr, &cl_addr_size);
 		if (socket_fd2 < 0)
 		{
