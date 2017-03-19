@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <time.h>
 
 #define MAX_PATH 1024
 #define BUFFER 2048 //velikost dat nacitanych ze socketu do bufferu
@@ -177,7 +178,18 @@ void getPath(char **Path)
 	free(temp);
 }
 
-void getHeader (char *ServerName, char *Path)
+void getTime(char **act_time)
+{
+	time_t rawtime;
+	struct tm * timeinfo;
+
+	time (&rawtime);
+	timeinfo = localtime (&rawtime);
+
+	strftime (*act_time, 64, "CET %a, %d %b %G %H:%M:%S", timeinfo);
+}
+
+void getHeader (char *ServerName, char *Path, char *act_time)
 {
 	char *type = "?.type=";
 	char *http = "HTTP/1.1";
@@ -189,7 +201,7 @@ void getHeader (char *ServerName, char *Path)
 	char *con_type = "Content-Type: application/octet-stream";
 	char *con_len = "Content-Length: ";
 
-	printf("%s %s%s%s %s\n%s%s\n%s\n%s\n%s\n%s\n%s\n", COMMAND, Path, type, file, http, host, ServerName, date, accept, accept_en, con_type, con_len);
+	printf("%s %s%s%s %s\n%s%s\n%s%s\n%s\n%s\n%s\n%s\n", COMMAND, Path, type, file, http, host, ServerName, date, act_time, accept, accept_en, con_type, con_len);
 }
 
 int main(int argc, char const *argv[])
@@ -213,7 +225,10 @@ int main(int argc, char const *argv[])
 	char *Path = malloc(BUFFER);
 	getPath(&Path);
 
-	getHeader(ServerName, Path);
+	char *act_time = malloc(BUFFER);
+	getTime(&act_time);
+
+	getHeader(ServerName, Path, act_time);
 
 	socket_fd = socket(AF_INET, SOCK_STREAM, 0); //inicializace socketu
 	if (socket_fd < 0) 
@@ -266,4 +281,3 @@ int main(int argc, char const *argv[])
 
 	return 0;
 }
-
