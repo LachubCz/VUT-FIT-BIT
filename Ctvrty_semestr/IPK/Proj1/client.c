@@ -265,31 +265,6 @@ char * getFile()
 	return buffer;
 }
 
-int file_or_folder(char *Path, int mode)
-{
-	char *PathTemp = malloc(sizeof(char)*strlen(Path) + 16);
-	strcpy(PathTemp, Path);
-	char *actualPath = NULL; 
-	char *tempSave = NULL;
-	actualPath = strtok(PathTemp,"/");
-	
-	while(actualPath != NULL)
-	{
-		tempSave = actualPath;
-		actualPath = strtok(NULL,"/");
-	}
-
-	int len = strlen(tempSave);
-	for(int i = 0; i < len; i++) 
-	{
-		if(tempSave[i] == '.') 
-		{
-			return 1;  //jedna pro file
-		}
-    }
-    return 0; //pro folder
-}
-
 int main(int argc, char const *argv[])
 {
 	int socket_fd;
@@ -358,7 +333,7 @@ int main(int argc, char const *argv[])
 	else
 	{
 		final_message = malloc(strlen(header)*sizeof(char) + strlen(binary_file) * sizeof(char));
-		sprintf(final_message, "%s\n%s", header, binary_file);
+		sprintf(final_message, "%s%s", header, binary_file);
 	}
 	
 
