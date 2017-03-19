@@ -19,25 +19,25 @@ void err_print(int err_code)
 	switch(err_code)
 	{
 		case 2:
-			fprintf(stderr, "Not a directory.");
+			fprintf(stderr, "Not a directory.\n");
 			exit(2);
 		case 3:
-			fprintf(stderr, "Directory not found.");
+			fprintf(stderr, "Directory not found.\n");
 			exit(3);
 		case 4:
-			fprintf(stderr, "Directory not empty.");
+			fprintf(stderr, "Directory not empty.\n");
 			exit(4);
 		case 5:
-			fprintf(stderr, "Already exists.");
+			fprintf(stderr, "Already exists.\n");
 			exit(5);
 		case 6:
-			fprintf(stderr, "Not a file.");
+			fprintf(stderr, "Not a file.\n");
 			exit(6);
 		case 7:
-			fprintf(stderr, "File not found.");
+			fprintf(stderr, "File not found.\n");
 			exit(7);
 		case 8:
-			fprintf(stderr, "Unknown error.");
+			fprintf(stderr, "Unknown error.\n");
 			exit(8);
 	}
 }
@@ -46,32 +46,32 @@ int check_command(const char *cmd)
 {
 	if (strcmp(cmd, "del") == 0)
 	{
-		strcpy(COMMAND, cmd);
+		strcpy(COMMAND, "DEL");
 		return 0;
 	}
 	else if (strcmp(cmd, "get") == 0)
 	{
-		strcpy(COMMAND, cmd);
+		strcpy(COMMAND, "GET");
 		return 1;
 	}
 	else if (strcmp(cmd, "put") == 0)
 	{
-		strcpy(COMMAND, cmd);
+		strcpy(COMMAND, "PUT");
 		return 2;
 	}	
 	else if (strcmp(cmd, "lst") == 0)
 	{
-		strcpy(COMMAND, cmd);
+		strcpy(COMMAND, "LST");
 		return 3;
 	}	
 	else if (strcmp(cmd, "mkd") == 0)
 	{
-		strcpy(COMMAND, cmd);
+		strcpy(COMMAND, "MKD");
 		return 4;
 	}	
 	else if (strcmp(cmd, "rmd") == 0)
 	{
-		strcpy(COMMAND, cmd);
+		strcpy(COMMAND, "RMD");
 		return 5;
 	}
 	else
@@ -177,7 +177,20 @@ void getPath(char **Path)
 	free(temp);
 }
 
+void getHeader (char *ServerName, char *Path)
+{
+	char *type = "?.type=";
+	char *http = "HTTP/1.1";
+	char *file = "file"; //nutne zmenit podle funkcniho zjistovani
+	char *host = "Host: ";
+	char *date = "Date: ";
+	char *accept = "Accept: application/json";
+	char *accept_en = "Accept-Encoding: identity";
+	char *con_type = "Content-Type: application/octet-stream";
+	char *con_len = "Content-Length: ";
 
+	printf("%s %s%s%s %s\n%s%s\n%s\n%s\n%s\n%s\n%s\n", COMMAND, Path, type, file, http, host, ServerName, date, accept, accept_en, con_type, con_len);
+}
 
 int main(int argc, char const *argv[])
 {
@@ -200,8 +213,8 @@ int main(int argc, char const *argv[])
 	char *Path = malloc(BUFFER);
 	getPath(&Path);
 
-	//printf("%s --- %s --- %s\n", Port, ServerName, Path);
-/*
+	getHeader(ServerName, Path);
+
 	socket_fd = socket(AF_INET, SOCK_STREAM, 0); //inicializace socketu
 	if (socket_fd < 0) 
 	{
@@ -212,7 +225,7 @@ int main(int argc, char const *argv[])
 	server = gethostbyname(ServerName);
 	if (server == NULL)
 	{
-		fprintf(stderr, "Server neexituje.");
+		fprintf(stderr, "Server neexituje.\n");
 		exit(3);
 	}
 
@@ -222,11 +235,13 @@ int main(int argc, char const *argv[])
 
 	bcopy((char *) server->h_addr, (char *) &server_addr.sin_addr.s_addr, server->h_length);
 
+	int port = *Port;
+
 	server_addr.sin_port = htons(port);
 
 	if ((connect(socket_fd, (struct sockaddr *) &server_addr, sizeof(server_addr))) < 0)
 	{
-		fprintf(stderr, "K serveru se nelze pripojit.");
+		fprintf(stderr, "K serveru se nelze pripojit.\n");
 		exit(4);
 	}
 
@@ -248,6 +263,7 @@ int main(int argc, char const *argv[])
 	}
 
 	//printf("%s", buffer);
-*/
+
 	return 0;
 }
+
