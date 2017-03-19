@@ -161,17 +161,42 @@ void send_state(int socket_fd2, char *message)
 
 void DEL(Header *header, int socket_fd2)
 {
-	printf("%s\n", header->command);
+	
 }
 
 void GET(Header *header, int socket_fd2)
 {
-	printf("%s\n", header->command);
+	
 }
 
 void PUT(Header *header, int socket_fd2)
 {
-	printf("%s\n", header->command);
+	int length = atoi (header->con_len);
+	char *binary_file = malloc(sizeof(char)*length + 16 * sizeof(char));
+
+	if (length == 0)
+	{
+		binary_file = "";
+	}
+	else
+	{
+		if (read(socket_fd2, binary_file, length) < 0)
+		{
+			fprintf(stderr, "Chyba pri cteni ze socketu.\n");
+			exit(5);
+		}
+	}
+
+	char *path = malloc(MAX_PATH*sizeof(char));
+	sprintf(path,"%s%s", ROOT_FOLDER, header->path);
+
+	FILE *file = fopen(path, "wb");
+	if (file == NULL)
+	{
+		fprintf(stderr, "Chyba pri zapisu souboru.\n");
+		exit(10);
+	}
+	fprintf(file, "%s", binary_file);
 }
 
 void LST(Header *header, int socket_fd2)
@@ -238,7 +263,7 @@ void cmd_switch(Header *header, int socket_fd2)
 		}
 		else
 		{
-			LST(header, socket_fd2);
+			LST(header, socket_fd2); 
 		}
 		
 	}
@@ -297,7 +322,7 @@ void ClientRequest(int socket_fd2)
 			fprintf(stderr, "Chyba pri cteni ze socketu.\n");
 			exit(5);
 		}
-
+		printf("%c\n", letter[0]);
 		position = strlen(request);
 
 		if ((position + 16) > buffer_limit)
@@ -306,8 +331,8 @@ void ClientRequest(int socket_fd2)
 			request = realloc(request, sizeof(char) *  buffer_limit);
 		}
 
-		request[position + 1] = request[position];
 		request[position] = letter[0];
+		request[position + 1] = '\0';
 
 		if (position > 1)
 		{
@@ -316,8 +341,9 @@ void ClientRequest(int socket_fd2)
 				break;
 			}
 		}
+		printf("%s\n", request);
 	}
-
+	printf("%s\n", request);
 	HeaderParser(request, socket_fd2);
 }
 
