@@ -294,6 +294,7 @@ int main(int argc, char const *argv[])
 {
 	int socket_fd;
 	int binary_file_len = 0;
+	int fof;// = file_or_folder(Path, 0);
 	char buffer[BUFFER];
 	char *binary_file;
 	char *final_message;
@@ -315,59 +316,35 @@ int main(int argc, char const *argv[])
 	getPath(&LocalPath, 1);
 
 
-	int fof = file_or_folder(Path, 0);
-
-
 	if (strcmp(COMMAND, "DEL") == 0)
 	{
-		if (fof == 0)
-		{
-			fprintf(stderr, "Nejedna se o soubor, ale o slozku.(1)\n");
-			exit(9);
-		}
+		fof = 1; //1 pro file
 	}
 	else if (strcmp(COMMAND, "GET") == 0)
 		{
-			if (fof == 0)
-			{
-				fprintf(stderr, "Nejedna se o soubor, ale o slozku.(2)\n");
-				exit(9);
-			}
+			fof = 1; //1 pro file
 		}
 	else if (strcmp(COMMAND, "PUT") == 0)
 		{
-			if (fof == 1)
-			{
-				fprintf(stderr, "Nejedna se o slozku, ale o soubor.(4)\n");
-				exit(9);
-			}
+			fof = 1; //1 pro file
 
 			binary_file = getFile();
 			binary_file_len = strlen(binary_file);
 		}
 	else if (strcmp(COMMAND, "LST") == 0)
 		{
-			if (fof == 1)
-			{
-				fprintf(stderr, "Nejedna se o slozku, ale o soubor.(1)\n");
-				exit(8);
-			}
+			fof = 0;
+			strcpy(COMMAND, "GET");
 		}
 	else if (strcmp(COMMAND, "MKD") == 0)
 		{
-			if (fof == 1)
-			{
-				fprintf(stderr, "Nejedna se o slozku, ale o soubor.(2)\n");
-				exit(8);
-			}
+			fof = 0;
+			strcpy(COMMAND, "PUT");
 		}
 	else if (strcmp(COMMAND, "RMD") == 0)
 		{
-			if (fof == 1)
-			{
-				fprintf(stderr, "Nejedna se o slozku, ale o soubor.(3)\n");
-				exit(8);
-			}
+			fof = 0;
+			strcpy(COMMAND, "DEL");
 		}
 
 
