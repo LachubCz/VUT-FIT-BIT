@@ -186,7 +186,7 @@ void MKD(Header *header, int socket_fd2)
 	char *path = malloc(MAX_PATH*sizeof(char));
 	sprintf(path,"%s%s", ROOT_FOLDER, header->path);
 	int errCheck = mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-	if (errCheck == -1)
+	if (errCheck == -1)  //doplnit errno
 	{
 		char *header_str = getHeader(1, 0);
 		send_state(socket_fd2, header_str);
@@ -204,7 +204,7 @@ void RMD(Header *header, int socket_fd2)
 	char *path = malloc(MAX_PATH*sizeof(char));
 	sprintf(path,"%s%s", ROOT_FOLDER, header->path);
 	int errCheck = rmdir(path);
-	if (errCheck == -1)
+	if (errCheck == -1)  //doplnit errno
 	{
 		char *header_str = getHeader(1, 0);
 		send_state(socket_fd2, header_str);
@@ -312,19 +312,66 @@ int main(int argc, char const *argv[])
 			fprintf(stderr, "Chyba pri prijmani socketu.\n");
 			exit(4);
 		}
-
+/*
 		if ((read(socket_fd2, buffer, BUFFER)) < 0)
 		{
 			fprintf(stderr, "Chyba pri cteni ze socketu.\n");
 			exit(5);
 		}
+*/int i = 0;
+		while(i < 1000)
+		{
+			read(socket_fd2, buffer, 1);
+			printf("%s\n", buffer);
+			i++;
+		}
 
+		break;
 		//recieve file function
 		
 		HeaderParser(buffer, socket_fd2);
-
-		//send_state(200, socket_fd2);
 	}
 
 	return 0;
+}
+
+void ClientRequest(int socket_fd2)
+{
+	int buffer_limit = BUFFER;
+	int position = 0;
+	char letter[2];
+
+	char request = malloc(sizeof(char) * BUFFER);
+	request[0] = "\0";
+
+	while(true)
+	{
+		bzero(item, 2);
+		if (read(socket_fd2, letter, 1) < 0)
+		{
+			fprintf(stderr, "Chyba pri cteni ze pozadavku.\n");
+			exit(10);
+		}
+
+		position = strlen(request);
+
+		if ((position + 16) > buffer_limit)
+		{
+			buffer_limit += BUFFER;
+			request = realloc(request, sizeof(char) *  buffer_limit);
+		}
+
+		request[position + 1] = request[position];
+		request[position] = letter[0];
+
+		if (position > 1)
+		{
+			if (request[position - 1] == '\n' && request[position] == '\n')
+			{
+				break;
+			}
+		}
+	}
+
+	
 }
