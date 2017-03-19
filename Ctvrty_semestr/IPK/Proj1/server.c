@@ -161,12 +161,63 @@ void send_state(int socket_fd2, char *message)
 
 void DEL(Header *header, int socket_fd2)
 {
-	
+	char *path = malloc(MAX_PATH*sizeof(char));
+	sprintf(path,"%s%s", ROOT_FOLDER, header->path);
+
+	int errCheck = remove(path);
+	if (errCheck == -1)  //doplnit errno
+	{
+		char *header_str = getHeader(1, 0);
+		send_state(socket_fd2, header_str);
+	}
+	else
+	{
+		char *header_str = getHeader(0, 0);
+		send_state(socket_fd2, header_str);
+	}
+	free(path);
 }
 
 void GET(Header *header, int socket_fd2)
 {
+	//char *ptr = header->path;
+	char *path = malloc(MAX_PATH*sizeof(char));
+	sprintf(path,"%s%s", ROOT_FOLDER, header->path);
 	
+	char *ptr = path;
+	char *buffer = 0;
+	long length;
+	char *final_message;
+	FILE *file = fopen (ptr, "rb");
+
+	if (file != NULL)
+	{
+		fseek (file, 0, SEEK_END);
+		length = ftell (file);
+		fseek (file, 0, SEEK_SET);
+		buffer = malloc (sizeof(char)*length);
+		if (buffer)
+		{
+			fread (buffer, 1, length, file);
+		}
+		fclose (file);
+	}
+	else
+	{
+		fprintf(stderr, "Soubor nenalezen.\n");
+		exit(7);
+	}
+
+	int len = strlen(buffer);
+
+	char *header_str = getHeader(0, len);
+
+	final_message = malloc(strlen(header_str)*sizeof(char) + strlen(buffer) * sizeof(char) + 16 * sizeof(char));
+
+	sprintf(final_message, "%s%s", header_str, buffer);
+	send_state(socket_fd2, final_message);
+
+	free(path);
 }
 
 void PUT(Header *header, int socket_fd2)
@@ -188,15 +239,22 @@ void PUT(Header *header, int socket_fd2)
 	}
 
 	char *path = malloc(MAX_PATH*sizeof(char));
+
 	sprintf(path,"%s%s", ROOT_FOLDER, header->path);
 
-	FILE *file = fopen(path, "wb");
+	FILE *file = fopen(path, "w");
 	if (file == NULL)
 	{
 		fprintf(stderr, "Chyba pri zapisu souboru.\n");
 		exit(10);
 	}
 	fprintf(file, "%s", binary_file);
+	fclose(file);
+
+	char *header_str = getHeader(0, 0);
+	send_state(socket_fd2, header_str);
+
+	free(path);
 }
 
 void LST(Header *header, int socket_fd2)
@@ -317,12 +375,13 @@ void ClientRequest(int socket_fd2)
 	while(true)
 	{
 		bzero(letter, 2);
+
 		if (read(socket_fd2, letter, 1) < 0)
 		{
 			fprintf(stderr, "Chyba pri cteni ze socketu.\n");
 			exit(5);
 		}
-		printf("%c\n", letter[0]);
+
 		position = strlen(request);
 
 		if ((position + 16) > buffer_limit)
@@ -341,9 +400,8 @@ void ClientRequest(int socket_fd2)
 				break;
 			}
 		}
-		printf("%s\n", request);
 	}
-	printf("%s\n", request);
+
 	HeaderParser(request, socket_fd2);
 }
 
