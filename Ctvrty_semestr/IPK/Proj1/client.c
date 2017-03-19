@@ -418,16 +418,12 @@ int main(int argc, char const *argv[])
 		exit(4);
 	}
 
-
-
 	//odesilani dat na server
 	if ((write(socket_fd, final_message, strlen(final_message))) < 0)
 	{
 		fprintf(stderr, "Chyba pri zapisovani do socketu.\n");
 		exit(5);
 	}
-
-
 
 	//prijmani dat zpet
 	bzero(buffer, BUFFER);
@@ -437,6 +433,6 @@ int main(int argc, char const *argv[])
 		exit(6);
 	}
 
-	printf("\n%s\n", buffer);
+	printf("%s\n", buffer);
 	return 0;
 }
