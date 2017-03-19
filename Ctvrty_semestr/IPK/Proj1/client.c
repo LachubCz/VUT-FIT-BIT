@@ -227,11 +227,11 @@ char * getHeader (char *ServerName, char *Path, int fof, int binary_file_len)
 	char *Header = malloc(length * sizeof(char) + 16 * sizeof(char));
 	if (LOCAL_PATH[0] == '\0')
 	{
-		sprintf(Header, "%s %s%s%s %s\n%s%s\n%s%s\n%s\n%s\n%s\n", COMMAND, Path, type, file, http, host, ServerName, date, act_time, accept, accept_en, con_type);
+		sprintf(Header, "%s %s%s%s %s\n%s%s\n%s%s\n%s\n%s\n%s\n\n", COMMAND, Path, type, file, http, host, ServerName, date, act_time, accept, accept_en, con_type);
 	}
 	else
 	{
-		sprintf(Header, "%s %s%s%s %s\n%s%s\n%s%s\n%s\n%s\n%s\n%s%d\n", COMMAND, Path, type, file, http, host, ServerName, date, act_time, accept, accept_en, con_type, con_len, binary_file_len);
+		sprintf(Header, "%s %s%s%s %s\n%s%s\n%s%s\n%s\n%s\n%s\n%s%d\n\n", COMMAND, Path, type, file, http, host, ServerName, date, act_time, accept, accept_en, con_type, con_len, binary_file_len);
 	}
 	
 	return Header;
