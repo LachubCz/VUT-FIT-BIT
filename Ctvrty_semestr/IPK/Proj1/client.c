@@ -178,22 +178,11 @@ void getPath(char **Path)
 	free(temp);
 }
 
-void getTime(char **act_time)
-{
-	time_t rawtime;
-	struct tm * timeinfo;
-
-	time (&rawtime);
-	timeinfo = localtime (&rawtime);
-
-	strftime (*act_time, 64, "CET %a, %d %b %G %H:%M:%S", timeinfo);
-}
-
-void getHeader (char *ServerName, char *Path, char *act_time)
+char * getHeader (char *ServerName, char *Pathtofile)
 {
 	char *type = "?.type=";
-	char *http = "HTTP/1.1";
 	char *file = "file"; //nutne zmenit podle funkcniho zjistovani
+	char *http = "HTTP/1.1";
 	char *host = "Host: ";
 	char *date = "Date: ";
 	char *accept = "Accept: application/json";
@@ -201,7 +190,17 @@ void getHeader (char *ServerName, char *Path, char *act_time)
 	char *con_type = "Content-Type: application/octet-stream";
 	char *con_len = "Content-Length: ";
 
-	printf("%s %s%s%s %s\n%s%s\n%s%s\n%s\n%s\n%s\n%s\n", COMMAND, Path, type, file, http, host, ServerName, date, act_time, accept, accept_en, con_type, con_len);
+	time_t rawtime;
+	struct tm * timeinfo;
+	char act_time[64];
+	time (&rawtime);
+	timeinfo = localtime (&rawtime);
+	strftime (act_time, 64, "CET %a, %d %b %G %H:%M:%S", timeinfo);
+
+	int length = strlen(COMMAND) + strlen(Pathtofile) + strlen(type) + strlen(file) + strlen(http) + strlen(host) + strlen(ServerName) + strlen(date) + strlen(act_time) + strlen(accept) + strlen(accept_en) + strlen(con_type) + strlen(con_len);
+	char *Header = malloc(length * sizeof(char) + 16 * sizeof(char));
+	sprintf(Header, "%s %s%s%s %s\n%s%s\n%s%s\n%s\n%s\n%s\n%s\n", COMMAND, Pathtofile, type, file, http, host, ServerName, date, act_time, accept, accept_en, con_type, con_len);
+	return Header;
 }
 
 int main(int argc, char const *argv[])
@@ -225,10 +224,9 @@ int main(int argc, char const *argv[])
 	char *Path = malloc(BUFFER);
 	getPath(&Path);
 
-	char *act_time = malloc(BUFFER);
-	getTime(&act_time);
+	char *header = getHeader(ServerName, Path);
 
-	getHeader(ServerName, Path, act_time);
+	printf("%s\n", header);
 
 	socket_fd = socket(AF_INET, SOCK_STREAM, 0); //inicializace socketu
 	if (socket_fd < 0) 
@@ -281,3 +279,4 @@ int main(int argc, char const *argv[])
 
 	return 0;
 }
+
