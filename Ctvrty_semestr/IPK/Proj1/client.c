@@ -84,10 +84,11 @@ int check_command(const char *cmd)
 void arguments (int argc, char const *argv[])
 {
 	bool fourth_argument;
+	bzero(LOCAL_PATH, MAX_PATH);
 
 	if (argc > 4 || argc < 3)
 	{
-		fprintf(stderr, "Chyba pri zadani argumentu.\n");
+		fprintf(stderr, "Chyba pri zadani argumentu.(1)\n");
 		exit(1);
 	}
 
@@ -104,7 +105,7 @@ void arguments (int argc, char const *argv[])
 	{
 		if (!fourth_argument)
 		{
-			fprintf(stderr, "Chyba pri zadani argumentu.\n");
+			fprintf(stderr, "Chyba pri zadani argumentu.(2)\n");
 			exit(1);
 		}
 		else
@@ -115,14 +116,14 @@ void arguments (int argc, char const *argv[])
 
 	strcpy(REMOTE_PATH, argv[2]);
 
-	if (strcmp(COMMAND, "get") == 0 && fourth_argument)
+	if (strcmp(COMMAND, "GET") == 0 && fourth_argument)
 	{
 		strcpy(LOCAL_PATH, argv[3]);
 	}
 
-	if (strcmp(COMMAND, "get") != 0 && strcmp(COMMAND, "put") != 0 && fourth_argument)
+	if ((strcmp(COMMAND, "GET") != 0 && strcmp(COMMAND, "PUT") != 0 ) && fourth_argument)
 	{
-		fprintf(stderr, "Chyba pri zadani argumentu.\n");
+		fprintf(stderr, "Chyba pri zadani argumentu.(3)\n");
 		exit(1);
 	}
 }
@@ -130,7 +131,7 @@ void arguments (int argc, char const *argv[])
 void getPort(char **Port)
 {
 	char Balast[BUFFER];
-	char *temp = malloc(BUFFER);
+	char *temp = malloc(sizeof(char) * BUFFER);
 
 	if (sscanf(REMOTE_PATH, "http://%s", Balast))
 	{
@@ -147,7 +148,7 @@ void getPort(char **Port)
 void getServerName(char **ServerName)
 {
 	char Balast[BUFFER];
-	char *temp = malloc(BUFFER);
+	char *temp = malloc(sizeof(char) * BUFFER);
 
 	if (sscanf(REMOTE_PATH, "http://%s", Balast))
 	{
@@ -160,15 +161,26 @@ void getServerName(char **ServerName)
 	free(temp);
 }
 
-void getPath(char **Path)
+void getPath(char **Path, int loc_or_rem)
 {
 	char Balast[BUFFER];
-	char *temp = malloc(BUFFER);
+	char *temp = malloc(sizeof(char) * BUFFER);
 
-	if (sscanf(REMOTE_PATH, "http://%s", Balast))
+	if (loc_or_rem == 0)
 	{
-		;//error handling
+		if (sscanf(REMOTE_PATH, "http://%s", Balast))
+		{
+			;//error handling
+		}
 	}
+	else
+	{
+		if (sscanf(LOCAL_PATH, "http://%s", Balast))
+		{
+			;//error handling
+		}
+	}
+
 
 	*Path = strtok(Balast, ":");
 	*Path = strtok(NULL,"/");
@@ -178,10 +190,21 @@ void getPath(char **Path)
 	free(temp);
 }
 
-char * getHeader (char *ServerName, char *Pathtofile)
+char * getHeader (char *ServerName, char *Path, int fof)
 {
 	char *type = "?.type=";
-	char *file = "file"; //nutne zmenit podle funkcniho zjistovani
+
+	char *file;
+
+	if (fof == 1)
+	{
+		file = "file";
+	}
+	else
+	{
+		file = "folder";
+	}
+	
 	char *http = "HTTP/1.1";
 	char *host = "Host: ";
 	char *date = "Date: ";
@@ -190,17 +213,82 @@ char * getHeader (char *ServerName, char *Pathtofile)
 	char *con_type = "Content-Type: application/octet-stream";
 	char *con_len = "Content-Length: ";
 
+	char *tempPath = malloc(strlen(Path) * sizeof(char));
+	tempPath = Path;
+	
 	time_t rawtime;
 	struct tm * timeinfo;
 	char act_time[64];
 	time (&rawtime);
 	timeinfo = localtime (&rawtime);
-	strftime (act_time, 64, "CET %a, %d %b %G %H:%M:%S", timeinfo);
+	strftime (act_time, 64, "%a, %d %b %G %H:%M:%S CET", timeinfo);
 
-	int length = strlen(COMMAND) + strlen(Pathtofile) + strlen(type) + strlen(file) + strlen(http) + strlen(host) + strlen(ServerName) + strlen(date) + strlen(act_time) + strlen(accept) + strlen(accept_en) + strlen(con_type) + strlen(con_len);
+	int length = strlen(COMMAND) + strlen(Path) + strlen(type) + strlen(file) + strlen(http) + strlen(host) + strlen(ServerName) + strlen(date) + strlen(act_time) + strlen(accept) + strlen(accept_en) + strlen(con_type) + strlen(con_len);
 	char *Header = malloc(length * sizeof(char) + 16 * sizeof(char));
-	sprintf(Header, "%s %s%s%s %s\n%s%s\n%s%s\n%s\n%s\n%s\n%s\n", COMMAND, Pathtofile, type, file, http, host, ServerName, date, act_time, accept, accept_en, con_type, con_len);
+	if (LOCAL_PATH[0] == '\0')
+	{
+		sprintf(Header, "%s %s%s%s %s\n%s%s\n%s%s\n%s\n%s\n%s\n", COMMAND, Path, type, file, http, host, ServerName, date, act_time, accept, accept_en, con_type);
+	}
+	else
+	{
+		sprintf(Header, "%s %s%s%s %s\n%s%s\n%s%s\n%s\n%s\n%s\n%s\n", COMMAND, Path, type, file, http, host, ServerName, date, act_time, accept, accept_en, con_type, con_len);
+	}
+	
 	return Header;
+}
+
+char * getFile(char *LocalPath)
+{
+	char *ptr = LOCAL_PATH;
+	printf("%s %s \n", LocalPath, LOCAL_PATH);
+	char *buffer = 0;
+	long length;
+	FILE *file = fopen (ptr, "rb");
+
+	if (file != NULL)
+	{
+		fseek (file, 0, SEEK_END);
+		length = ftell (file);
+		fseek (file, 0, SEEK_SET);
+		buffer = malloc (sizeof(char)*length);
+		if (buffer)
+		{
+			fread (buffer, 1, length, file);
+		}
+		fclose (file);
+	}
+	else
+	{
+		fprintf(stderr, "Soubor nenalezen.\n");
+		exit(7);
+	}
+
+	return buffer;
+}
+
+int file_or_folder(char *Path, int mode)
+{
+	char *PathTemp = malloc(sizeof(char)*strlen(Path) + 16);
+	strcpy(PathTemp, Path);
+	char *actualPath = NULL; 
+	char *tempSave = NULL;
+	actualPath = strtok(PathTemp,"/");
+	
+	while(actualPath != NULL)
+	{
+		tempSave = actualPath;
+		actualPath = strtok(NULL,"/");
+	}
+
+	int len = strlen(tempSave);
+	for(int i = 0; i < len; i++) 
+	{
+		if(tempSave[i] == '.') 
+		{
+			return 1;  //jedna pro file
+		}
+    }
+    return 0; //pro folder
 }
 
 int main(int argc, char const *argv[])
@@ -215,19 +303,29 @@ int main(int argc, char const *argv[])
 
 	arguments(argc, argv);
 
-	char *Port = malloc(BUFFER);
+	char *Port = malloc(sizeof(char) * BUFFER);
 	getPort(&Port);
 
-	char *ServerName = malloc(BUFFER);
+	char *ServerName = malloc(sizeof(char) * BUFFER);
 	getServerName(&ServerName);
 
-	char *Path = malloc(BUFFER);
-	getPath(&Path);
+	char *Path = malloc(sizeof(char) * BUFFER);
+	getPath(&Path, 0);
 
-	char *header = getHeader(ServerName, Path);
+	char *LocalPath = malloc(sizeof(char) * BUFFER);
+	getPath(&LocalPath, 1);
+
+	int fof = file_or_folder(Path, 0);
+
+	char *header = getHeader(ServerName, Path, fof);  //opet vznika problem s path
 
 	printf("%s\n", header);
 
+	if (strcmp(COMMAND, "PUT") == 0)
+	{
+		getFile(LocalPath);
+	}
+	
 	socket_fd = socket(AF_INET, SOCK_STREAM, 0); //inicializace socketu
 	if (socket_fd < 0) 
 	{
@@ -248,8 +346,8 @@ int main(int argc, char const *argv[])
 
 	bcopy((char *) server->h_addr, (char *) &server_addr.sin_addr.s_addr, server->h_length);
 
-	int port = *Port;
-
+	int port = atoi(Port);
+	
 	server_addr.sin_port = htons(port);
 
 	if ((connect(socket_fd, (struct sockaddr *) &server_addr, sizeof(server_addr))) < 0)
@@ -258,10 +356,10 @@ int main(int argc, char const *argv[])
 		exit(4);
 	}
 
-	printf("Napis Zpravu: ");
-	fgets(buffer, BUFFER, stdin);
+	//printf("Napis Zpravu: ");
+	//fgets(buffer, BUFFER, stdin);
 
-	if ((write(socket_fd, buffer, strlen(buffer))) < 0)
+	if ((write(socket_fd, header, strlen(header))) < 0)
 	{
 		fprintf(stderr, "Chyba pri zapisovani do socketu.\n");
 		exit(5);
@@ -279,4 +377,3 @@ int main(int argc, char const *argv[])
 
 	return 0;
 }
-
