@@ -380,7 +380,6 @@ int main(int argc, char const *argv[])
 	}
 
 	//prijmani dat zpet
-	
 	if (!(strcmp(COMMAND, "GET") == 0))
 	{
 		bzero(buffer, BUFFER);
