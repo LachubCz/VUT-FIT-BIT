@@ -221,33 +221,42 @@ void cmd_switch(Header *header, int socket_fd2)
 {
 	if (strcmp(header->command, "DEL") == 0)
 	{
-		DEL(header, socket_fd2);
+		if (strcmp(header->type, "file") == 0)
+		{
+			DEL(header, socket_fd2);
+		}
+		else
+		{
+			RMD(header, socket_fd2);
+		}
 	}
 	else if (strcmp(header->command, "GET") == 0)
 	{
-		GET(header, socket_fd2);
+		if (strcmp(header->type, "file") == 0)
+		{
+			GET(header, socket_fd2);
+		}
+		else
+		{
+			LST(header, socket_fd2);
+		}
+		
 	}
 	else if (strcmp(header->command, "PUT") == 0)
 	{
-		PUT(header, socket_fd2);
-	}
-	else if (strcmp(header->command, "LST") == 0)
-	{
-		LST(header, socket_fd2);
-	}
-	else if (strcmp(header->command, "MKD") == 0)
-	{
-		MKD(header, socket_fd2);
-	}
-	else if (strcmp(header->command, "RMD") == 0)
-	{
-		RMD(header, socket_fd2);
+		if (strcmp(header->type, "file") == 0)
+		{
+			PUT(header, socket_fd2);
+		}
+		else
+		{
+			MKD(header, socket_fd2);
+		}
 	}
 }
 
 void HeaderParser(char *header_str, int socket_fd2)
 {
-
 	Header *header = malloc(sizeof(Header));
 
 	header->command = strtok(header_str, " ");
@@ -269,6 +278,47 @@ void HeaderParser(char *header_str, int socket_fd2)
 	strtok(NULL, ":");
 
 	cmd_switch(header, socket_fd2);
+}
+
+void ClientRequest(int socket_fd2)
+{
+	int buffer_limit = BUFFER;
+	int position = 0;
+	char letter[2];
+
+	char *request = malloc(sizeof(char) * BUFFER);
+	request[0] = '\0';
+
+	while(true)
+	{
+		bzero(letter, 2);
+		if (read(socket_fd2, letter, 1) < 0)
+		{
+			fprintf(stderr, "Chyba pri cteni ze socketu.\n");
+			exit(5);
+		}
+
+		position = strlen(request);
+
+		if ((position + 16) > buffer_limit)
+		{
+			buffer_limit += BUFFER;
+			request = realloc(request, sizeof(char) *  buffer_limit);
+		}
+
+		request[position + 1] = request[position];
+		request[position] = letter[0];
+
+		if (position > 1)
+		{
+			if (request[position - 1] == '\n' && request[position] == '\n')
+			{
+				break;
+			}
+		}
+	}
+
+	HeaderParser(request, socket_fd2);
 }
 
 int main(int argc, char const *argv[])
@@ -312,66 +362,9 @@ int main(int argc, char const *argv[])
 			fprintf(stderr, "Chyba pri prijmani socketu.\n");
 			exit(4);
 		}
-/*
-		if ((read(socket_fd2, buffer, BUFFER)) < 0)
-		{
-			fprintf(stderr, "Chyba pri cteni ze socketu.\n");
-			exit(5);
-		}
-*/int i = 0;
-		while(i < 1000)
-		{
-			read(socket_fd2, buffer, 1);
-			printf("%s\n", buffer);
-			i++;
-		}
 
-		break;
-		//recieve file function
-		
-		HeaderParser(buffer, socket_fd2);
+		ClientRequest(socket_fd2);
 	}
 
 	return 0;
-}
-
-void ClientRequest(int socket_fd2)
-{
-	int buffer_limit = BUFFER;
-	int position = 0;
-	char letter[2];
-
-	char request = malloc(sizeof(char) * BUFFER);
-	request[0] = "\0";
-
-	while(true)
-	{
-		bzero(item, 2);
-		if (read(socket_fd2, letter, 1) < 0)
-		{
-			fprintf(stderr, "Chyba pri cteni ze pozadavku.\n");
-			exit(10);
-		}
-
-		position = strlen(request);
-
-		if ((position + 16) > buffer_limit)
-		{
-			buffer_limit += BUFFER;
-			request = realloc(request, sizeof(char) *  buffer_limit);
-		}
-
-		request[position + 1] = request[position];
-		request[position] = letter[0];
-
-		if (position > 1)
-		{
-			if (request[position - 1] == '\n' && request[position] == '\n')
-			{
-				break;
-			}
-		}
-	}
-
-	
 }
