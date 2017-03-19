@@ -94,6 +94,31 @@ void arguments(int argc, char const *argv[])
 	return;
 }
 
+void send_state(int state, int socket_fd2)
+{
+	char message[17];
+	bzero(message, 17);
+
+	switch (state)
+	{
+		case 200:
+			strcpy(message, "200 OK");
+			break;
+		case 404:
+			strcpy(message, "404 Not Found");
+			break;
+		case 400:
+			strcpy(message, "400 Bad Request");
+			break;
+	}
+
+	if ((write(socket_fd2, message, strlen(message))) < 0)
+	{
+		fprintf(stderr, "Chyba pri zapisovani do socketu.\n");
+		exit(6);
+	}
+}
+
 int main(int argc, char const *argv[])
 {
 	int socket_fd, socket_fd2;
@@ -140,13 +165,9 @@ int main(int argc, char const *argv[])
 		exit(5);
 	}
 
-	printf("%s", buffer);
+	printf("\n%s\n", buffer);
 
-	if ((write(socket_fd2, "Hello from the server side.", 27)) < 0)
-	{
-		fprintf(stderr, "Chyba pri zapisovani do socketu.\n");
-		exit(6);
-	}
+	send_state(200, socket_fd2);
 
 	return 0;
 }
