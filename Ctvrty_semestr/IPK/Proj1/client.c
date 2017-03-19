@@ -126,12 +126,61 @@ void arguments (int argc, char const *argv[])
 	}
 }
 
+void getPort(char **Port)
+{
+	char Balast[BUFFER];
+	char *temp = malloc(BUFFER);
+
+	if (sscanf(REMOTE_PATH, "http://%s", Balast))
+	{
+		;//error handling
+	}
+
+	*Port = strtok(Balast, ":");
+	*Port = strtok(NULL,"/");
+	sprintf(temp, "%s", *Port);
+	*Port = temp;
+	free(temp);
+}
+
+void getServerName(char **ServerName)
+{
+	char Balast[BUFFER];
+	char *temp = malloc(BUFFER);
+
+	if (sscanf(REMOTE_PATH, "http://%s", Balast))
+	{
+		;//error handling
+	}
+
+	*ServerName = strtok(Balast, ":");
+	sprintf(temp, "%s", *ServerName);
+	*ServerName = temp;
+	free(temp);
+}
+
+void getPath(char **Path)
+{
+	char Balast[BUFFER];
+	char *temp = malloc(BUFFER);
+
+	if (sscanf(REMOTE_PATH, "http://%s", Balast))
+	{
+		;//error handling
+	}
+
+	*Path = strtok(Balast, ":");
+	*Path = strtok(NULL,"/");
+	*Path = strtok(NULL, "\0");
+	sprintf(temp, "/%s", *Path);
+	*Path = temp;
+	free(temp);
+}
+
+
+
 int main(int argc, char const *argv[])
 {
-	arguments(argc, argv);
-
-	int port = 1061; //bude nahrazeno rozparserovanym prikazem
-
 	int socket_fd;
 
 	char buffer[BUFFER];
@@ -140,6 +189,19 @@ int main(int argc, char const *argv[])
 	struct sockaddr_in server_addr;
 	struct hostent *server;
 
+	arguments(argc, argv);
+
+	char *Port = malloc(BUFFER);
+	getPort(&Port);
+
+	char *ServerName = malloc(BUFFER);
+	getServerName(&ServerName);
+
+	char *Path = malloc(BUFFER);
+	getPath(&Path);
+
+	//printf("%s --- %s --- %s\n", Port, ServerName, Path);
+/*
 	socket_fd = socket(AF_INET, SOCK_STREAM, 0); //inicializace socketu
 	if (socket_fd < 0) 
 	{
@@ -147,7 +209,7 @@ int main(int argc, char const *argv[])
 		exit(2);
 	}
 
-	server = gethostbyname("localhost");
+	server = gethostbyname(ServerName);
 	if (server == NULL)
 	{
 		fprintf(stderr, "Server neexituje.");
@@ -185,7 +247,7 @@ int main(int argc, char const *argv[])
 		exit(6);
 	}
 
-	printf("%s", buffer);
-
+	//printf("%s", buffer);
+*/
 	return 0;
 }
