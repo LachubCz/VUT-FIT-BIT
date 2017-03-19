@@ -237,10 +237,9 @@ char * getHeader (char *ServerName, char *Path, int fof, int binary_file_len)
 	return Header;
 }
 
-char * getFile(char *LocalPath)
+char * getFile()
 {
 	char *ptr = LOCAL_PATH;
-	printf("%s %s \n", LocalPath, LOCAL_PATH);
 	char *buffer = 0;
 	long length;
 	FILE *file = fopen (ptr, "rb");
@@ -343,8 +342,8 @@ int main(int argc, char const *argv[])
 				exit(9);
 			}
 
-			binary_file = getFile(LocalPath);
-			binary_file_len = strlen();
+			binary_file = getFile();
+			binary_file_len = strlen(binary_file);
 		}
 	else if (strcmp(COMMAND, "LST") == 0)
 		{
