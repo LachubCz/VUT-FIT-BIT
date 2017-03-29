@@ -1,7 +1,50 @@
 # @author Petr Buchal(xbucha02)
 
 import getopt, sys
-#import StringIO
+
+####################################################################################
+######################################Funkce########################################
+####################################################################################
+
+def output_func(output, final):
+    if output == 'STDOUT':
+        print(final)
+    else:
+        f1 = open(output, 'w')
+        f1.write(final)
+
+def help_func():
+    help_str = '--help ## Viz spolecne zadani vsech uloh.\n'
+
+    help_str += '--input=fileordir ## Zadany vstupni soubor nebo adresar se zdrojovym kodem v jazyce C.'
+    help_str += 'Predpokladejte, ze soubory budou v kodovani UTF-8. Je-li zadana cesta k adresari, tak jsou'
+    help_str += 'postupne analyzovany vsechny soubory s priponou .h v tomto adresari a jeho podadresarich.'
+    help_str += 'Pokud je zadana primo cesta k souboru (nikoliv k adresari), tak priponu souboru nekontrolujte.'
+    help_str += 'Pokud nebude tento parametr zadan, tak se analyzuji vsechny hlavickove soubory (opet pouze'
+    help_str += 's priponou .h) z aktualniho adresare a vsech jeho podadresaru.\n'
+
+    help_str += '--output=filename ## Zadany vystupni soubor ve formatu XML v kodovani UTF-8 (presny'
+    help_str += 'format viz nize). Pokud tento parametr neni zadan, tak dojde k vypsani vysledku na standardni vystup.\n'
+
+    help_str += '--pretty-xml=k ## Skript zformatuje vysledny XML dokument tak, ze (1) kazde nove zanoreni'
+    help_str += 'bude odsazeno o k mezer oproti predchozimu a (2) XML hlavicka bude od korenoveho elementu'
+    help_str += 'oddelena znakem noveho radku. Pokud k neni zadano, tak se pouzije hodnota 4. Pokud tento'
+    help_str += 'parametr nebyl zadan, tak se neodsazuje (ani XML hlavicka od korenoveho elementu).\n'
+
+    help_str += '--no-inline ## Skript preskoci funkce deklarovane se specifikatorem inline.\n'
+
+    help_str += '--max-par=n ## Skript bude brat v uvahu pouze funkce, ktere maji n ci mene parametru (n musi'
+    help_str += 'byt vzdy zadano). U funkci, ktere maji promenny pocet parametru, pocitejte pouze s fixnimi parametry.\n'
+
+    help_str += '--no-duplicates ## Pokud se v souboru vyskytne vice funkci se stejnym jmenem (napr.'
+    help_str += 'deklarace funkce a pozdeji jeji definice), tak se do vysledneho XML souboru ulozi pouze prvni'
+    help_str += 'z nich (uvazujte pruchod souborem shora dolu). Pokud tento parametr neni zadan, tak se do'
+    help_str += 'vysledneho XML souboru ulozi vsechny vyskyty funkce se stejnym jmenem.\n'
+
+    help_str += '--remove-whitespace ## Pri pouziti tohoto parametru skript odstrani z obsahu atributu'
+    help_str += 'rettype a type (viz nize) vsechny prebytecne mezery.\n' 
+
+    return help_str
 
 ####################################################################################
 ###############################Zpracovani argumentu#################################
@@ -66,47 +109,3 @@ if help == True and ( input != 'STDIN' or output != 'STDOUT' or pretty != False 
 if help == True:
     help_str = help_func()
     output_func(output, help_str)
-
-####################################################################################
-######################################Funkce########################################
-####################################################################################
-
-def output_func(output, final):
-    f1 = open(output, 'w')
-    f1.write(final)
-
-def help_func():
-    help_str = StringIO()
-
-    help_str.write('--help ## Viz spolecne zadani vsech uloh.\n\n')
-
-    help_str.write('--input=fileordir ## Zadany vstupni soubor nebo adresar se zdrojovym kodem v jazyce C.\n')
-    help_str.write('Predpokladejte, ze soubory budou v kodovani UTF-8. Je-li zadana cesta k adresari, tak jsou\n')
-    help_str.write('postupne analyzovany vsechny soubory s priponou .h v tomto adresari a jeho podadresarich.\n')
-    help_str.write('Pokud je zadana primo cesta k souboru (nikoliv k adresari), tak priponu souboru nekontrolujte.\n')
-    help_str.write('Pokud nebude tento parametr zadan, tak se analyzuji vsechny hlavickove soubory (opet pouze\n')
-    help_str.write('s priponou .h) z aktualniho adresare a vsech jeho podadresaru.\n\n')
-
-    help_str.write('--output=filename ## Zadany vystupni soubor ve formatu XML v kodovani UTF-8 (presny\n')
-    help_str.write('format viz nize). Pokud tento parametr neni zadan, tak dojde k vypsani vysledku na standardni vystup.\n\n')
-
-    help_str.write('--pretty-xml=k ## Skript zformatuje vysledny XML dokument tak, ze (1) kazde nove zanoreni\n')
-    help_str.write('bude odsazeno o k mezer oproti predchozimu a (2) XML hlavicka bude od korenoveho elementu\n')
-    help_str.write('oddelena znakem noveho radku. Pokud k neni zadano, tak se pouzije hodnota 4. Pokud tento\n')
-    help_str.write('parametr nebyl zadan, tak se neodsazuje (ani XML hlavicka od korenoveho elementu).\n\n')
-
-    help_str.write('--no-inline ## Skript preskoci funkce deklarovane se specifikatorem inline.\n\n')
-
-    help_str.write('--max-par=n ## Skript bude brat v uvahu pouze funkce, ktere maji n ci mene parametru (n musi\n')
-    help_str.write('byt vzdy zadano). U funkci, ktere maji promenny pocet parametru, pocitejte pouze s fixnimi parametry.\n\n')   
-
-    help_str.write('--no-duplicates ## Pokud se v souboru vyskytne vice funkci se stejnym jmenem (napr.\n')
-    help_str.write('deklarace funkce a pozdeji jeji definice), tak se do vysledneho XML souboru ulozi pouze prvni\n')
-    help_str.write('z nich (uvazujte pruchod souborem shora dolu). Pokud tento parametr neni zadan, tak se do\n')
-    help_str.write('vysledneho XML souboru ulozi vsechny vyskyty funkce se stejnym jmenem.\n\n')
-
-    help_str.write('--remove-whitespace ## Pri pouziti tohoto parametru skript odstrani z obsahu atributu\n')
-    help_str.write('rettype a type (viz nize) vsechny prebytecne mezery.\n\n')   
-
-    return help_str
-    
