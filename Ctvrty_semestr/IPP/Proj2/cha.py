@@ -1,5 +1,4 @@
-import getopt
-import sys
+import getopt, sys
 
 help = False
 input = 'STDIN'
@@ -12,25 +11,40 @@ remove_whitespace = False
 
 print ("ARGV      :", sys.argv[1:])
 
-options, remainder = getopt.getopt(sys.argv[1:], ':', ['output=', 
-                                                         'verbose',
-                                                         'version=',
+options, remainder = getopt.getopt(sys.argv[1:], ':', ['input=', 
+                                                         'output',
+                                                         'max-par=',
                                                          'help',
+                                                         'pretty',
+                                                         'no-inline',
+                                                         'no-duplicates',
+                                                         'remove-whitespace',
                                                          ])
 print ("OPTIONS   :", options)
 
 for opt, arg in options:
-    if opt in '--output':
-        output_filename = arg
-    elif opt in '--verbose':
-        verbose = True
-    elif opt == '--version':
-        version = arg
+    if opt in '--input':
+        input = arg
+    elif opt in '--output':
+        output = arg
+    elif opt in '--max-par':
+        max_par = arg
     elif opt == '--help':
-        version = True
+        help = True
+    elif opt == '--pretty':
+        pretty = True
+    elif opt == '--no-inline':
+        no_inline = True
+    elif opt == '--no-duplicates':
+        no_duplicates = True
+    elif opt == '--remove-whitespace':
+        remove_whitespace = True
 
-#print ("VERSION   :", version)
-#print ("VERBOSE   :", verbose)
-#print ("OUTPUT    :", output_filename)
-print ("HELP      :", help)
-#print ("REMAINING :", remainder)
+print ("HELP              :", help)
+print ("INPUT             :", input)
+print ("OUTPUT            :", output)
+print ("PRETTY            :", pretty)
+print ("NO-INLINE         :", no_inline)
+print ("MAX-PAR           :", max_par)
+print ("NO-DUPLICATES     :", no_duplicates)
+print ("REMOVE-WHITESPACE :", remove_whitespace)
