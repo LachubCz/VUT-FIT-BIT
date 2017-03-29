@@ -51,4 +51,4 @@ for opt, arg in options:
 #print ("REMAINING         :", remainder)
 
 if len(remainder) != 0:
-    exit(1)
+    sys.exit(1)
