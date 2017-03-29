@@ -1,11 +1,14 @@
 import getopt
 import sys
 
-version = '1.0'
-verbose = False
 help = False
-output_filename = 'default.out'
-
+input = 'STDIN'
+output = 'STDOUT'
+pretty = False
+no_inline = False
+max_par = 0
+no_duplicates = False
+remove_whitespace = False
 
 print ("ARGV      :", sys.argv[1:])
 
@@ -26,8 +29,8 @@ for opt, arg in options:
     elif opt == '--help':
         version = True
 
-print ("VERSION   :", version)
-print ("VERBOSE   :", verbose)
-print ("OUTPUT    :", output_filename)
+#print ("VERSION   :", version)
+#print ("VERBOSE   :", verbose)
+#print ("OUTPUT    :", output_filename)
 print ("HELP      :", help)
-print ("REMAINING :", remainder)
+#print ("REMAINING :", remainder)
