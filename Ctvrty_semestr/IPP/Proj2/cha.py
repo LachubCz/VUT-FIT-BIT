@@ -9,7 +9,7 @@ max_par = 0
 no_duplicates = False
 remove_whitespace = False
 
-print ("ARGV      :", sys.argv[1:])
+#print ("ARGV      :", sys.argv[1:])
 
 options, remainder = getopt.getopt(sys.argv[1:], ':', ['input=', 
                                                          'output',
@@ -20,7 +20,7 @@ options, remainder = getopt.getopt(sys.argv[1:], ':', ['input=',
                                                          'no-duplicates',
                                                          'remove-whitespace',
                                                          ])
-print ("OPTIONS   :", options)
+#print ("OPTIONS   :", options)
 
 for opt, arg in options:
     if opt in '--input':
@@ -40,11 +40,15 @@ for opt, arg in options:
     elif opt == '--remove-whitespace':
         remove_whitespace = True
 
-print ("HELP              :", help)
-print ("INPUT             :", input)
-print ("OUTPUT            :", output)
-print ("PRETTY            :", pretty)
-print ("NO-INLINE         :", no_inline)
-print ("MAX-PAR           :", max_par)
-print ("NO-DUPLICATES     :", no_duplicates)
-print ("REMOVE-WHITESPACE :", remove_whitespace)
+#print ("HELP              :", help)
+#print ("INPUT             :", input)
+#print ("OUTPUT            :", output)
+#print ("PRETTY            :", pretty)
+#print ("NO-INLINE         :", no_inline)
+#print ("MAX-PAR           :", max_par)
+#print ("NO-DUPLICATES     :", no_duplicates)
+#print ("REMOVE-WHITESPACE :", remove_whitespace)
+#print ("REMAINING         :", remainder)
+
+if len(remainder) != 0:
+    exit(1)
