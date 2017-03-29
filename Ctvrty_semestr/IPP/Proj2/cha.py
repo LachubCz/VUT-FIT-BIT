@@ -1,6 +1,7 @@
 # @author Petr Buchal(xbucha02)
 
 import getopt, sys
+import os, fnmatch
 
 ####################################################################################
 ######################################Funkce########################################
@@ -42,9 +43,28 @@ def help_func():
     help_str += 'vysledneho XML souboru ulozi vsechny vyskyty funkce se stejnym jmenem.\n'
 
     help_str += '--remove-whitespace ## Pri pouziti tohoto parametru skript odstrani z obsahu atributu'
-    help_str += 'rettype a type (viz nize) vsechny prebytecne mezery.\n' 
+    help_str += 'rettype a type (viz nize) vsechny prebytecne mezery.' 
 
     return help_str
+
+def fileordir(name):
+    if os.path.isdir(name):
+        return 0
+    if os.path.isfile(name):
+        return 1
+
+def recursive_gold(act_dir):
+    for fileordir in os.listdir(act_dir):
+        if fnmatch.fnmatch(fileordir, '*'):
+            fileordir = act_dir + "/" + fileordir
+            if os.path.isdir(fileordir):
+                print(fileordir, "<-- FOLDER\n")
+                recursive_gold(fileordir)
+            elif os.path.isfile(fileordir):
+                print(fileordir, "<-- FILE\n")
+
+def analysa(file):
+    ;
 
 ####################################################################################
 ###############################Zpracovani argumentu#################################
@@ -59,8 +79,6 @@ max_par = -1
 no_duplicates = False
 remove_whitespace = False
 
-#print ("ARGV      :", sys.argv[1:])
-
 options, remainder = getopt.getopt(sys.argv[1:], ':', ['input=', 
                                                          'output',
                                                          'max-par=',
@@ -70,7 +88,6 @@ options, remainder = getopt.getopt(sys.argv[1:], ':', ['input=',
                                                          'no-duplicates',
                                                          'remove-whitespace',
                                                          ])
-#print ("OPTIONS   :", options)
 
 for opt, arg in options:
     if opt in '--input':
@@ -90,6 +107,9 @@ for opt, arg in options:
     elif opt == '--remove-whitespace':
         remove_whitespace = True
 
+#testovaci vypis argumentu
+#print ("ARGV      :", sys.argv[1:])
+#print ("OPTIONS   :", options)
 #print ("HELP              :", help)
 #print ("INPUT             :", input)
 #print ("OUTPUT            :", output)
@@ -109,3 +129,9 @@ if help == True and ( input != 'STDIN' or output != 'STDOUT' or pretty != False 
 if help == True:
     help_str = help_func()
     output_func(output, help_str)
+
+if fileordir(output) == 0:
+    path = os.path.abspath(output)
+    recursive_gold(path)
+else:
+    analysa(path)
