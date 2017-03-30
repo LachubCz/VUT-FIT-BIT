@@ -12,13 +12,37 @@ class database:
     def __init__(self, arg):
         self.functions = []
 
-class Function:
+class function:
 
     def __init__(self, file, name, varargs, rettype):
         self.file = 'null'
         self.name = 'null'
         self.varargs = {}
-        self. rettype = 'null'
+        self.rettype = 'null'
+
+    def get_info(type):
+        if type == 'file':
+            return self.file
+        elif type == 'name':
+            return self.name
+        elif type == 'varargs':
+            return self.varargs
+        elif type == 'rettype':
+            return self.rettype
+
+class parser:
+   
+    def __init__(self):
+        pass
+
+    def readByChar(filename):
+        with open(filename) as f:
+            while True:
+                c = f.read(1)
+                if not c:
+                    print ("End of file")
+                    break
+                print ("Read a character: ", c)
         
 ####################################################################################
 ######################################Funkce########################################
@@ -151,10 +175,13 @@ if help == True:
     output_func(output, help_str)
 
 path = os.path.abspath(input)
-
+"""
 if fileordir(input) == 0:
     recursive_gold(path)
 elif fileordir(input) == 1:
     analysa(path)
 elif fileordir(input) == 2:
     recursive_gold('.')
+
+"""
+parser.readByChar(path)
