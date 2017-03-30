@@ -84,7 +84,7 @@ def recursive_gold(act_dir):
                 analysa(fileordir)
 
 def analysa(file):
-    print("")
+    pass
 
 ####################################################################################
 ###############################Zpracovani argumentu#################################
