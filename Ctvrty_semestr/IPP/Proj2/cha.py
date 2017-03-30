@@ -4,6 +4,23 @@ import getopt, sys
 import os, fnmatch
 
 ####################################################################################
+#######################################Tridy########################################
+####################################################################################
+
+class database:
+
+    def __init__(self, arg):
+        self.functions = []
+
+class Function:
+
+    def __init__(self, file, name, varargs, rettype):
+        self.file = 'null'
+        self.name = 'null'
+        self.varargs = {}
+        self. rettype = 'null'
+        
+####################################################################################
 ######################################Funkce########################################
 ####################################################################################
 
@@ -52,19 +69,22 @@ def fileordir(name):
         return 0
     if os.path.isfile(name):
         return 1
+    if name == "STDIN":
+        return 2
 
 def recursive_gold(act_dir):
     for fileordir in os.listdir(act_dir):
         if fnmatch.fnmatch(fileordir, '*'):
             fileordir = act_dir + "/" + fileordir
             if os.path.isdir(fileordir):
-                print(fileordir, "<-- FOLDER\n")
+                #print(fileordir, "<-- FOLDER\n")
                 recursive_gold(fileordir)
             elif os.path.isfile(fileordir):
-                print(fileordir, "<-- FILE\n")
+                #print(fileordir, "<-- FILE\n")
+                analysa(fileordir)
 
 def analysa(file):
-    ;
+    print("")
 
 ####################################################################################
 ###############################Zpracovani argumentu#################################
@@ -130,8 +150,11 @@ if help == True:
     help_str = help_func()
     output_func(output, help_str)
 
-if fileordir(output) == 0:
-    path = os.path.abspath(output)
+path = os.path.abspath(input)
+
+if fileordir(input) == 0:
     recursive_gold(path)
-else:
+elif fileordir(input) == 1:
     analysa(path)
+elif fileordir(input) == 2:
+    recursive_gold('.')
