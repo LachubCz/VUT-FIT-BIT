@@ -12,13 +12,19 @@ class database:
     def __init__(self, arg):
         self.functions = []
 
+    def put_function(function)
+        self.functions.append(function)
+
 class function:
 
-    def __init__(self, file, name, varargs, rettype):
-        self.file = 'null'
-        self.name = 'null'
+    def __init__(self):
+        self.file = ""
+        self.name = ""
         self.varargs = {}
-        self.rettype = 'null'
+        self.rettype = ""
+
+    def put_rettype(string):
+        self.rettype = string
 
     def get_info(type):
         if type == 'file':
@@ -32,16 +38,62 @@ class function:
 
 class parser:
    
-    def __init__(self):
-        pass
+    def __init__(self, word):
+        self.word = ""
 
     def readByChar(filename):
-        with open(filename) as f:
+        lastChar = '0'
+        state = 0
+        inFunction = False
+        inComment = False
+        with open(filename) as file:
             while True:
-                c = f.read(1)
+                c = file.read(1)
                 if not c:
-                    print ("End of file")
+                    #print ("End of file")
                     break
+                #rozhodovani zdali se ctou slova z funkce
+                if inFunction:
+                    if state == 3:
+                        if !c.isspace():
+                            self.word = c
+                        else
+                            function.function() #mozna se budou muset funke cislovat
+                            function.put_rettype(word)
+                            self.word = "" 
+                            state = 4
+                    if state == 4:
+                        if c = '\n':
+                            database
+                        
+                elif inComment:
+                    if state == 1:
+                        if c == '\n':
+                            inComment = False
+                    elif state == 2:
+                        if c = '/' and lastChar = '*':
+                            inComment = False
+                        lastChar = c
+                else
+                    if lastChar == '0':
+                        lastChar = c
+
+                    if lastChar == '/' and c == '/':
+                        inComment = True
+                        state = 1
+
+                    if lastChar == '/' and c == '*':
+                        inComment = True
+                        state = 2
+
+                    if lastChar.isspace() and c.isspace(): 
+                        lastChar = c
+
+                    if lastChar != '0' and !c.isspace() and c != '/':
+                        inFunction = True
+                        state = 3
+                        self.word += lastChar
+
                 print ("Read a character: ", c)
         
 ####################################################################################
@@ -173,6 +225,8 @@ if help == True and ( input != 'STDIN' or output != 'STDOUT' or pretty != False 
 if help == True:
     help_str = help_func()
     output_func(output, help_str)
+
+database.database() #inicializace databaze
 
 path = os.path.abspath(input)
 """
