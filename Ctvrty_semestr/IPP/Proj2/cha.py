@@ -12,7 +12,7 @@ class database:
     def __init__(self, arg):
         self.functions = []
 
-    def put_function(function)
+    def put_function(function):
         self.functions.append(function)
 
 class function:
@@ -41,7 +41,7 @@ class parser:
     def __init__(self, word):
         self.word = ""
 
-    def readByChar(filename):
+    def readByChar(filename, database):
         lastChar = '0'
         state = 0
         inFunction = False
@@ -55,7 +55,7 @@ class parser:
                 #rozhodovani zdali se ctou slova z funkce
                 if inFunction:
                     if state == 3:
-                        if !c.isspace():
+                        if !(c.isspace()):
                             self.word = c
                         else
                             function.function() #mozna se budou muset funke cislovat
@@ -64,7 +64,7 @@ class parser:
                             state = 4
                     if state == 4:
                         if c = '\n':
-                            database
+                            database.put_function(function)
                         
                 elif inComment:
                     if state == 1:
@@ -89,7 +89,7 @@ class parser:
                     if lastChar.isspace() and c.isspace(): 
                         lastChar = c
 
-                    if lastChar != '0' and !c.isspace() and c != '/':
+                    if lastChar != '0' and !(c.isspace()) and c != '/':
                         inFunction = True
                         state = 3
                         self.word += lastChar
@@ -238,4 +238,5 @@ elif fileordir(input) == 2:
     recursive_gold('.')
 
 """
-parser.readByChar(path)
+parser.readByChar(path, database)
+print(database->functions[0]->rettype)
