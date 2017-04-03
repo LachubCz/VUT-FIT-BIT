@@ -52,6 +52,9 @@ class parser:
                 c = file.read(1)
                 if not c:
                     #print ("End of file")
+                    if inFunction:
+                        #functionToPut.put_rettype(word) #vkladani argumentu
+                        database.put_function(functionToPut)
                     break
                 #rozhodovani zdali se ctou slova z funkce
                 if inFunction:
@@ -61,12 +64,12 @@ class parser:
                         else:
                             functionToPut = function() #mozna se budou muset funke cislovat
                             functionToPut.put_rettype(word)
-                            print(word)
+                            #print(word)
                             word = ""
                             state = 4
                     if state == 4:
                         if c == '\n':
-                            print(functionToPut.rettype)
+                            #print(functionToPut.rettype)
                             database.put_function(functionToPut)
 
                         
@@ -98,7 +101,7 @@ class parser:
                         state = 3
                         word = lastChar
 
-                print ("Read a character: ", c, " State: ", state)
+                #print ("Read a character: ", c, " State: ", state)
         
 ####################################################################################
 ######################################Funkce########################################
