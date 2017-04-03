@@ -29,6 +29,12 @@ class function:
     def put_rettype(self, string):
         self.rettype = string
 
+    def put_name(self, string):
+        self.name = string
+
+    def put_file(self, string):
+        self.file = string
+
     def get_info(self, type):
         if type == 'file':
             return self.file
@@ -53,7 +59,7 @@ class parser:
                 if not c:
                     #print ("End of file")
                     if inFunction:
-                        #functionToPut.put_rettype(word) #vkladani argumentu
+                        #vkladani argumentu
                         database.put_function(functionToPut)
                     break
                 #rozhodovani zdali se ctou slova z funkce
@@ -64,14 +70,21 @@ class parser:
                         else:
                             functionToPut = function() #mozna se budou muset funke cislovat
                             functionToPut.put_rettype(word)
-                            #print(word)
-                            word = ""
                             state = 4
-                    if state == 4:
+                    elif state == 4:
+                        if (c.isspace() == False):
+                            word = c
+                            state = 5
+                    elif state == 5:
+                        if (c.isspace() == False and c != '('):
+                            word += c
+                        else:
+                            functionToPut.put_name(word)
+                            word = ""
+                            state = 6
+                    elif state == 6:
                         if c == '\n':
-                            #print(functionToPut.rettype)
                             database.put_function(functionToPut)
-
                         
                 elif inComment:
                     if state == 1:
@@ -247,4 +260,4 @@ elif fileordir(input) == 2:
 """
 parser.readByChar(path, database)
 functionToGet = database.get_function(0)
-print(functionToGet.rettype)
+print("Rettype: ", functionToGet.rettype, " Name: ", functionToGet.name)
