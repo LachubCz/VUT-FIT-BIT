@@ -9,11 +9,14 @@ import os, fnmatch
 
 class database:
 
-    def __init__(self, arg):
+    def __init__(self):
         self.functions = []
 
-    def put_function(function):
-        self.functions.append(function)
+    def put_function(self, functionToPut):
+        self.functions.append(functionToPut)
+
+    def get_function(self, index):
+        return self.functions[index]
 
 class function:
 
@@ -23,10 +26,10 @@ class function:
         self.varargs = {}
         self.rettype = ""
 
-    def put_rettype(string):
+    def put_rettype(self, string):
         self.rettype = string
 
-    def get_info(type):
+    def get_info(self, type):
         if type == 'file':
             return self.file
         elif type == 'name':
@@ -37,11 +40,9 @@ class function:
             return self.rettype
 
 class parser:
-   
-    def __init__(self, word):
-        self.word = ""
 
     def readByChar(filename, database):
+        word = "" 
         lastChar = '0'
         state = 0
         inFunction = False
@@ -55,26 +56,29 @@ class parser:
                 #rozhodovani zdali se ctou slova z funkce
                 if inFunction:
                     if state == 3:
-                        if !(c.isspace()):
-                            self.word = c
-                        else
-                            function.function() #mozna se budou muset funke cislovat
-                            function.put_rettype(word)
-                            self.word = "" 
+                        if (c.isspace() == False):
+                            word += c
+                        else:
+                            functionToPut = function() #mozna se budou muset funke cislovat
+                            functionToPut.put_rettype(word)
+                            print(word)
+                            word = ""
                             state = 4
                     if state == 4:
-                        if c = '\n':
-                            database.put_function(function)
+                        if c == '\n':
+                            print(functionToPut.rettype)
+                            database.put_function(functionToPut)
+
                         
                 elif inComment:
                     if state == 1:
                         if c == '\n':
                             inComment = False
                     elif state == 2:
-                        if c = '/' and lastChar = '*':
+                        if c == '/' and lastChar == '*':
                             inComment = False
                         lastChar = c
-                else
+                else:
                     if lastChar == '0':
                         lastChar = c
 
@@ -89,12 +93,12 @@ class parser:
                     if lastChar.isspace() and c.isspace(): 
                         lastChar = c
 
-                    if lastChar != '0' and !(c.isspace()) and c != '/':
+                    if lastChar != '0' and (c.isspace() == False) and c != '/':
                         inFunction = True
                         state = 3
-                        self.word += lastChar
+                        word = lastChar
 
-                print ("Read a character: ", c)
+                print ("Read a character: ", c, " State: ", state)
         
 ####################################################################################
 ######################################Funkce########################################
@@ -226,7 +230,7 @@ if help == True:
     help_str = help_func()
     output_func(output, help_str)
 
-database.database() #inicializace databaze
+database = database() #inicializace databaze
 
 path = os.path.abspath(input)
 """
@@ -239,4 +243,5 @@ elif fileordir(input) == 2:
 
 """
 parser.readByChar(path, database)
-print(database->functions[0]->rettype)
+functionToGet = database.get_function(0)
+print(functionToGet.rettype)
