@@ -32,11 +32,12 @@ class function:
     def __init__(self):
         self.file = ""
         self.name = ""
-        self.varargs = {}
+        self.varargs = "no"
+        self.parameters = {}
         self.rettype = ""
 
-    def put_varargs(self, key, value):
-        self.varargs[key] = value
+    def put_parameter(self, key, value):
+        self.parameters[key] = value
 
     def put_rettype(self, string):
         self.rettype = string
@@ -52,8 +53,8 @@ class function:
             return self.file
         elif type == 'name':
             return self.name
-        elif type == 'varargs':
-            return self.varargs
+        elif type == 'parameters':
+            return self.parameters
         elif type == 'rettype':
             return self.rettype
 
@@ -72,9 +73,9 @@ class parser:
                 c = file.read(1)
                 if not c:
                     #print ("End of file")
-                    if inFunction:
+                    #if inFunction:
                         #vkladani argumentu
-                        database.put_function(functionToPut)
+                        #database.put_function(functionToPut)
                     break
                 #rozhodovani zdali se ctou slova z funkce
                 if inFunction:
@@ -131,7 +132,7 @@ class parser:
                                 pass
                             else:
                                 #print(word, " - ", temp)
-                                functionToPut.put_varargs(word, temp)
+                                functionToPut.put_parameter(word, temp)
                                 word = ""
                                 if (c == ')'):
                                     state = 0
@@ -184,11 +185,17 @@ def output_func(output, final):
 def printDatabase(database):
     final = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     final += "<functions dir=\"\">\n"
+
     for functionToGet in database.functions:
-        final += "  <function file=\"" + functionToGet.file + "\" name=\"" + functionToGet.name + "\" varargs=\"no\" rettype=\"" + functionToGet.rettype + "\">\n"
-        for parameter in functionToGet.varargs.keys():
-            final += "      <param number=\"\" type=\"" + functionToGet.varargs[parameter] + "\" />\n"
+        final += "  <function file=\"" + functionToGet.file + "\" name=\"" + functionToGet.name + "\" varargs=\"" + functionToGet.varargs + "\" rettype=\"" + functionToGet.rettype + "\">\n"
+        i = 1
+
+        for parameter in functionToGet.parameters.keys():
+            final += "      <param number=\"" + str(i) + "\" type=\"" + functionToGet.parameters[parameter] + "\" />\n"
+            i += 1
+
     final += "</functions>"
+
     output_func(database.parameters[2], final)
 
 def help_func():
@@ -326,9 +333,9 @@ parser.readByChar(path, database)
 functionToGet = database.get_function(0)
 #print("Rettype: ", functionToGet.rettype, " Name: ", functionToGet.name, "File: ", functionToGet.file)
 
-#for x in functionToGet.varargs.keys():
-#    print (x, " => ", functionToGet.varargs[x])
+#for x in functionToGet.parameters.keys():
+#    print (x, " => ", functionToGet.parameters[x])
 
-#for key, value in functionToGet.varargs.items():
+#for key, value in functionToGet.parameters.items():
 #    print("{}: {}".format(key, value))
 printDatabase(database)
