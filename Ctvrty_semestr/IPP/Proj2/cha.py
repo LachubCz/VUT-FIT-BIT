@@ -9,8 +9,17 @@ import os, fnmatch
 
 class database:
 
-    def __init__(self):
+    def __init__(self, help, input, output, pretty, no_inline, max_par, no_duplicates, remove_whitespace):
         self.functions = []
+        self.parameters = []
+        self.parameters.append(help)
+        self.parameters.append(input)
+        self.parameters.append(output)
+        self.parameters.append(pretty)
+        self.parameters.append(no_inline)
+        self.parameters.append(max_par)
+        self.parameters.append(no_duplicates)
+        self.parameters.append(remove_whitespace)
 
     def put_function(self, functionToPut):
         self.functions.append(functionToPut)
@@ -180,7 +189,7 @@ def printDatabase(database):
         for parameter in functionToGet.varargs.keys():
             final += "      <param number=\"\" type=\"" + functionToGet.varargs[parameter] + "\" />\n"
     final += "</functions>"
-    output_func('STDOUT', final)
+    output_func(database.parameters[2], final)
 
 def help_func():
     help_str = '--help ## Viz spolecne zadani vsech uloh.\n'
@@ -301,7 +310,7 @@ if help == True:
     help_str = help_func()
     output_func(output, help_str)
 
-database = database() #inicializace databaze
+database = database(help, input, output, pretty, no_inline, max_par, no_duplicates, remove_whitespace) #inicializace databaze
 
 path = os.path.abspath(input)
 """
