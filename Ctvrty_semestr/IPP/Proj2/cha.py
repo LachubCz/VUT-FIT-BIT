@@ -40,13 +40,16 @@ class function:
         self.parameters[key] = value
 
     def put_rettype(self, string):
-        self.rettype = string
+        self.rettype += string
 
     def put_name(self, string):
         self.name = string
 
     def put_file(self, string):
         self.file = string
+
+    def put_varargs(self):
+        self.varargs = "yes"
 
 class parser:
 
@@ -81,9 +84,16 @@ class parser:
                         if (c.isspace() == False and c != '('):
                             word += c
                         else:
-                            functionToPut.put_name(word)
-                            word = ""
-                            state = 6
+                            if c == '(':
+                                functionToPut.put_name(word)
+                                word = ""
+                                state = 6
+                            elif c.isspace() == True:
+                                word = " " + word
+                                functionToPut.put_rettype(word)
+                                word = ""
+                                state = 4
+
                     elif state == 6: #hledani zacatku typu argumentu
                         if (c.isspace() == False):
                             if c == ')':
@@ -95,12 +105,17 @@ class parser:
                                 word = c
                                 state = 7
                     elif state == 7: #cteni typu argumentu
-                        if (c.isspace() == False):
+                        if (c.isspace() == False and c != ')'):
                             word += c
                         else:
-                            temp = word
-                            word = ""
-                            state = 8
+                            if word == 'void':
+                                database.put_function(functionToPut)
+                                word = ""
+                                inFunction = False
+                            else:
+                                temp = word
+                                word = ""
+                                state = 8
                     elif state == 8: #hledani zacatku nazvu argumentu
                         if (c.isspace() == False):
                             if c == '*':
