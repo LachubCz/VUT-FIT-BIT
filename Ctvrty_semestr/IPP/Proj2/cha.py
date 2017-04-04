@@ -72,10 +72,6 @@ class parser:
             while True:
                 c = file.read(1)
                 if not c:
-                    #print ("End of file")
-                    #if inFunction:
-                        #vkladani argumentu
-                        #database.put_function(functionToPut)
                     break
                 #rozhodovani zdali se ctou slova z funkce
                 if inFunction:
@@ -131,7 +127,6 @@ class parser:
                             if pointer == True:
                                 pass
                             else:
-                                #print(word, " - ", temp)
                                 functionToPut.put_parameter(word, temp)
                                 word = ""
                                 if (c == ')'):
@@ -168,8 +163,6 @@ class parser:
                         inFunction = True
                         state = 3
                         word = lastChar
-
-                #print ("Read a character: ", c, " State: ", state)
         
 ####################################################################################
 ######################################Funkce########################################
@@ -294,19 +287,6 @@ for opt, arg in options:
     elif opt == '--remove-whitespace':
         remove_whitespace = True
 
-#testovaci vypis argumentu
-#print ("ARGV      :", sys.argv[1:])
-#print ("OPTIONS   :", options)
-#print ("HELP              :", help)
-#print ("INPUT             :", input)
-#print ("OUTPUT            :", output)
-#print ("PRETTY            :", pretty)
-#print ("NO-INLINE         :", no_inline)
-#print ("MAX-PAR           :", max_par)
-#print ("NO-DUPLICATES     :", no_duplicates)
-#print ("REMOVE-WHITESPACE :", remove_whitespace)
-#print ("REMAINING         :", remainder)
-
 if len(remainder) != 0:
     sys.exit(1)
 
@@ -331,11 +311,5 @@ elif fileordir(input) == 2:
 """
 parser.readByChar(path, database)
 functionToGet = database.get_function(0)
-#print("Rettype: ", functionToGet.rettype, " Name: ", functionToGet.name, "File: ", functionToGet.file)
 
-#for x in functionToGet.parameters.keys():
-#    print (x, " => ", functionToGet.parameters[x])
-
-#for key, value in functionToGet.parameters.items():
-#    print("{}: {}".format(key, value))
 printDatabase(database)
