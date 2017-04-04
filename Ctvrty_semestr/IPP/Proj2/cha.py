@@ -51,7 +51,8 @@ class function:
 class parser:
 
     def readByChar(filename, database):
-        word = "" 
+        word = ""
+        temp = ""
         lastChar = '0'
         state = 0
         inFunction = False
@@ -87,25 +88,36 @@ class parser:
                             state = 6
                     elif state == 6: #hledani zacatku typu argumentu
                         if (c.isspace() == False):
-                            word = c
-                            state = 7
+                            if c == ')':
+                                state = 0
+                                inFunction = False
+                                database.put_function(functionToPut)
+                            else:
+                                word = c
+                                state = 7
                     elif state == 7: #cteni typu argumentu
                         if (c.isspace() == False):
                             word += c
                         else:
-                            functionToPut.put_name(word)
+                            temp = word
                             word = ""
-                            state = 6
+                            state = 8
                     elif state == 8: #hledani zacatku nazvu argumentu
                         if (c.isspace() == False):
                             word = c
                             state = 9
                     elif state == 9: #cteni nazvu argumentu
-                        pass
-                        #poslani funkce do databaze
-                        if c == '\n':
-                            database.put_function(functionToPut)
-                        
+                        if (c.isspace() == False and c != ')'):
+                            word += c
+                        else:
+                            word = ""
+                            put_varargs(word, temp)
+                            if (c == ')'):
+                                state = 0
+                                inFunction = False
+                                database.put_function(functionToPut)
+                            else:
+                                state = 6;
                 elif inComment:
                     if state == 1:
                         if c == '\n':
