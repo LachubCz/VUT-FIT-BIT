@@ -164,6 +164,7 @@ def output_func(output, final):
     else:
         f1 = open(output, 'w')
         f1.write(final)
+    sys.exit(0)
 
 def printDatabase(database):
     final = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
