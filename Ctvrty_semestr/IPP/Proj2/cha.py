@@ -50,7 +50,7 @@ class function:
 
 class parser:
 
-    def readByChar(filename, database):
+    def readByChar(filename, database, relativepath):
         word = ""
         temp = ""
         lastChar = '0'
@@ -58,6 +58,7 @@ class parser:
         inFunction = False
         inComment = False
         pointer = False
+
         with open(filename) as file:
             while True:
                 c = file.read(1)
@@ -88,7 +89,7 @@ class parser:
                             if c == ')':
                                 state = 0
                                 inFunction = False
-                                functionToPut.put_file(filename)
+                                functionToPut.put_file(relativepath)
                                 database.put_function(functionToPut)
                             else:
                                 word = c
@@ -122,7 +123,7 @@ class parser:
                                 if (c == ')'):
                                     state = 0
                                     inFunction = False
-                                    functionToPut.put_file(filename)
+                                    functionToPut.put_file(relativepath)
                                     database.put_function(functionToPut)
                                 else:
                                     state = 6;
@@ -130,29 +131,29 @@ class parser:
                     if state == 1:
                         if c == '\n':
                             inComment = False
+                            lastChar = '0'
                     elif state == 2:
                         if c == '/' and lastChar == '*':
                             inComment = False
                         lastChar = c
                 else:
-                    if lastChar == '0':
+                    if c == ';':
+                        pass
+                    elif lastChar == '0':
                         lastChar = c
-
-                    if lastChar == '/' and c == '/':
+                    elif lastChar == '/' and c == '/':
                         inComment = True
                         state = 1
-
-                    if lastChar == '/' and c == '*':
+                    elif lastChar == '/' and c == '*':
                         inComment = True
                         state = 2
-
-                    if lastChar.isspace() and c.isspace(): 
+                    elif lastChar.isspace() and c.isspace(): 
                         lastChar = c
-
-                    if lastChar != '0' and (c.isspace() == False) and c != '/':
+                    elif lastChar != '0' and (c.isspace() == False) and c != '/':
                         inFunction = True
                         state = 3
-                        word = lastChar
+                        word = lastChar + c
+
         
 ####################################################################################
 ######################################Funkce########################################
@@ -230,10 +231,10 @@ def recursive_gold(act_dir, database):
             if os.path.isdir(fileordir):
                 recursive_gold(fileordir)
             elif os.path.isfile(fileordir):
-                analysa(fileordir, database)
+                analysa(fileordir, database, "neco")
 
-def analysa(file, database):
-    parser.readByChar(path, database)
+def analysa(file, database, relativepath):
+    parser.readByChar(path, database, relativepath)
 
 ####################################################################################
 ###############################Zpracovani argumentu#################################
@@ -293,7 +294,7 @@ path = os.path.abspath(input)
 if fileordir(input) == 0:
     recursive_gold(path, database)
 elif fileordir(input) == 1:
-    analysa(path, database)
+    analysa(path, database, input)
 elif fileordir(input) == 2:
     recursive_gold('.')
 
