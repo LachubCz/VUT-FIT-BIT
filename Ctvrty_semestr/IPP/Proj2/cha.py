@@ -83,6 +83,18 @@ class parser:
                             word = ""
                             state = 6
                     elif state == 6:
+                        if (c.isspace() == False):
+                            word = c
+                            state = 7
+                    elif state == 7:
+                        pass
+                    elif state == 8:
+                        if (c.isspace() == False):
+                            word = c
+                            state = 9
+                    elif state == 9:
+                        pass
+                        
                         if c == '\n':
                             database.put_function(functionToPut)
                         
