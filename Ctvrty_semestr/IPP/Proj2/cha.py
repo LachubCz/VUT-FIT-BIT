@@ -26,8 +26,8 @@ class function:
         self.varargs = {}
         self.rettype = ""
 
-    def put_varargs (self, key, value)
-        self.varargs.setdefault(key, []).append(value)
+    def put_varargs(self, key, value):
+        self.varargs[key] = value
 
     def put_rettype(self, string):
         self.rettype = string
@@ -57,6 +57,7 @@ class parser:
         state = 0
         inFunction = False
         inComment = False
+        pointer = False
         with open(filename) as file:
             while True:
                 c = file.read(1)
@@ -91,6 +92,7 @@ class parser:
                             if c == ')':
                                 state = 0
                                 inFunction = False
+                                functionToPut.put_file(filename)
                                 database.put_function(functionToPut)
                             else:
                                 word = c
@@ -104,20 +106,31 @@ class parser:
                             state = 8
                     elif state == 8: #hledani zacatku nazvu argumentu
                         if (c.isspace() == False):
-                            word = c
+                            if c == '*':
+                                pointer = True
+                                word = c + " "
+                            else:
+                                word = c
                             state = 9
                     elif state == 9: #cteni nazvu argumentu
                         if (c.isspace() == False and c != ')'):
-                            word += c
+                            if c != ',':
+                                word += c
+                            pointer = False
                         else:
-                            word = ""
-                            put_varargs(word, temp)
-                            if (c == ')'):
-                                state = 0
-                                inFunction = False
-                                database.put_function(functionToPut)
+                            if pointer == True:
+                                pass
                             else:
-                                state = 6;
+                                #print(word, " - ", temp)
+                                functionToPut.put_varargs(word, temp)
+                                word = ""
+                                if (c == ')'):
+                                    state = 0
+                                    inFunction = False
+                                    functionToPut.put_file(filename)
+                                    database.put_function(functionToPut)
+                                else:
+                                    state = 6;
                 elif inComment:
                     if state == 1:
                         if c == '\n':
@@ -158,6 +171,16 @@ def output_func(output, final):
     else:
         f1 = open(output, 'w')
         f1.write(final)
+
+def printDatabase(database):
+    final = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    final += "<functions dir=\"\">\n"
+    for functionToGet in database.functions:
+        final += "  <function file=\"" + functionToGet.file + "\" name=\"" + functionToGet.name + "\" varargs=\"no\" rettype=\"" + functionToGet.rettype + "\">\n"
+        for parameter in functionToGet.varargs.keys():
+            final += "      <param number=\"\" type=\"" + functionToGet.varargs[parameter] + "\" />\n"
+    final += "</functions>"
+    output_func('STDOUT', final)
 
 def help_func():
     help_str = '--help ## Viz spolecne zadani vsech uloh.\n'
@@ -292,4 +315,11 @@ elif fileordir(input) == 2:
 """
 parser.readByChar(path, database)
 functionToGet = database.get_function(0)
-print("Rettype: ", functionToGet.rettype, " Name: ", functionToGet.name)
+#print("Rettype: ", functionToGet.rettype, " Name: ", functionToGet.name, "File: ", functionToGet.file)
+
+#for x in functionToGet.varargs.keys():
+#    print (x, " => ", functionToGet.varargs[x])
+
+#for key, value in functionToGet.varargs.items():
+#    print("{}: {}".format(key, value))
+printDatabase(database)
