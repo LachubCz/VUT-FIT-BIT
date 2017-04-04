@@ -48,16 +48,6 @@ class function:
     def put_file(self, string):
         self.file = string
 
-    def get_info(self, type):
-        if type == 'file':
-            return self.file
-        elif type == 'name':
-            return self.name
-        elif type == 'parameters':
-            return self.parameters
-        elif type == 'rettype':
-            return self.rettype
-
 class parser:
 
     def readByChar(filename, database):
@@ -232,19 +222,17 @@ def fileordir(name):
     if name == "STDIN":
         return 2
 
-def recursive_gold(act_dir):
+def recursive_gold(act_dir, database):
     for fileordir in os.listdir(act_dir):
         if fnmatch.fnmatch(fileordir, '*'):
             fileordir = act_dir + "/" + fileordir
             if os.path.isdir(fileordir):
-                #print(fileordir, "<-- FOLDER\n")
                 recursive_gold(fileordir)
             elif os.path.isfile(fileordir):
-                #print(fileordir, "<-- FILE\n")
-                analysa(fileordir)
+                analysa(fileordir, database)
 
-def analysa(file):
-    pass
+def analysa(file, database):
+    parser.readByChar(path, database)
 
 ####################################################################################
 ###############################Zpracovani argumentu#################################
@@ -300,16 +288,12 @@ if help == True:
 database = database(help, input, output, pretty, no_inline, max_par, no_duplicates, remove_whitespace) #inicializace databaze
 
 path = os.path.abspath(input)
-"""
+
 if fileordir(input) == 0:
-    recursive_gold(path)
+    recursive_gold(path, database)
 elif fileordir(input) == 1:
-    analysa(path)
+    analysa(path, database)
 elif fileordir(input) == 2:
     recursive_gold('.')
-
-"""
-parser.readByChar(path, database)
-functionToGet = database.get_function(0)
 
 printDatabase(database)
