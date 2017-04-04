@@ -26,6 +26,9 @@ class function:
         self.varargs = {}
         self.rettype = ""
 
+    def put_varargs (self, key, value)
+        self.varargs.setdefault(key, []).append(value)
+
     def put_rettype(self, string):
         self.rettype = string
 
@@ -64,37 +67,42 @@ class parser:
                     break
                 #rozhodovani zdali se ctou slova z funkce
                 if inFunction:
-                    if state == 3:
+                    if state == 3: #cteni navratoveho typu
                         if (c.isspace() == False):
                             word += c
                         else:
                             functionToPut = function() #mozna se budou muset funke cislovat
                             functionToPut.put_rettype(word)
                             state = 4
-                    elif state == 4:
+                    elif state == 4: #hledani zacatku nazvu funkce
                         if (c.isspace() == False):
                             word = c
                             state = 5
-                    elif state == 5:
+                    elif state == 5: #cteni nazvu funkce
                         if (c.isspace() == False and c != '('):
                             word += c
                         else:
                             functionToPut.put_name(word)
                             word = ""
                             state = 6
-                    elif state == 6:
+                    elif state == 6: #hledani zacatku typu argumentu
                         if (c.isspace() == False):
                             word = c
                             state = 7
-                    elif state == 7:
-                        pass
-                    elif state == 8:
+                    elif state == 7: #cteni typu argumentu
+                        if (c.isspace() == False):
+                            word += c
+                        else:
+                            functionToPut.put_name(word)
+                            word = ""
+                            state = 6
+                    elif state == 8: #hledani zacatku nazvu argumentu
                         if (c.isspace() == False):
                             word = c
                             state = 9
-                    elif state == 9:
+                    elif state == 9: #cteni nazvu argumentu
                         pass
-                        
+                        #poslani funkce do databaze
                         if c == '\n':
                             database.put_function(functionToPut)
                         
