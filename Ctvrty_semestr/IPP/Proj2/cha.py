@@ -99,6 +99,7 @@ class parser:
                             if c == ')':
                                 state = 0
                                 inFunction = False
+                                word = ""
                                 functionToPut.put_file(relativepath)
                                 database.put_function(functionToPut)
                             else:
@@ -109,6 +110,7 @@ class parser:
                             word += c
                         else:
                             if word == 'void':
+                                functionToPut.put_file(relativepath)
                                 database.put_function(functionToPut)
                                 word = ""
                                 inFunction = False
@@ -152,7 +154,7 @@ class parser:
                             inComment = False
                         lastChar = c
                 else:
-                    if c == ';':
+                    if c == ';' or c == ')' or c == '\n':
                         pass
                     elif lastChar == '0':
                         lastChar = c
@@ -168,6 +170,7 @@ class parser:
                         inFunction = True
                         state = 3
                         word = lastChar + c
+                        lastChar = '0'
 
         
 ####################################################################################
@@ -190,7 +193,7 @@ def printDatabase(database):
         final += "  <function file=\"" + functionToGet.file + "\" name=\"" + functionToGet.name + "\" varargs=\"" + functionToGet.varargs + "\" rettype=\"" + functionToGet.rettype + "\">\n"
         i = 1
 
-        for parameter in functionToGet.parameters.keys():
+        for parameter in functionToGet.parameters:
             final += "      <param number=\"" + str(i) + "\" type=\"" + functionToGet.parameters[parameter] + "\" />\n"
             i += 1
 
