@@ -33,11 +33,11 @@ class function:
         self.file = ""
         self.name = ""
         self.varargs = "no"
-        self.parameters = {}
+        self.parameters = []
         self.rettype = ""
 
-    def put_parameter(self, key, value):
-        self.parameters[key] = value
+    def put_parameter(self, string):
+        self.parameters.append(string)
 
     def put_rettype(self, string):
         self.rettype += string
@@ -60,20 +60,23 @@ class parser:
         state = 0
         inFunction = False
         inComment = False
-        pointer = False
+        end = False
 
         with open(filename) as file:
             while True:
                 c = file.read(1)
                 if not c:
                     break
-                #rozhodovani zdali se ctou slova z funkce
+
+                #funkce
                 if inFunction:
+
+                    #pred parametry funkce
                     if state == 3: #cteni navratoveho typu
                         if (c.isspace() == False):
                             word += c
                         else:
-                            functionToPut = function() #mozna se budou muset funke cislovat
+                            functionToPut = function()
                             functionToPut.put_rettype(word)
                             state = 4
                     elif state == 4: #hledani zacatku nazvu funkce
@@ -94,7 +97,9 @@ class parser:
                                 word = ""
                                 state = 4
 
+                    #parametry funkce
                     elif state == 6: #hledani zacatku typu argumentu
+                        print ("State: ", state, " - ", c)
                         if (c.isspace() == False):
                             if c == ')':
                                 state = 0
@@ -105,7 +110,9 @@ class parser:
                             else:
                                 word = c
                                 state = 7
+
                     elif state == 7: #cteni typu argumentu
+                        print ("State: ", state, " - ", c)
                         if (c.isspace() == False and c != ')'):
                             word += c
                         else:
@@ -114,36 +121,72 @@ class parser:
                                 database.put_function(functionToPut)
                                 word = ""
                                 inFunction = False
+                            elif word == '...':
+                                functionToPut.put_varargs()
+                                functionToPut.put_file(relativepath)
+                                word = ""
+                                inFunction = False
+                                database.put_function(functionToPut)
                             else:
                                 temp = word
                                 word = ""
                                 state = 8
+
                     elif state == 8: #hledani zacatku nazvu argumentu
+                        print ("State: ", state, " - ", c)
                         if (c.isspace() == False):
                             if c == '*':
-                                pointer = True
-                                word = c + " "
+                                temp = " " + c
+                                functionToPut.put_parameter(temp)
+                                word = ""
+                                state = 10
                             else:
                                 word = c
-                            state = 9
+                                state = 9
+
                     elif state == 9: #cteni nazvu argumentu
+                        print ("State: ", state, " - ", c)
                         if (c.isspace() == False and c != ')'):
                             if c != ',':
                                 word += c
-                            pointer = False
-                        else:
-                            if pointer == True:
-                                pass
                             else:
-                                functionToPut.put_parameter(word, temp)
+                                state = 6
+                        else:
+                            #functionToPut.put_parameter(word)
+                            if c == ')':
+                                inFunction = False
+                                functionToPut.put_file(relativepath)
+                                functionToPut.put_parameter(temp)
+                                database.put_function(functionToPut)
+                            else:
+                                state = 11;
+
+                    elif state == 10: #cteni nazvu argumentu
+                        print ("State: ", state, " - ", c)
+                        if c == ',':
+                            state = 6
+                        elif c == ')':
+                            inFunction = False
+                    
+                    elif state == 11:
+                        print ("State: ", state, " - ", c)
+                        if c.isspace():
+                            pass
+                        elif c == ',':
+                            state = 6
+                            functionToPut.put_parameter(temp)
+                            word = ""
+                        else:
+                            temp = " " + word
+                            if c == '*':
+                                functionToPut.put_parameter(temp)
                                 word = ""
-                                if (c == ')'):
-                                    state = 0
-                                    inFunction = False
-                                    functionToPut.put_file(relativepath)
-                                    database.put_function(functionToPut)
-                                else:
-                                    state = 6;
+                                state = 10
+                            else:
+                                word = c
+                                state = 9
+
+                #komentare
                 elif inComment:
                     if state == 1:
                         if c == '\n':
@@ -153,6 +196,8 @@ class parser:
                         if c == '/' and lastChar == '*':
                             inComment = False
                         lastChar = c
+
+                #mimo funkci mimo komentar
                 else:
                     if c == ';' or c == ')' or c == '\n':
                         pass
@@ -194,7 +239,7 @@ def printDatabase(database):
         i = 1
 
         for parameter in functionToGet.parameters:
-            final += "      <param number=\"" + str(i) + "\" type=\"" + functionToGet.parameters[parameter] + "\" />\n"
+            final += "      <param number=\"" + str(i) + "\" type=\"" + parameter + "\" />\n"
             i += 1
 
     final += "</functions>"
