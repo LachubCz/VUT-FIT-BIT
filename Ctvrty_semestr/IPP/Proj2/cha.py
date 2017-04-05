@@ -226,16 +226,17 @@ def output_func(output, final):
     sys.exit(0)
 
 def printDatabase(database):
-    final = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-    final += "<functions dir=\"\">\n"
+    final = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+    final += "<functions dir=\"\">"
 
     for functionToGet in database.functions:
-        final += "  <function file=\"" + functionToGet.file + "\" name=\"" + functionToGet.name + "\" varargs=\"" + functionToGet.varargs + "\" rettype=\"" + functionToGet.rettype + "\">\n"
+        final += "<function file=\"" + functionToGet.file + "\" name=\"" + functionToGet.name + "\" varargs=\"" + functionToGet.varargs + "\" rettype=\"" + functionToGet.rettype + "\">"
         i = 1
 
         for parameter in functionToGet.parameters:
-            final += "      <param number=\"" + str(i) + "\" type=\"" + parameter + "\" />\n"
+            final += "<param number=\"" + str(i) + "\" type=\"" + parameter + "\" />"
             i += 1
+        final += ("</function>")
 
     final += "</functions>"
 
