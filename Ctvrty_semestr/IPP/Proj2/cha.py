@@ -99,7 +99,6 @@ class parser:
 
                     #parametry funkce
                     elif state == 6: #hledani zacatku typu argumentu
-                        print ("State: ", state, " - ", c)
                         if (c.isspace() == False):
                             if c == ')':
                                 state = 0
@@ -112,7 +111,6 @@ class parser:
                                 state = 7
 
                     elif state == 7: #cteni typu argumentu
-                        print ("State: ", state, " - ", c)
                         if (c.isspace() == False and c != ')'):
                             word += c
                         else:
@@ -133,10 +131,9 @@ class parser:
                                 state = 8
 
                     elif state == 8: #hledani zacatku nazvu argumentu
-                        print ("State: ", state, " - ", c)
                         if (c.isspace() == False):
                             if c == '*':
-                                temp = " " + c
+                                temp = temp + " " + c
                                 functionToPut.put_parameter(temp)
                                 word = ""
                                 state = 10
@@ -145,7 +142,6 @@ class parser:
                                 state = 9
 
                     elif state == 9: #cteni nazvu argumentu
-                        print ("State: ", state, " - ", c)
                         if (c.isspace() == False and c != ')'):
                             if c != ',':
                                 word += c
@@ -162,14 +158,12 @@ class parser:
                                 state = 11;
 
                     elif state == 10: #cteni nazvu argumentu
-                        print ("State: ", state, " - ", c)
                         if c == ',':
                             state = 6
                         elif c == ')':
                             inFunction = False
                     
                     elif state == 11:
-                        print ("State: ", state, " - ", c)
                         if c.isspace():
                             pass
                         elif c == ',':
@@ -177,8 +171,9 @@ class parser:
                             functionToPut.put_parameter(temp)
                             word = ""
                         else:
-                            temp = " " + word
+                            temp = temp + " " + word
                             if c == '*':
+                                temp = temp + " " + c
                                 functionToPut.put_parameter(temp)
                                 word = ""
                                 state = 10
