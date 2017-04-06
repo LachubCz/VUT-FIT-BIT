@@ -227,16 +227,41 @@ def output_func(output, final):
 
 def printDatabase(database):
     final = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+    if database.parameters[3] != -1:
+        final+='\n'
+
     final += "<functions dir=\"\">"
+    if database.parameters[3] != -1:
+        final+='\n'
 
     for functionToGet in database.functions:
+        e = 0
+        while e < int(database.parameters[3]):
+            e+=1
+            final+=' '
+        
         final += "<function file=\"" + functionToGet.file + "\" name=\"" + functionToGet.name + "\" varargs=\"" + functionToGet.varargs + "\" rettype=\"" + functionToGet.rettype + "\">"
         i = 1
+        if database.parameters[3] != -1:
+            final+='\n'
 
         for parameter in functionToGet.parameters:
+            e = 0
+            while e < (int(database.parameters[3]) * 2):
+                final+=' '
+                e+=1
             final += "<param number=\"" + str(i) + "\" type=\"" + parameter + "\" />"
+            if database.parameters[3] != -1:
+                final+='\n'
             i += 1
+        
+        e = 0
+        while e < int(database.parameters[3]):
+            final+=' '
+            e+=1
         final += ("</function>")
+        if database.parameters[3] != -1:
+            final+='\n'
 
     final += "</functions>"
 
@@ -302,7 +327,7 @@ def analysa(file, database, relativepath):
 help = False
 input = 'STDIN'
 output = 'STDOUT'
-pretty = False
+pretty = -1
 no_inline = False
 max_par = -1
 no_duplicates = False
@@ -312,7 +337,7 @@ options, remainder = getopt.getopt(sys.argv[1:], ':', ['input=',
                                                          'output',
                                                          'max-par=',
                                                          'help',
-                                                         'pretty',
+                                                         'pretty-xml=',
                                                          'no-inline',
                                                          'no-duplicates',
                                                          'remove-whitespace',
@@ -327,8 +352,8 @@ for opt, arg in options:
         max_par = arg
     elif opt == '--help':
         help = True
-    elif opt == '--pretty':
-        pretty = True
+    elif opt == '--pretty-xml':
+        pretty = arg
     elif opt == '--no-inline':
         no_inline = True
     elif opt == '--no-duplicates':
@@ -339,7 +364,7 @@ for opt, arg in options:
 if len(remainder) != 0:
     sys.exit(1)
 
-if help == True and ( input != 'STDIN' or output != 'STDOUT' or pretty != False or no_inline != False or max_par != -1 or no_duplicates != False or remove_whitespace != False ):
+if help == True and ( input != 'STDIN' or output != 'STDOUT' or pretty != -1 or no_inline != False or max_par != -1 or no_duplicates != False or remove_whitespace != False ):
     sys.exit(1)
 
 if help == True:
