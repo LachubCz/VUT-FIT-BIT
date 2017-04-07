@@ -221,18 +221,19 @@ class parserForFile:
 def output_func(output, final):
     if output == 'STDOUT':
         print(final)
+        sys.exit(0)
     else:
         f1 = open(output, 'w')
         f1.write(final)
-    sys.exit(0)
+        sys.exit(0)
 
 def printDatabase(database):
     final = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-    if database.parameters[3] != -1:
+    if database.parameters[3] != '-1':
         final+='\n'
 
     final += "<functions dir=\"\">"
-    if database.parameters[3] != -1:
+    if database.parameters[3] != '-1':
         final+='\n'
 
     for functionToGet in database.functions:
@@ -243,7 +244,7 @@ def printDatabase(database):
         
         final += "<function file=\"" + functionToGet.file + "\" name=\"" + functionToGet.name + "\" varargs=\"" + functionToGet.varargs + "\" rettype=\"" + functionToGet.rettype + "\">"
         i = 1
-        if database.parameters[3] != -1:
+        if database.parameters[3] != '-1':
             final+='\n'
 
         for parameter in functionToGet.parameters:
@@ -252,7 +253,7 @@ def printDatabase(database):
                 final+=' '
                 e+=1
             final += "<param number=\"" + str(i) + "\" type=\"" + parameter + "\" />"
-            if database.parameters[3] != -1:
+            if database.parameters[3] != '-1':
                 final+='\n'
             i += 1
         
@@ -261,7 +262,7 @@ def printDatabase(database):
             final+=' '
             e+=1
         final += ("</function>")
-        if database.parameters[3] != -1:
+        if database.parameters[3] != '-1':
             final+='\n'
 
     final += "</functions>"
@@ -309,17 +310,18 @@ def fileordir(name):
     if name == "STDIN":
         return 2
 
-def recursive_gold(act_dir, database):
+def recursive_gold(act_dir, database, relativepath):
     for fileordir in os.listdir(act_dir):
         if fnmatch.fnmatch(fileordir, '*'):
+            relativepath = relativepath + "/" + fileordir
             fileordir = act_dir + "/" + fileordir
             if os.path.isdir(fileordir):
-                recursive_gold(fileordir)
+                recursive_gold(fileordir, database, relativepath)
             elif os.path.isfile(fileordir):
-                analysa(fileordir, database, "neco")
+                analysa(fileordir, database, relativepath)
 
 def analysa(file, database, relativepath):
-    parserForFile.readByChar(path, database, relativepath)
+    parserForFile.readByChar(file, database, relativepath)
 
 ####################################################################################
 ###############################Zpracovani argumentu#################################
@@ -343,19 +345,15 @@ except SystemExit:
 
 if results.pretty == None:
     results.pretty = 4
-"""
-print ("HELP              :", results.help)
-print ("INPUT             :", results.input)
-print ("OUTPUT            :", results.output)
-print ("PRETTY            :", results.pretty,)
-print ("NO-INLINE         :", results.no_inline)
-print ("MAX-PAR           :", results.max_par)
-print ("NO-DUPLICATES     :", results.no_duplicates)
-print ("REMOVE-WHITESPACE :", results.remove_whitespace)
-"""
 
 if results.help == True and ( results.input != 'STDIN' or results.output != 'STDOUT' or results.pretty != '-1' or results.no_inline != False  or results.max_par != '-1'  or results.no_duplicates != False or results.remove_whitespace != False ):
     sys.exit(1)
+
+if results.input == 'STDIN':
+    results.input = '.'
+
+if os.path.isdir(results.output):
+    sys.exit(3)
 
 if results.help == True:
     help_str = help_func()
@@ -366,10 +364,10 @@ database = database(results.help, results.input, results.output, results.pretty,
 path = os.path.abspath(results.input)
 
 if fileordir(results.input) == 0:
-    recursive_gold(path, database)
+    recursive_gold(path, database, results.input)
 elif fileordir(results.input) == 1:
     analysa(path, database, results.input)
 elif fileordir(results.input) == 2:
-    recursive_gold('.')
+    recursive_gold('.', database, '.')
 
 printDatabase(database)
