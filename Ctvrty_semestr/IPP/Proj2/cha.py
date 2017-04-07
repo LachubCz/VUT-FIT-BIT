@@ -324,16 +324,7 @@ def analysa(file, database, relativepath):
 ####################################################################################
 ###############################Zpracovani argumentu#################################
 ####################################################################################
-"""
-help = False
-input = 'STDIN'
-output = 'STDOUT'
-pretty = -1
-no_inline = False
-max_par = -1
-no_duplicates = False
-remove_whitespace = False
-"""
+
 parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
 
 parser.add_argument('--input', action='store', dest='input', default='STDIN')
@@ -361,83 +352,8 @@ print ("NO-INLINE         :", results.no_inline)
 print ("MAX-PAR           :", results.max_par)
 print ("NO-DUPLICATES     :", results.no_duplicates)
 print ("REMOVE-WHITESPACE :", results.remove_whitespace)
-
 """
 
-
-#print ("REMAINING         :", results.remainder)
-
-
-
-"""
-options, remainder = getopt.getopt(sys.argv[1:], ':', ['input=', 
-                                                         'output',
-                                                         'max-par=',
-                                                         'help',
-                                                         'pretty-xml=',
-                                                         'pretty-xml',
-                                                         'no-inline',
-                                                         'no-duplicates',
-                                                         'remove-whitespace',
-                                                         ])
-
-for opt, arg in options:
-    if opt in '--input':
-        input = arg
-    elif opt in '--output':
-        output = arg
-    elif opt in '--max-par':
-        max_par = arg
-    elif opt == '--help':
-        help = True
-    elif opt == '--pretty-xml':
-        if arg == '':
-            pretty = 4
-        else:
-            pretty = arg
-    elif opt == '--no-inline':
-        no_inline = True
-    elif opt == '--no-duplicates':
-        no_duplicates = True
-    elif opt == '--remove-whitespace':
-        remove_whitespace = True
-"""
-
-
-
-
-"""
-parser.add_argument('--pretty-xml=', action='append', dest='collection',
-                    default=[],
-                    help='Add repeated values to a list',
-                    )
-"""
-"""
-parser.add_argument('--pretty-xml', action='store_true', default=True,
-                    dest='boolean_switch',
-                    help='Set a switch to true')
-"""
-
-#print ('collection       =', results.collection)
-#print ('boolean_switch   =', results.boolean_switch)
-"""
-
-print ("ARGV      :", sys.argv[1:])
-print ("OPTIONS   :", options)
-print ("HELP              :", help)
-print ("INPUT             :", input)
-print ("OUTPUT            :", output)
-print ("PRETTY            :", pretty)
-print ("NO-INLINE         :", no_inline)
-print ("MAX-PAR           :", max_par)
-print ("NO-DUPLICATES     :", no_duplicates)
-print ("REMOVE-WHITESPACE :", remove_whitespace)
-print ("REMAINING         :", remainder)
-
-
-if len(remainder) != 0:
-    sys.exit(1)
-"""
 if results.help == True and ( results.input != 'STDIN' or results.output != 'STDOUT' or results.pretty != '-1' or results.no_inline != False  or results.max_par != '-1'  or results.no_duplicates != False or results.remove_whitespace != False ):
     sys.exit(1)
 
