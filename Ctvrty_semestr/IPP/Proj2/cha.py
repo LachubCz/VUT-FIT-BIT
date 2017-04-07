@@ -344,22 +344,27 @@ parser.add_argument('--pretty-xml', action='store', dest='pretty', default='-1',
 parser.add_argument('--no-inline', action='store_true', dest='no_inline', default=False)
 parser.add_argument('--no-duplicates', action='store_true', dest='no_duplicates', default=False)
 parser.add_argument('--remove-whitespace', action='store_true', dest='remove_whitespace', default=False)
-#try: 
-results = parser.parse_args()
-#except SystemExit:
-#    if results.help == -1:
-#        sys.exit(0)
-#    print("do something else")
-#    sys.exit(1)
+
+try: 
+    results = parser.parse_args()
+except SystemExit:
+    sys.exit(1)
+
+if results.pretty == None:
+    results.pretty = 4
 
 print ("HELP              :", results.help)
 print ("INPUT             :", results.input)
 print ("OUTPUT            :", results.output)
-print ("PRETTY            :", results.pretty)
+print ("PRETTY            :", results.pretty,)
 print ("NO-INLINE         :", results.no_inline)
 print ("MAX-PAR           :", results.max_par)
 print ("NO-DUPLICATES     :", results.no_duplicates)
 print ("REMOVE-WHITESPACE :", results.remove_whitespace)
+
+
+
+
 #print ("REMAINING         :", results.remainder)
 
 
