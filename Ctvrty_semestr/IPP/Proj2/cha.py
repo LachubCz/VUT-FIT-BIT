@@ -52,7 +52,7 @@ class function:
     def put_varargs(self):
         self.varargs = "yes"
 
-class parser:
+class parserForFile:
 
     def readByChar(filename, database, relativepath):
         word = ""
@@ -319,7 +319,7 @@ def recursive_gold(act_dir, database):
                 analysa(fileordir, database, "neco")
 
 def analysa(file, database, relativepath):
-    parser.readByChar(path, database, relativepath)
+    parserForFile.readByChar(path, database, relativepath)
 
 ####################################################################################
 ###############################Zpracovani argumentu#################################
@@ -338,7 +338,7 @@ parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
 
 parser.add_argument('--input', action='store', dest='input', default='STDIN')
 parser.add_argument('--output', action='store', dest='output', default='STDOUT')
-parser.add_argument('--max-par', action='store', dest='max_par', default=-1)
+parser.add_argument('--max-par', action='store', dest='max_par', default='-1')
 parser.add_argument('--help', action='store_true', dest='help', default=False)
 parser.add_argument('--pretty-xml', action='store', dest='pretty', default='-1', nargs='?')
 parser.add_argument('--no-inline', action='store_true', dest='no_inline', default=False)
@@ -352,7 +352,7 @@ except SystemExit:
 
 if results.pretty == None:
     results.pretty = 4
-
+"""
 print ("HELP              :", results.help)
 print ("INPUT             :", results.input)
 print ("OUTPUT            :", results.output)
@@ -362,7 +362,7 @@ print ("MAX-PAR           :", results.max_par)
 print ("NO-DUPLICATES     :", results.no_duplicates)
 print ("REMOVE-WHITESPACE :", results.remove_whitespace)
 
-
+"""
 
 
 #print ("REMAINING         :", results.remainder)
@@ -420,8 +420,8 @@ parser.add_argument('--pretty-xml', action='store_true', default=True,
 
 #print ('collection       =', results.collection)
 #print ('boolean_switch   =', results.boolean_switch)
-
 """
+
 print ("ARGV      :", sys.argv[1:])
 print ("OPTIONS   :", options)
 print ("HELP              :", help)
@@ -437,24 +437,23 @@ print ("REMAINING         :", remainder)
 
 if len(remainder) != 0:
     sys.exit(1)
-
-if help == True and ( input != 'STDIN' or output != 'STDOUT' or pretty != -1 or no_inline != False or max_par != -1 or no_duplicates != False or remove_whitespace != False ):
+"""
+if results.help == True and ( results.input != 'STDIN' or results.output != 'STDOUT' or results.pretty != '-1' or results.no_inline != False  or results.max_par != '-1'  or results.no_duplicates != False or results.remove_whitespace != False ):
     sys.exit(1)
 
-if help == True:
+if results.help == True:
     help_str = help_func()
-    output_func(output, help_str)
+    output_func(results.output, help_str)
 
-database = database(help, input, output, pretty, no_inline, max_par, no_duplicates, remove_whitespace) #inicializace databaze
+database = database(results.help, results.input, results.output, results.pretty, results.no_inline, results.max_par, results.no_duplicates, results.remove_whitespace) #inicializace databaze
 
-path = os.path.abspath(input)
+path = os.path.abspath(results.input)
 
-if fileordir(input) == 0:
+if fileordir(results.input) == 0:
     recursive_gold(path, database)
-elif fileordir(input) == 1:
-    analysa(path, database, input)
-elif fileordir(input) == 2:
+elif fileordir(results.input) == 1:
+    analysa(path, database, results.input)
+elif fileordir(results.input) == 2:
     recursive_gold('.')
 
 printDatabase(database)
-"""
