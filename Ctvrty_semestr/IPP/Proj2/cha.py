@@ -80,6 +80,7 @@ class parserForFile:
         inComment = False
         end = False
         inString = False
+        inMacro = False
 
         with open(filename) as file:
             while True:
@@ -177,9 +178,7 @@ class parserForFile:
                             if c != ',':
                                 word += c
                             else:
-                                functionToPut.put_file(relativepath)
                                 functionToPut.put_parameter(temp)
-                                database.put_function(functionToPut)
                                 state = 6
                         else:
                             if c == ')':
@@ -257,6 +256,27 @@ class parserForFile:
                             lastChar = '0'
                         else:
                             lastChar = c
+
+                elif inMacro:
+                    if state == 18:
+                        if c == '\u005C':
+                            state = 19
+                        elif lastChar == '/' and c == '*':
+                            state = 19
+                        elif c == '\n':
+                            inMacro = False
+                            lastChar = '0'
+                        else:
+                            lastChar = c
+                    elif state == 19:
+                        if c == '\n':
+                            state = 20
+                    elif state == 20:
+                        if c == '\n':
+                            inMacro = False
+                            lastChar = '0'
+
+
                 #mimo funkci mimo komentar
                 else:
                     if c == ';' or c == ')' or c == '\n':
@@ -267,6 +287,9 @@ class parserForFile:
                     elif c == '\'':
                         inString = True
                         state = 17
+                    elif c == '#':
+                        inMacro = True
+                        state = 18
                     elif lastChar == '0':
                         lastChar = c
                     elif lastChar == '/' and c == '/':
