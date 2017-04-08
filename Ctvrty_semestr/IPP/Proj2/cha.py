@@ -204,6 +204,8 @@ class parserForFile:
                 #komentare
                 elif inComment:
                     if state == 1:
+                        if c == '\u005C':
+                            state = 12
                         if c == '\n':
                             inComment = False
                             lastChar = '0'
@@ -211,6 +213,13 @@ class parserForFile:
                         if c == '/' and lastChar == '*':
                             inComment = False
                         lastChar = c
+                    elif state == 12:
+                        if c == '\n':
+                            state = 13
+                    elif state == 14:
+                        if c == '\n':
+                            inComment = False
+                            lastChar = '0'
 
                 #mimo funkci mimo komentar
                 else:
