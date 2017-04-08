@@ -24,7 +24,7 @@ class database:
 
     def put_function(self, functionToPut):
         duplicate = False
-        if self.parameters[6] == '-1':
+        if self.parameters[6] == False:
             if self.parameters[5] == '-1':
                 self.functions.append(functionToPut)
             else:
@@ -94,9 +94,12 @@ class parserForFile:
                         if (c.isspace() == False):
                             word += c
                         else:
-                            functionToPut = function()
-                            functionToPut.put_rettype(word)
-                            state = 4
+                            if "inline" in word and database.parameters[4]:
+                                state = 15
+                            else:
+                                functionToPut = function()
+                                functionToPut.put_rettype(word)
+                                state = 4
                     elif state == 4: #hledani zacatku nazvu funkce
                         if (c.isspace() == False):
                             word = c
@@ -110,10 +113,13 @@ class parserForFile:
                                 word = ""
                                 state = 6
                             elif c.isspace() == True:
-                                word = " " + word
-                                functionToPut.put_rettype(word)
-                                word = ""
-                                state = 4
+                                if "inline" in word and database.parameters[4]:
+                                    state = 15
+                                else:
+                                    word = " " + word
+                                    functionToPut.put_rettype(word)
+                                    word = ""
+                                    state = 4
 
                     #parametry funkce
                     elif state == 6: #hledani zacatku typu argumentu
@@ -206,6 +212,10 @@ class parserForFile:
                             else:
                                 word = c
                                 state = 9
+                    elif state == 15:
+                        if c == ';':
+                            inFunction = False
+                            lastChar = '0'
 
                 #komentare
                 elif inComment:
