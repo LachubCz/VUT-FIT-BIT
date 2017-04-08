@@ -232,9 +232,17 @@ def printDatabase(database):
     if database.parameters[3] != '-1':
         final+='\n'
 
-    final += "<functions dir=\"\">"
-    if database.parameters[3] != '-1':
-        final+='\n'
+    if os.path.isdir(database.parameters[1]):
+        if database.parameters[1][-1] != '/':
+            database.parameters[1] += '/'
+
+        final += "<functions dir=\"" + database.parameters[1] +"\">"
+        if database.parameters[3] != '-1':
+            final+='\n'
+    else:
+        final += "<functions dir=\"\">"
+        if database.parameters[3] != '-1':
+            final+='\n'
 
     for functionToGet in database.functions:
         e = 0
@@ -313,7 +321,10 @@ def fileordir(name):
 def recursive_gold(act_dir, database, relativepath):
     for fileordir in os.listdir(act_dir):
         if fnmatch.fnmatch(fileordir, '*'):
-            relativepath = relativepath + "/" + fileordir
+            if relativepath == '-1':
+                relativepath = fileordir
+            else:
+                relativepath = relativepath + "/" + fileordir
             fileordir = act_dir + "/" + fileordir
             if os.path.isdir(fileordir):
                 recursive_gold(fileordir, database, relativepath)
@@ -364,10 +375,10 @@ database = database(results.help, results.input, results.output, results.pretty,
 path = os.path.abspath(results.input)
 
 if fileordir(results.input) == 0:
-    recursive_gold(path, database, results.input)
+    recursive_gold(path, database, '-1')
 elif fileordir(results.input) == 1:
     analysa(path, database, results.input)
 elif fileordir(results.input) == 2:
-    recursive_gold('.', database, '.')
+    recursive_gold('.', database, '-1')
 
 printDatabase(database)
