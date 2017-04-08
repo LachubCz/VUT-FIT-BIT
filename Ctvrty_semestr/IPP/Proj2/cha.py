@@ -23,12 +23,24 @@ class database:
         self.parameters.append(remove_whitespace)
 
     def put_function(self, functionToPut):
-        if self.parameters[5] == '-1':
-            self.functions.append(functionToPut)
-        else:
-            if len(functionToPut.parameters) <= int(self.parameters[5]):
+        duplicate = False
+        if self.parameters[6] == '-1':
+            if self.parameters[5] == '-1':
                 self.functions.append(functionToPut)
-        
+            else:
+                if len(functionToPut.parameters) <= int(self.parameters[5]):
+                    self.functions.append(functionToPut)
+        else:
+            for functionToCheck in self.functions:
+                if functionToCheck.name == functionToPut.name:
+                    duplicate = True
+            if duplicate == False:
+                if self.parameters[5] == '-1':
+                    self.functions.append(functionToPut)
+                else:
+                    if len(functionToPut.parameters) <= int(self.parameters[5]):
+                        self.functions.append(functionToPut)
+
 
     def get_function(self, index):
         return self.functions[index]
@@ -83,8 +95,6 @@ class parserForFile:
                             word += c
                         else:
                             functionToPut = function()
-                            if word != 'no-inline':
-                                pass
                             functionToPut.put_rettype(word)
                             state = 4
                     elif state == 4: #hledani zacatku nazvu funkce
@@ -154,9 +164,11 @@ class parserForFile:
                             if c != ',':
                                 word += c
                             else:
+                                functionToPut.put_file(relativepath)
+                                functionToPut.put_parameter(temp)
+                                database.put_function(functionToPut)
                                 state = 6
                         else:
-                            #functionToPut.put_parameter(word)
                             if c == ')':
                                 inFunction = False
                                 functionToPut.put_file(relativepath)
