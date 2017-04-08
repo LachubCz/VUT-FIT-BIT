@@ -79,6 +79,7 @@ class parserForFile:
         inFunction = False
         inComment = False
         end = False
+        inString = False
 
         with open(filename) as file:
             while True:
@@ -238,11 +239,34 @@ class parserForFile:
                         if c == '\n':
                             inComment = False
                             lastChar = '0'
-
+                
+                elif inString:
+                    if state == 16:
+                        if lastChar == '\u005C' and c == "\"":
+                            pass
+                        elif c == "\"":
+                            inString = False
+                            lastChar = '0'
+                        else:
+                            lastChar = c
+                    elif state == 17:
+                        if lastChar == '\u005C' and c == "\'":
+                            pass
+                        elif c == "\'":
+                            inString = False
+                            lastChar = '0'
+                        else:
+                            lastChar = c
                 #mimo funkci mimo komentar
                 else:
                     if c == ';' or c == ')' or c == '\n':
                         pass
+                    elif c == '\"':
+                        inString = True
+                        state = 16
+                    elif c == '\'':
+                        inString = True
+                        state = 17
                     elif lastChar == '0':
                         lastChar = c
                     elif lastChar == '/' and c == '/':
@@ -366,7 +390,6 @@ def fileordir(name):
         return 2
     else:
         return 3
-
 
 def recursive_gold(act_dir, database, relativepath):
     for fileordir in os.listdir(act_dir):
