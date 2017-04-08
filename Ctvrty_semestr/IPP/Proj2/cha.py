@@ -1,6 +1,6 @@
 # @author Petr Buchal(xbucha02)
 
-import getopt, sys
+import sys
 import os, fnmatch
 import argparse
 
