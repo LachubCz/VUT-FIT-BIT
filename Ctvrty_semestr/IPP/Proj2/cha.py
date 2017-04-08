@@ -85,7 +85,7 @@ class parserForFile:
                 c = file.read(1)
                 if not c:
                     break
-
+                #print(state, " - ", lastChar, " - ", c, "\n")
                 #funkce
                 if inFunction:
 
@@ -143,6 +143,12 @@ class parserForFile:
                                 word = ""
                                 inFunction = False
                                 database.put_function(functionToPut)
+                            elif c == ')':
+                                inFunction = False
+                                functionToPut.put_file(relativepath)
+                                functionToPut.put_parameter(word)
+                                database.put_function(functionToPut)
+                                word = ""
                             else:
                                 temp = word
                                 word = ""
@@ -212,7 +218,9 @@ class parserForFile:
                     elif state == 2:
                         if c == '/' and lastChar == '*':
                             inComment = False
-                        lastChar = c
+                            lastChar = '0'
+                        else:
+                            lastChar = c
                     elif state == 12:
                         if c == '\n':
                             state = 13
@@ -398,8 +406,9 @@ if results.input == 'STDIN':
 if os.path.isdir(results.output):
     sys.exit(3)
 
-if os.access(results.output, os.R_OK) == False:
-    sys.exit(3)
+if results.output != 'STDOUT':
+    if os.access(results.output, os.R_OK) == False:
+        sys.exit(3)
 
 if results.help == True:
     help_str = help_func()
