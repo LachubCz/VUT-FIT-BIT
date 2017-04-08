@@ -253,6 +253,7 @@ def output_func(output, final):
     else:
         f1 = open(output, 'w')
         f1.write(final)
+        f1.close()
         sys.exit(0)
 
 def printDatabase(database):
@@ -341,10 +342,13 @@ def help_func():
 def fileordir(name):
     if os.path.isdir(name):
         return 0
-    if os.path.isfile(name):
+    elif os.path.isfile(name):
         return 1
-    if name == "STDIN":
+    elif name == "STDIN":
         return 2
+    else:
+        return 3
+
 
 def recursive_gold(act_dir, database, relativepath):
     for fileordir in os.listdir(act_dir):
@@ -394,6 +398,9 @@ if results.input == 'STDIN':
 if os.path.isdir(results.output):
     sys.exit(3)
 
+if os.access(results.output, os.R_OK) == False:
+    sys.exit(3)
+
 if results.help == True:
     help_str = help_func()
     output_func(results.output, help_str)
@@ -408,5 +415,7 @@ elif fileordir(results.input) == 1:
     analysa(path, database, results.input)
 elif fileordir(results.input) == 2:
     recursive_gold('.', database, '-1')
+elif fileordir(results.input) == 3:
+    sys.exit(2)
 
 printDatabase(database)
