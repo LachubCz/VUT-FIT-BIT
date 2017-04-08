@@ -23,7 +23,12 @@ class database:
         self.parameters.append(remove_whitespace)
 
     def put_function(self, functionToPut):
-        self.functions.append(functionToPut)
+        if self.parameters[5] == '-1':
+            self.functions.append(functionToPut)
+        else:
+            if len(functionToPut.parameters) <= int(self.parameters[5]):
+                self.functions.append(functionToPut)
+        
 
     def get_function(self, index):
         return self.functions[index]
@@ -78,6 +83,8 @@ class parserForFile:
                             word += c
                         else:
                             functionToPut = function()
+                            if word != 'no-inline':
+                                pass
                             functionToPut.put_rettype(word)
                             state = 4
                     elif state == 4: #hledani zacatku nazvu funkce
