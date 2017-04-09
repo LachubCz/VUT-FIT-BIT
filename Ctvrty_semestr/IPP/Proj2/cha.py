@@ -504,17 +504,28 @@ def fileordir(name):
 def recursive_gold(act_dir, database, relativepath):
     for fileordir in os.listdir(act_dir):
         if fnmatch.fnmatch(fileordir, '*'):
-            if relativepath == '-1':
-                relativepath = fileordir
-            else:
-                relativepath = relativepath + "/" + fileordir
+            temp = fileordir
             fileordir = act_dir + "/" + fileordir
             if os.path.isdir(fileordir):
+                if relativepath == '-1':
+                    relativepath = temp
+                    temp2 = '-1'
+                else:
+                    temp2 = relativepath
+                    relativepath = relativepath + "/" + temp
                 recursive_gold(fileordir, database, relativepath)
+                relativepath = temp2
             elif os.path.isfile(fileordir):
                 ext = os.path.splitext(fileordir)[-1].lower()
                 if ext == ".h":
+                    if relativepath == '-1':
+                        relativepath = temp
+                        temp2 = '-1'
+                    else:
+                        temp2 = relativepath
+                        relativepath = relativepath + "/" + temp
                     analysa(fileordir, database, relativepath)
+                    relativepath = temp2
 
 def analysa(file, database, relativepath):
     parserForFile.readByChar(file, database, relativepath)
