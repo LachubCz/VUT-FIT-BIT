@@ -512,9 +512,9 @@ def recursive_gold(act_dir, database, relativepath):
             if os.path.isdir(fileordir):
                 recursive_gold(fileordir, database, relativepath)
             elif os.path.isfile(fileordir):
-                #ext = os.path.splitext(fileordir)[-1].lower()
-                #if ext == ".h":
-                analysa(fileordir, database, relativepath)
+                ext = os.path.splitext(fileordir)[-1].lower()
+                if ext == ".h":
+                    analysa(fileordir, database, relativepath)
 
 def analysa(file, database, relativepath):
     parserForFile.readByChar(file, database, relativepath)
@@ -522,6 +522,7 @@ def analysa(file, database, relativepath):
 ####################################################################################
 ###############################Zpracovani argumentu#################################
 ####################################################################################
+
 helpArg = False
 no_inline = False
 no_duplicates = False
@@ -533,7 +534,7 @@ parser.add_argument('--input', action='append', dest='input', default=['STDIN'])
 parser.add_argument('--output', action='append', dest='output', default=['STDOUT'])
 parser.add_argument('--max-par', action='append', dest='max_par', default=['-1'])
 parser.add_argument('--help', action='append_const', dest='help', default=['False'], const='True')
-parser.add_argument('--pretty-xml', action='store', dest='pretty', default='-1', nargs='?')
+parser.add_argument('--pretty-xml', action='append', dest='pretty', default=['-1'], nargs='?')
 parser.add_argument('--no-inline', action='append_const', dest='no_inline', default=['False'], const='True')
 parser.add_argument('--no-duplicates', action='append_const', dest='no_duplicates', default=['False'], const='True')
 parser.add_argument('--remove-whitespace', action='append_const', dest='remove_whitespace', default=['False'], const='True')
@@ -585,21 +586,27 @@ if len(results.remove_whitespace) != 1 and len(results.remove_whitespace) != 2:
 if len(results.remove_whitespace) == 2:
     remove_whitespace = True
 
+#pretty
+if len(results.pretty) != 1 and len(results.pretty) != 2:
+    sys.exit(1)
+if len(results.pretty) == 2:
+    results.pretty[0] = results.pretty[1]
+
 """
 print ("HELP              :", results.help)
 print ("INPUT             :", results.input)
 print ("OUTPUT            :", results.output)
-print ("PRETTY            :", results.pretty,)
+print ("PRETTY            :", results.pretty)
 print ("NO-INLINE         :", results.no_inline)
 print ("MAX-PAR           :", results.max_par)
 print ("NO-DUPLICATES     :", results.no_duplicates)
 print ("REMOVE-WHITESPACE :", results.remove_whitespace)
 """
 
-if results.pretty == None:
-    results.pretty = 4
+if results.pretty[0] == None:
+    results.pretty = '4'
 
-if helpArg == True and ( results.input[0] != 'STDIN' or results.output[0] != 'STDOUT' or results.pretty != '-1' or no_inline != False  or results.max_par[0] != '-1'  or no_duplicates != False or remove_whitespace != False ):
+if helpArg == True and ( results.input[0] != 'STDIN' or results.output[0] != 'STDOUT' or results.pretty[0] != '-1' or no_inline != False  or results.max_par[0] != '-1'  or no_duplicates != False or remove_whitespace != False ):
     sys.exit(1)
 
 if results.input[0] == 'STDIN':
@@ -616,7 +623,7 @@ if helpArg == True:
     help_str = help_func()
     output_func(results.output[0], help_str)
 
-database = database(helpArg, results.input[0], results.output[0], results.pretty, no_inline, results.max_par[0], no_duplicates, remove_whitespace) #inicializace databaze
+database = database(helpArg, results.input[0], results.output[0], results.pretty[0], no_inline, results.max_par[0], no_duplicates, remove_whitespace) #inicializace databaze
 
 path = os.path.abspath(results.input[0])
 
