@@ -246,6 +246,7 @@ class parserForFile:
                             else:
                                 word = c
                                 state = 9
+
                     elif state == 15:
                         if c == ';':
                             inFunction = False
@@ -273,6 +274,7 @@ class parserForFile:
                             inComment = False
                             lastChar = '0'
                 
+                #retezce
                 elif inString:
                     if state == 16:
                         if lastChar == '\u005C' and c == "\"":
@@ -291,6 +293,7 @@ class parserForFile:
                         else:
                             lastChar = c
 
+                #macra
                 elif inMacro:
                     if state == 18:
                         if c == '\u005C':
