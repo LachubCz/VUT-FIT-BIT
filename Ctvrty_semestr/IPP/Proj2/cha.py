@@ -523,8 +523,8 @@ def analysa(file, database, relativepath):
 
 parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
 
-parser.add_argument('--input', action='store', dest='input', default='STDIN')
-parser.add_argument('--output', action='store', dest='output', default='STDOUT')
+parser.add_argument('--input', action='append', dest='input', default=['STDIN'])
+parser.add_argument('--output', action='append', dest='output', default=['STDOUT'])
 parser.add_argument('--max-par', action='store', dest='max_par', default='-1')
 parser.add_argument('--help', action='store_true', dest='help', default=False)
 parser.add_argument('--pretty-xml', action='store', dest='pretty', default='-1', nargs='?')
@@ -537,37 +537,60 @@ try:
 except SystemExit:
     sys.exit(1)
 
+if len(results.input) != 1 and len(results.input) != 2:
+    sys.exit(1)
+
+if len(results.output) != 1 and len(results.output) != 2:
+    sys.exit(1)
+
+if len(results.input) == 2:
+    results.input[0] = results.input[1]
+
+if len(results.output) == 2:
+    results.output[0] = results.output[1] 
+
+"""
+print ("HELP              :", results.help)
+print ("INPUT             :", results.input)
+print ("OUTPUT            :", results.output)
+print ("PRETTY            :", results.pretty,)
+print ("NO-INLINE         :", results.no_inline)
+print ("MAX-PAR           :", results.max_par)
+print ("NO-DUPLICATES     :", results.no_duplicates)
+print ("REMOVE-WHITESPACE :", results.remove_whitespace)
+"""
+
 if results.pretty == None:
     results.pretty = 4
 
-if results.help == True and ( results.input != 'STDIN' or results.output != 'STDOUT' or results.pretty != '-1' or results.no_inline != False  or results.max_par != '-1'  or results.no_duplicates != False or results.remove_whitespace != False ):
+if results.help == True and ( results.input[0] != 'STDIN' or results.output[0] != 'STDOUT' or results.pretty != '-1' or results.no_inline != False  or results.max_par != '-1'  or results.no_duplicates != False or results.remove_whitespace != False ):
     sys.exit(1)
 
-if results.input == 'STDIN':
-    results.input = '.'
+if results.input[0] == 'STDIN':
+    results.input[0] = '.'
 
-if os.path.isdir(results.output):
+if os.path.isdir(results.output[0]):
     sys.exit(3)
 
-if results.output != 'STDOUT':
-    if os.access(results.output, os.R_OK) == False:
+if results.output[0] != 'STDOUT':
+    if os.access(results.output[0], os.R_OK) == False:
         sys.exit(3)
 
 if results.help == True:
     help_str = help_func()
-    output_func(results.output, help_str)
+    output_func(results.output[0], help_str)
 
-database = database(results.help, results.input, results.output, results.pretty, results.no_inline, results.max_par, results.no_duplicates, results.remove_whitespace) #inicializace databaze
+database = database(results.help, results.input[0], results.output[0], results.pretty, results.no_inline, results.max_par, results.no_duplicates, results.remove_whitespace) #inicializace databaze
 
-path = os.path.abspath(results.input)
+path = os.path.abspath(results.input[0])
 
-if fileordir(results.input) == 0:
+if fileordir(results.input[0]) == 0:
     recursive_gold(path, database, '-1')
-elif fileordir(results.input) == 1:
-    analysa(path, database, results.input)
-elif fileordir(results.input) == 2:
+elif fileordir(results.input[0]) == 1:
+    analysa(path, database, results.input[0])
+elif fileordir(results.input[0]) == 2:
     recursive_gold('.', database, '-1')
-elif fileordir(results.input) == 3:
+elif fileordir(results.input[0]) == 3:
     sys.exit(2)
 
 printDatabase(database)
