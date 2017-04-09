@@ -92,6 +92,7 @@ class parserForFile:
         end = False
         inString = False
         inMacro = False
+        first = True
 
         with open(filename) as file:
             while True:
@@ -204,10 +205,10 @@ class parserForFile:
                                     temp = temp + whitespace + c
                                 else:
                                     temp = temp + " " + c
-                                functionToPut.put_parameter(temp)
+                                #functionToPut.put_parameter(temp)
                                 word = ""
                                 whitespace = ""
-                                state = 10
+                                #state = 10
                             else:
                                 word = c
                                 state = 9
@@ -250,11 +251,15 @@ class parserForFile:
                             functionToPut.put_parameter(temp)
                             word = ""
                         else:
-                            if database.parameters[7] != True:
-                                ws_temp = parserForFile.whiteSpaceStrech(ws_temp)
-                                temp = temp + ws_temp + word
-                            else:
-                                temp = temp + " " + word
+                            if first == True:
+                                if database.parameters[7] != True:
+                                    ws_temp = parserForFile.whiteSpaceStrech(ws_temp)
+                                    temp = temp + ws_temp + word
+                                else:
+                                    temp = temp + " " + word
+                                first = False
+                                ws_temp = ""
+
 
                             if c == '*':
                                 if database.parameters[7] != True:
@@ -262,14 +267,15 @@ class parserForFile:
                                     temp = temp + whitespace + c
                                 else:
                                     temp = temp + " " + c
-                                functionToPut.put_parameter(temp)
+                                #functionToPut.put_parameter(temp)
                                 word = ""
                                 whitespace = ""
-                                ws_temp = ""
-                                state = 10
+                                
+                                #state = 10
                             else:
                                 word = c
                                 state = 9
+                                first = True
 
                     elif state == 15:
                         if c == ';':
