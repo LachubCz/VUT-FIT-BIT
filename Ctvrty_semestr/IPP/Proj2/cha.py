@@ -627,7 +627,7 @@ if os.path.isdir(results.output[0]):
     sys.exit(3)
 
 if results.output[0] != 'STDOUT':
-    if os.access(results.output[0], os.R_OK) == False:
+    if os.access(results.output[0], os.W_OK) == False:
         sys.exit(3)
 
 if helpArg == True:
