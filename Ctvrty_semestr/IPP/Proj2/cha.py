@@ -84,6 +84,7 @@ class parserForFile:
         word = ""
         temp = ""
         whitespace = ""
+        ws_temp = ""
         lastChar = '0'
         state = 0
         inFunction = False
@@ -192,18 +193,26 @@ class parserForFile:
                             else:
                                 temp = word
                                 word = ""
+                                whitespace = c
                                 state = 8
 
                     elif state == 8: #hledani zacatku nazvu argumentu
                         if (c.isspace() == False):
                             if c == '*':
-                                temp = temp + " " + c
+                                if database.parameters[7] != True:
+                                    whitespace = parserForFile.whiteSpaceStrech(whitespace)
+                                    temp = temp + whitespace + c
+                                else:
+                                    temp = temp + " " + c
                                 functionToPut.put_parameter(temp)
                                 word = ""
+                                whitespace = ""
                                 state = 10
                             else:
                                 word = c
                                 state = 9
+                        else:
+                            whitespace += c
 
                     elif state == 9: #cteni nazvu argumentu
                         if (c.isspace() == False and c != ')'):
@@ -211,6 +220,7 @@ class parserForFile:
                                 word += c
                             else:
                                 functionToPut.put_parameter(temp)
+                                whitespace = ""
                                 state = 6
                         else:
                             if c == ')':
@@ -219,8 +229,11 @@ class parserForFile:
                                 functionToPut.put_file(relativepath)
                                 functionToPut.put_parameter(temp)
                                 temp = ""
+                                whitespace = ""
                                 database.put_function(functionToPut)
                             else:
+                                ws_temp = whitespace
+                                whitespace = c
                                 state = 11;
 
                     elif state == 10: #cteni nazvu argumentu
@@ -231,17 +244,28 @@ class parserForFile:
                     
                     elif state == 11:
                         if c.isspace():
-                            pass
+                            whitespace += c
                         elif c == ',':
                             state = 6
                             functionToPut.put_parameter(temp)
                             word = ""
                         else:
-                            temp = temp + " " + word
+                            if database.parameters[7] != True:
+                                ws_temp = parserForFile.whiteSpaceStrech(ws_temp)
+                                temp = temp + ws_temp + word
+                            else:
+                                temp = temp + " " + word
+
                             if c == '*':
-                                temp = temp + " " + c
+                                if database.parameters[7] != True:
+                                    whitespace = parserForFile.whiteSpaceStrech(whitespace)
+                                    temp = temp + whitespace + c
+                                else:
+                                    temp = temp + " " + c
                                 functionToPut.put_parameter(temp)
                                 word = ""
+                                whitespace = ""
+                                ws_temp = ""
                                 state = 10
                             else:
                                 word = c
