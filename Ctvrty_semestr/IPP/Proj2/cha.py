@@ -512,6 +512,8 @@ def recursive_gold(act_dir, database, relativepath):
             if os.path.isdir(fileordir):
                 recursive_gold(fileordir, database, relativepath)
             elif os.path.isfile(fileordir):
+                #ext = os.path.splitext(fileordir)[-1].lower()
+                #if ext == ".h":
                 analysa(fileordir, database, relativepath)
 
 def analysa(file, database, relativepath):
@@ -520,34 +522,68 @@ def analysa(file, database, relativepath):
 ####################################################################################
 ###############################Zpracovani argumentu#################################
 ####################################################################################
+helpArg = False
+no_inline = False
+no_duplicates = False
+remove_whitespace = False
 
 parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
 
 parser.add_argument('--input', action='append', dest='input', default=['STDIN'])
 parser.add_argument('--output', action='append', dest='output', default=['STDOUT'])
-parser.add_argument('--max-par', action='store', dest='max_par', default='-1')
-parser.add_argument('--help', action='store_true', dest='help', default=False)
+parser.add_argument('--max-par', action='append', dest='max_par', default=['-1'])
+parser.add_argument('--help', action='append_const', dest='help', default=['False'], const='True')
 parser.add_argument('--pretty-xml', action='store', dest='pretty', default='-1', nargs='?')
-parser.add_argument('--no-inline', action='store_true', dest='no_inline', default=False)
-parser.add_argument('--no-duplicates', action='store_true', dest='no_duplicates', default=False)
-parser.add_argument('--remove-whitespace', action='store_true', dest='remove_whitespace', default=False)
+parser.add_argument('--no-inline', action='append_const', dest='no_inline', default=['False'], const='True')
+parser.add_argument('--no-duplicates', action='append_const', dest='no_duplicates', default=['False'], const='True')
+parser.add_argument('--remove-whitespace', action='append_const', dest='remove_whitespace', default=['False'], const='True')
 
 try: 
     results = parser.parse_args()
 except SystemExit:
     sys.exit(1)
 
+#input
 if len(results.input) != 1 and len(results.input) != 2:
     sys.exit(1)
-
-if len(results.output) != 1 and len(results.output) != 2:
-    sys.exit(1)
-
 if len(results.input) == 2:
     results.input[0] = results.input[1]
 
+#output
+if len(results.output) != 1 and len(results.output) != 2:
+    sys.exit(1)
 if len(results.output) == 2:
     results.output[0] = results.output[1] 
+
+#max_par
+if len(results.max_par) != 1 and len(results.max_par) != 2:
+    sys.exit(1)
+if len(results.max_par) == 2:
+    results.max_par[0] = results.max_par[1] 
+
+#help
+if len(results.help) != 1 and len(results.help) != 2:
+    sys.exit(1)
+if len(results.help) == 2:
+    helpArg = True
+
+#no_inline
+if len(results.no_inline) != 1 and len(results.no_inline) != 2:
+    sys.exit(1)
+if len(results.no_inline) == 2:
+    no_inline = True
+
+#no_duplicates
+if len(results.no_duplicates) != 1 and len(results.no_duplicates) != 2:
+    sys.exit(1)
+if len(results.no_duplicates) == 2:
+    no_duplicates = True
+
+#remove_whitespace
+if len(results.remove_whitespace) != 1 and len(results.remove_whitespace) != 2:
+    sys.exit(1)
+if len(results.remove_whitespace) == 2:
+    remove_whitespace = True
 
 """
 print ("HELP              :", results.help)
@@ -563,7 +599,7 @@ print ("REMOVE-WHITESPACE :", results.remove_whitespace)
 if results.pretty == None:
     results.pretty = 4
 
-if results.help == True and ( results.input[0] != 'STDIN' or results.output[0] != 'STDOUT' or results.pretty != '-1' or results.no_inline != False  or results.max_par != '-1'  or results.no_duplicates != False or results.remove_whitespace != False ):
+if helpArg == True and ( results.input[0] != 'STDIN' or results.output[0] != 'STDOUT' or results.pretty != '-1' or no_inline != False  or results.max_par[0] != '-1'  or no_duplicates != False or remove_whitespace != False ):
     sys.exit(1)
 
 if results.input[0] == 'STDIN':
@@ -576,11 +612,11 @@ if results.output[0] != 'STDOUT':
     if os.access(results.output[0], os.R_OK) == False:
         sys.exit(3)
 
-if results.help == True:
+if helpArg == True:
     help_str = help_func()
     output_func(results.output[0], help_str)
 
-database = database(results.help, results.input[0], results.output[0], results.pretty, results.no_inline, results.max_par, results.no_duplicates, results.remove_whitespace) #inicializace databaze
+database = database(helpArg, results.input[0], results.output[0], results.pretty, no_inline, results.max_par[0], no_duplicates, remove_whitespace) #inicializace databaze
 
 path = os.path.abspath(results.input[0])
 
