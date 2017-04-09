@@ -71,9 +71,19 @@ class function:
 
 class parserForFile:
 
+    def whiteSpaceStrech(string):
+        lenght = len(string)
+        i = 0
+        newStr = ""
+        while (i < lenght):
+            i+=1
+            newStr += " "
+        return newStr
+
     def readByChar(filename, database, relativepath):
         word = ""
         temp = ""
+        whitespace = ""
         lastChar = '0'
         state = 0
         inFunction = False
@@ -99,28 +109,46 @@ class parserForFile:
                             if "inline" in word and database.parameters[4]:
                                 state = 15
                             else:
+                                whitespace = c
                                 functionToPut = function()
                                 functionToPut.put_rettype(word)
                                 state = 4
                     elif state == 4: #hledani zacatku nazvu funkce
                         if (c.isspace() == False):
-                            word = c
-                            state = 5
+                            if c == '(':
+                                functionToPut.put_name(word)
+                                whitespace = ""
+                                state = 6
+                                word = ""
+                                temp = ""
+                            else:
+                                functionToPut.put_rettype(temp) #temp
+                                temp = ""
+                                word = c
+                                state = 5
+                        else:
+                            whitespace += c
                     elif state == 5: #cteni nazvu funkce
                         if (c.isspace() == False and c != '('):
                             word += c
                         else:
                             if c == '(':
+                                functionToPut.put_rettype(temp) #temp
                                 functionToPut.put_name(word)
                                 word = ""
+                                temp = ""
+                                whitespace = ""
                                 state = 6
                             elif c.isspace() == True:
                                 if "inline" in word and database.parameters[4]:
                                     state = 15
                                 else:
-                                    word = " " + word
-                                    functionToPut.put_rettype(word)
-                                    word = ""
+                                    if database.parameters[7] != True:
+                                        whitespace = parserForFile.whiteSpaceStrech(whitespace)
+                                        temp = whitespace + word
+                                    else:
+                                        temp = " " + word
+                                    whitespace = c
                                     state = 4
 
                     #parametry funkce
@@ -130,6 +158,7 @@ class parserForFile:
                                 state = 0
                                 inFunction = False
                                 word = ""
+                                temp = ""
                                 functionToPut.put_file(relativepath)
                                 database.put_function(functionToPut)
                             else:
@@ -144,11 +173,13 @@ class parserForFile:
                                 functionToPut.put_file(relativepath)
                                 database.put_function(functionToPut)
                                 word = ""
+                                temp = ""
                                 inFunction = False
                             elif word == '...':
                                 functionToPut.put_varargs()
                                 functionToPut.put_file(relativepath)
                                 word = ""
+                                temp = ""
                                 inFunction = False
                                 database.put_function(functionToPut)
                             elif c == ')':
@@ -157,6 +188,7 @@ class parserForFile:
                                 functionToPut.put_parameter(word)
                                 database.put_function(functionToPut)
                                 word = ""
+                                temp = ""
                             else:
                                 temp = word
                                 word = ""
@@ -183,8 +215,10 @@ class parserForFile:
                         else:
                             if c == ')':
                                 inFunction = False
+                                word = ""
                                 functionToPut.put_file(relativepath)
                                 functionToPut.put_parameter(temp)
+                                temp = ""
                                 database.put_function(functionToPut)
                             else:
                                 state = 11;
@@ -303,7 +337,10 @@ class parserForFile:
                     elif lastChar != '0' and (c.isspace() == False) and c != '/':
                         inFunction = True
                         state = 3
-                        word = lastChar + c
+                        if lastChar.isspace():
+                            word = c
+                        else:
+                            word = lastChar + c
                         lastChar = '0'
 
         
