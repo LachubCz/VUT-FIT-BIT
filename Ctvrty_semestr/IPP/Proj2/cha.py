@@ -99,7 +99,7 @@ class parserForFile:
                 c = file.read(1)
                 if not c:
                     break
-                #print(state, " - ", lastChar, " - ", c, "\n")
+                #print(state, " - ", lastChar, " - ", c, " - ", inFunction, "\n")
                 #funkce
                 if inFunction:
 
@@ -110,6 +110,7 @@ class parserForFile:
                         else:
                             if "inline" in word and database.parameters[4]:
                                 state = 15
+                                word = ""
                             else:
                                 whitespace = c
                                 functionToPut = function()
@@ -144,6 +145,7 @@ class parserForFile:
                             elif c.isspace() == True:
                                 if "inline" in word and database.parameters[4]:
                                     state = 15
+                                    word = ""
                                 else:
                                     if database.parameters[7] != True:
                                         whitespace = parserForFile.whiteSpaceStrech(whitespace)
@@ -278,8 +280,9 @@ class parserForFile:
                                 first = True
 
                     elif state == 15:
-                        if c == ';':
+                        if c == ';' or c == ')':
                             inFunction = False
+                            word = ""
                             lastChar = '0'
 
                 #komentare
