@@ -93,6 +93,7 @@ class parserForFile:
         inString = False
         inMacro = False
         first = True
+        inBody = False
 
         with open(filename) as file:
             while True:
@@ -346,6 +347,15 @@ class parserForFile:
                             inMacro = False
                             lastChar = '0'
 
+                #telo funkce
+                elif inBody:
+                    if state == 21:
+                        if c == '{':
+                            counter += 1
+                        elif c == '}':
+                            counter -= 1
+                            if counter == 0:
+                                inBody = False
 
                 #mimo funkci mimo komentar
                 else:
@@ -357,6 +367,10 @@ class parserForFile:
                     elif c == '\'':
                         inString = True
                         state = 17
+                    elif c == '{':
+                        inBody = True
+                        state = 21
+                        counter = 1
                     elif c == '#':
                         inMacro = True
                         state = 18
