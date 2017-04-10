@@ -8,9 +8,11 @@ import argparse
 #######################################Tridy########################################
 ####################################################################################
 
+#trida do jejiz instance se ukladaji funkce a parametry skriptu
 class database:
 
     def __init__(self, help, input, output, pretty, no_inline, max_par, no_duplicates, remove_whitespace):
+        """Metoda inicializuje databazi a nahraje do ni argumenty predane skriptu, ktere jsou predany parametry teto metody."""
         self.functions = []
         self.parameters = []
         self.parameters.append(help)
@@ -23,6 +25,7 @@ class database:
         self.parameters.append(remove_whitespace)
 
     def put_function(self, functionToPut):
+        """Metoda vklada funkci do databaze."""
         duplicate = False
         if self.parameters[6] == False:
             if self.parameters[5] == '-1':
@@ -42,11 +45,14 @@ class database:
                         self.functions.append(functionToPut)
 
     def get_function(self, index):
+        """Metoda vrati funkci na danem indexu."""
         return self.functions[index]
 
+#trida do jejiz instanci se ukladaji vlastnosti funkci
 class function:
 
     def __init__(self):
+        """Metoda inicializuje instanci tridy function."""
         self.file = ""
         self.name = ""
         self.varargs = "no"
@@ -54,23 +60,30 @@ class function:
         self.rettype = ""
 
     def put_parameter(self, string):
+        """Metoda prida do instance parametr funkce do listu."""
         self.parameters.append(string)
 
     def put_rettype(self, string):
+        """Metoda v instanci konkatenuje casti navratoveho typu funkce."""
         self.rettype += string
 
     def put_name(self, string):
+        """Metoda vlozi do instance jmeno funkce."""
         self.name = string
 
     def put_file(self, string):
+        """Metoda vlozi do instance nazev souboru obsahujici funkci."""
         self.file = string
 
     def put_varargs(self):
+        """Metoda vlozi do instance informaci zda-li ma funkce promenne parametry."""
         self.varargs = "yes"
 
+#trida, ktera obsahuje metody na parserovani souboru
 class parserForFile:
 
     def whiteSpaceStrech(string):
+        """Metoda zmeni bile znaky v retezci, ktere jsou jine nez mezery, na mezery."""
         lenght = len(string)
         i = 0
         newStr = ""
@@ -80,6 +93,7 @@ class parserForFile:
         return newStr
 
     def readByChar(filename, database, relativepath):
+        """Metoda rozparseruje vstupni soubor a nahraje jednotlive funkce do databaze."""
         word = ""
         temp = ""
         whitespace = ""
@@ -399,10 +413,11 @@ class parserForFile:
                         lastChar = '0'
         
 ####################################################################################
-######################################Funkce########################################
+####################################Dalsi metody####################################
 ####################################################################################
 
 def output_func(output, final):
+    """Metoda tiskne retezec final na uzivatelem zvoleny vystup."""
     if output == 'STDOUT':
         print(final)
         sys.exit(0)
@@ -413,6 +428,7 @@ def output_func(output, final):
         sys.exit(0)
 
 def printDatabase(database):
+    """Metoda vytvari retezec xml souboru, ktery se bude tisknout."""
     final = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
     if database.parameters[3] != '-1':
         final+='\n'
@@ -455,6 +471,7 @@ def printDatabase(database):
     output_func(database.parameters[2], final)
 
 def help_func():
+    """Metoda vytvari retezec, obsahujici napovedu, ktery se bude tisknout."""
     help_str = '--help ## Viz spolecne zadani vsech uloh.\n'
     help_str += '--input=fileordir ## Zadany vstupni soubor nebo adresar se zdrojovym kodem v jazyce C.'
     help_str += 'Predpokladejte, ze soubory budou v kodovani UTF-8. Je-li zadana cesta k adresari, tak jsou'
@@ -480,6 +497,7 @@ def help_func():
     return help_str
 
 def fileordir(name):
+    """Metoda rozhoduje, zda-li je cesta soubor, slozka, implicitni hodnota 'STDIN' a nebo neexistuje."""
     if os.path.isdir(name):
         return 0
     elif os.path.isfile(name):
@@ -490,6 +508,7 @@ def fileordir(name):
         return 3
 
 def recursive_gold(act_dir, database, relativepath):
+    """Metoda rekurzivne prochazi slozky zadane uzivatelem a u souboru s koncovkou .h vola metodu, ktera soubor analyzuje."""
     for fileordir in os.listdir(act_dir):
         if fnmatch.fnmatch(fileordir, '*'):
             temp = fileordir
@@ -516,17 +535,20 @@ def recursive_gold(act_dir, database, relativepath):
                     relativepath = temp2
 
 def analysa(file, database, relativepath):
+    """Metoda analyzuje soubor."""
     parserForFile.readByChar(file, database, relativepath)
 
 ####################################################################################
-##########################Telo samotneho mocneho programu###########################
+###########################Samotne telo mocneho programu############################
 ####################################################################################
 
+#pomocne promenne pro zpracovani argument
 helpArg = False
 no_inline = False
 no_duplicates = False
 remove_whitespace = False
 
+#parserovani argumentu pomoci argparse
 parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
 
 parser.add_argument('--input', action='append', dest='input', default=['STDIN'])
@@ -538,11 +560,13 @@ parser.add_argument('--no-inline', action='append_const', dest='no_inline', defa
 parser.add_argument('--no-duplicates', action='append_const', dest='no_duplicates', default=['False'], const='True')
 parser.add_argument('--remove-whitespace', action='append_const', dest='remove_whitespace', default=['False'], const='True')
 
+#pokud dojde k exception, meni se jeji navratova hodnota
 try: 
     results = parser.parse_args()
 except SystemExit:
     sys.exit(1)
 
+#kontrola duplicity zadani argumentu
 #input
 if len(results.input) != 1 and len(results.input) != 2:
     sys.exit(1)
@@ -591,30 +615,39 @@ if len(results.pretty) != 1 and len(results.pretty) != 2:
 if len(results.pretty) == 2:
     results.pretty[0] = results.pretty[1]
 
+#pokud je zadano pouze --pretty-xml, je jeho hodnota implicitne 4
 if results.pretty[0] == None:
     results.pretty = '4'
 
+#kontŕola zda-li neni held zadan s jinym parametrem
 if helpArg == True and ( results.input[0] != 'STDIN' or results.output[0] != 'STDOUT' or results.pretty[0] != '-1' or no_inline != False  or results.max_par[0] != '-1'  or no_duplicates != False or remove_whitespace != False ):
     sys.exit(1)
 
+#zmena na implicitni vstup
 if results.input[0] == 'STDIN':
     results.input[0] = '.'
 
+#kontrola zda-li neni --output slozka
 if os.path.isdir(results.output[0]):
     sys.exit(3)
 
+#kontrola pristupu cesty zadane parametrem --output
 if results.output[0] != 'STDOUT':
     if not os.access(os.path.dirname(results.output[0]), os.W_OK):
         sys.exit(3)
 
+#tisk napovedy
 if helpArg == True:
     help_str = help_func()
     output_func(results.output[0], help_str)
 
+#inicializace a nahrani argumentu do databaze
 database = database(helpArg, results.input[0], results.output[0], results.pretty[0], no_inline, results.max_par[0], no_duplicates, remove_whitespace) #inicializace databaze
 
+#ziskani absolutni cesty
 path = os.path.abspath(results.input[0])
 
+#predani rizeni programu metode recursive_gold a nebo metode analysa, ktera primo parseruje soubor na vstupu
 if fileordir(results.input[0]) == 0:
     recursive_gold(path, database, '-1')
 elif fileordir(results.input[0]) == 1:
@@ -624,4 +657,5 @@ elif fileordir(results.input[0]) == 2:
 elif fileordir(results.input[0]) == 3:
     sys.exit(2)
 
+#tisk xml souboru
 printDatabase(database)
