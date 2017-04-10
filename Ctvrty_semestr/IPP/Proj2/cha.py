@@ -310,8 +310,9 @@ class parserForFile:
                 elif inMacro:
                     if state == 18:
                         if c == '\u005C':
-                            state = 19
+                            state = 22
                         elif lastChar == '/' and c == '*':
+                            lastChar = '0'
                             state = 19
                         elif c == '\n':
                             inMacro = False
@@ -321,10 +322,18 @@ class parserForFile:
                     elif state == 19:
                         if c == '\n':
                             state = 20
+                        elif lastChar == '*' and c == '/':
+                            state = 18
+                            lastChar = '0'
+                        else:
+                            lastChar = c
                     elif state == 20:
                         if c == '\n':
                             inMacro = False
                             lastChar = '0'
+                    elif state == 22:
+                        if c == '\n':
+                            state = 20
                 #telo funkce
                 elif inBody:
                     if state == 21:
