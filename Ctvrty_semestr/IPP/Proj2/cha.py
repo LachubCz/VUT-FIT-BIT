@@ -41,7 +41,6 @@ class database:
                     if len(functionToPut.parameters) <= int(self.parameters[5]):
                         self.functions.append(functionToPut)
 
-
     def get_function(self, index):
         return self.functions[index]
 
@@ -94,18 +93,15 @@ class parserForFile:
         inMacro = False
         first = True
         inBody = False
-
         with open(filename) as file:
             while True:
                 c = file.read(1)
                 if not c:
                     break
-                #print(state, " - ", lastChar, " - ", c, " - ", inFunction, "\n")
                 #funkce
                 if inFunction:
-
-                    #pred parametry funkce
-                    if state == 3: #cteni navratoveho typu
+                    #predni cast funkce
+                    if state == 3: #cteni prvniho slova
                         if (c.isspace() == False):
                             word += c
                         else:
@@ -117,7 +113,7 @@ class parserForFile:
                                 functionToPut = function()
                                 functionToPut.put_rettype(word)
                                 state = 4
-                    elif state == 4: #hledani zacatku nazvu funkce
+                    elif state == 4: #hledani zacatku druheho/dalsiho slova
                         if (c.isspace() == False):
                             if c == '(':
                                 functionToPut.put_name(word)
@@ -126,18 +122,18 @@ class parserForFile:
                                 word = ""
                                 temp = ""
                             else:
-                                functionToPut.put_rettype(temp) #temp
+                                functionToPut.put_rettype(temp)
                                 temp = ""
                                 word = c
                                 state = 5
                         else:
                             whitespace += c
-                    elif state == 5: #cteni nazvu funkce
+                    elif state == 5: #cteni druheho/dalsiho slova
                         if (c.isspace() == False and c != '('):
                             word += c
                         else:
                             if c == '(':
-                                functionToPut.put_rettype(temp) #temp
+                                functionToPut.put_rettype(temp)
                                 functionToPut.put_name(word)
                                 word = ""
                                 temp = ""
@@ -155,9 +151,8 @@ class parserForFile:
                                         temp = " " + word
                                     whitespace = c
                                     state = 4
-
-                    #parametry funkce
-                    elif state == 6: #hledani zacatku typu argumentu
+                    #vnitrni cast funkce
+                    elif state == 6: #hledani prvniho slova typu argumentu
                         if (c.isspace() == False):
                             if c == ')':
                                 state = 0
@@ -169,8 +164,7 @@ class parserForFile:
                             else:
                                 word = c
                                 state = 7
-
-                    elif state == 7: #cteni typu argumentu
+                    elif state == 7: #cteni prvniho slova typu argumentu
                         if (c.isspace() == False and c != ')'):
                             word += c
                         else:
@@ -199,8 +193,7 @@ class parserForFile:
                                 word = ""
                                 whitespace = c
                                 state = 8
-
-                    elif state == 8: #hledani zacatku nazvu argumentu
+                    elif state == 8: #hledani zacatku druheho/dalsiho slova typu argumentu
                         if (c.isspace() == False):
                             if c == '*':
                                 if database.parameters[7] != True:
@@ -208,17 +201,14 @@ class parserForFile:
                                     temp = temp + whitespace + c
                                 else:
                                     temp = temp + " " + c
-                                #functionToPut.put_parameter(temp)
                                 word = ""
                                 whitespace = ""
-                                #state = 10
                             else:
                                 word = c
                                 state = 9
                         else:
                             whitespace += c
-
-                    elif state == 9: #cteni nazvu argumentu
+                    elif state == 9: #cteni druheho/dalsiho slova typu argumentu
                         if (c.isspace() == False and c != ')'):
                             if c != ',':
                                 word += c
@@ -239,14 +229,12 @@ class parserForFile:
                                 ws_temp = whitespace
                                 whitespace = c
                                 state = 11;
-
-                    elif state == 10: #cteni nazvu argumentu
+                    elif state == 10: #cekani na konec soucasneho argumentu
                         if c == ',':
                             state = 6
                         elif c == ')':
                             inFunction = False
-                    
-                    elif state == 11:
+                    elif state == 11: #rozhodovani zda-li je slovo typ argumentu nebo nazev
                         if c.isspace():
                             whitespace += c
                         elif c == ',':
@@ -262,30 +250,23 @@ class parserForFile:
                                     temp = temp + " " + word
                                 first = False
                                 ws_temp = ""
-
-
                             if c == '*':
                                 if database.parameters[7] != True:
                                     whitespace = parserForFile.whiteSpaceStrech(whitespace)
                                     temp = temp + whitespace + c
                                 else:
                                     temp = temp + " " + c
-                                #functionToPut.put_parameter(temp)
                                 word = ""
                                 whitespace = ""
-                                
-                                #state = 10
                             else:
                                 word = c
                                 state = 9
                                 first = True
-
-                    elif state == 15:
+                    elif state == 15: #cekani na konec funkce
                         if c == ';' or c == ')':
                             inFunction = False
                             word = ""
                             lastChar = '0'
-
                 #komentare
                 elif inComment:
                     if state == 1:
@@ -307,7 +288,6 @@ class parserForFile:
                         if c == '\n':
                             inComment = False
                             lastChar = '0'
-                
                 #retezce
                 elif inString:
                     if state == 16:
@@ -326,7 +306,6 @@ class parserForFile:
                             lastChar = '0'
                         else:
                             lastChar = c
-
                 #macra
                 elif inMacro:
                     if state == 18:
@@ -346,7 +325,6 @@ class parserForFile:
                         if c == '\n':
                             inMacro = False
                             lastChar = '0'
-
                 #telo funkce
                 elif inBody:
                     if state == 21:
@@ -356,8 +334,7 @@ class parserForFile:
                             counter -= 1
                             if counter == 0:
                                 inBody = False
-
-                #mimo funkci mimo komentar
+                #mimo funkci, mimo komentar, mimo retezec, mimo macro, mimo telo funkce
                 else:
                     if c == ';' or c == ')' or c == '\n':
                         pass
@@ -392,7 +369,6 @@ class parserForFile:
                         else:
                             word = lastChar + c
                         lastChar = '0'
-
         
 ####################################################################################
 ######################################Funkce########################################
@@ -412,11 +388,9 @@ def printDatabase(database):
     final = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
     if database.parameters[3] != '-1':
         final+='\n'
-
     if os.path.isdir(database.parameters[1]):
         if database.parameters[1][-1] != '/':
             database.parameters[1] += '/'
-
         final += "<functions dir=\"" + database.parameters[1] +"\">"
         if database.parameters[3] != '-1':
             final+='\n'
@@ -424,18 +398,15 @@ def printDatabase(database):
         final += "<functions dir=\"\">"
         if database.parameters[3] != '-1':
             final+='\n'
-
     for functionToGet in database.functions:
         e = 0
         while e < int(database.parameters[3]):
             e+=1
             final+=' '
-        
         final += "<function file=\"" + functionToGet.file + "\" name=\"" + functionToGet.name + "\" varargs=\"" + functionToGet.varargs + "\" rettype=\"" + functionToGet.rettype + "\">"
         i = 1
         if database.parameters[3] != '-1':
             final+='\n'
-
         for parameter in functionToGet.parameters:
             e = 0
             while e < (int(database.parameters[3]) * 2):
@@ -445,7 +416,6 @@ def printDatabase(database):
             if database.parameters[3] != '-1':
                 final+='\n'
             i += 1
-        
         e = 0
         while e < int(database.parameters[3]):
             final+=' '
@@ -453,42 +423,32 @@ def printDatabase(database):
         final += ("</function>")
         if database.parameters[3] != '-1':
             final+='\n'
-
     final += "</functions>"
-
     output_func(database.parameters[2], final)
 
 def help_func():
     help_str = '--help ## Viz spolecne zadani vsech uloh.\n'
-
     help_str += '--input=fileordir ## Zadany vstupni soubor nebo adresar se zdrojovym kodem v jazyce C.'
     help_str += 'Predpokladejte, ze soubory budou v kodovani UTF-8. Je-li zadana cesta k adresari, tak jsou'
     help_str += 'postupne analyzovany vsechny soubory s priponou .h v tomto adresari a jeho podadresarich.'
     help_str += 'Pokud je zadana primo cesta k souboru (nikoliv k adresari), tak priponu souboru nekontrolujte.'
     help_str += 'Pokud nebude tento parametr zadan, tak se analyzuji vsechny hlavickove soubory (opet pouze'
     help_str += 's priponou .h) z aktualniho adresare a vsech jeho podadresaru.\n'
-
     help_str += '--output=filename ## Zadany vystupni soubor ve formatu XML v kodovani UTF-8 (presny'
     help_str += 'format viz nize). Pokud tento parametr neni zadan, tak dojde k vypsani vysledku na standardni vystup.\n'
-
     help_str += '--pretty-xml=k ## Skript zformatuje vysledny XML dokument tak, ze (1) kazde nove zanoreni'
     help_str += 'bude odsazeno o k mezer oproti predchozimu a (2) XML hlavicka bude od korenoveho elementu'
     help_str += 'oddelena znakem noveho radku. Pokud k neni zadano, tak se pouzije hodnota 4. Pokud tento'
     help_str += 'parametr nebyl zadan, tak se neodsazuje (ani XML hlavicka od korenoveho elementu).\n'
-
     help_str += '--no-inline ## Skript preskoci funkce deklarovane se specifikatorem inline.\n'
-
     help_str += '--max-par=n ## Skript bude brat v uvahu pouze funkce, ktere maji n ci mene parametru (n musi'
     help_str += 'byt vzdy zadano). U funkci, ktere maji promenny pocet parametru, pocitejte pouze s fixnimi parametry.\n'
-
     help_str += '--no-duplicates ## Pokud se v souboru vyskytne vice funkci se stejnym jmenem (napr.'
     help_str += 'deklarace funkce a pozdeji jeji definice), tak se do vysledneho XML souboru ulozi pouze prvni'
     help_str += 'z nich (uvazujte pruchod souborem shora dolu). Pokud tento parametr neni zadan, tak se do'
     help_str += 'vysledneho XML souboru ulozi vsechny vyskyty funkce se stejnym jmenem.\n'
-
     help_str += '--remove-whitespace ## Pri pouziti tohoto parametru skript odstrani z obsahu atributu'
     help_str += 'rettype a type (viz nize) vsechny prebytecne mezery.' 
-
     return help_str
 
 def fileordir(name):
@@ -531,7 +491,7 @@ def analysa(file, database, relativepath):
     parserForFile.readByChar(file, database, relativepath)
 
 ####################################################################################
-###############################Zpracovani argumentu#################################
+##########################Telo samotneho mocneho programu###########################
 ####################################################################################
 
 helpArg = False
@@ -603,17 +563,6 @@ if len(results.pretty) != 1 and len(results.pretty) != 2:
 if len(results.pretty) == 2:
     results.pretty[0] = results.pretty[1]
 
-"""
-print ("HELP              :", results.help)
-print ("INPUT             :", results.input)
-print ("OUTPUT            :", results.output)
-print ("PRETTY            :", results.pretty)
-print ("NO-INLINE         :", results.no_inline)
-print ("MAX-PAR           :", results.max_par)
-print ("NO-DUPLICATES     :", results.no_duplicates)
-print ("REMOVE-WHITESPACE :", results.remove_whitespace)
-"""
-
 if results.pretty[0] == None:
     results.pretty = '4'
 
@@ -627,7 +576,7 @@ if os.path.isdir(results.output[0]):
     sys.exit(3)
 
 if results.output[0] != 'STDOUT':
-    if os.access(results.output[0], os.W_OK) == False:
+    if not os.access(os.path.dirname(results.output[0]), os.W_OK):
         sys.exit(3)
 
 if helpArg == True:
