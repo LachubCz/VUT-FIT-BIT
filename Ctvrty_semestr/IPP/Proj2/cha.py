@@ -118,7 +118,11 @@ class parserForFile:
                         if (c.isspace() == False):
                             if c == '(':
                                 if word[0] == '*':
-                                    strech = whitespace + '*'
+                                    if database.parameters[7] != True:
+                                        whitespace = parserForFile.whiteSpaceStrech(whitespace)
+                                        strech = whitespace + '*'
+                                    else:
+                                        strech = ' *'
                                     functionToPut.put_rettype(strech)
                                     functionToPut.put_name(word[1:])
                                 else:
@@ -141,7 +145,11 @@ class parserForFile:
                             if c == '(':
                                 functionToPut.put_rettype(temp)
                                 if word[0] == '*':
-                                    strech = whitespace + '*'
+                                    if database.parameters[7] != True:
+                                        whitespace = parserForFile.whiteSpaceStrech(whitespace)
+                                        strech = whitespace + '*'
+                                    else:
+                                        strech = ' *'
                                     functionToPut.put_rettype(strech)
                                     functionToPut.put_name(word[1:])
                                 else:
