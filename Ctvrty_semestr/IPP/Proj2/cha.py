@@ -84,6 +84,7 @@ class parserForFile:
         temp = ""
         whitespace = ""
         ws_temp = ""
+        strech = ""
         lastChar = '0'
         state = 0
         inFunction = False
@@ -116,7 +117,12 @@ class parserForFile:
                     elif state == 4: #hledani zacatku druheho/dalsiho slova
                         if (c.isspace() == False):
                             if c == '(':
-                                functionToPut.put_name(word)
+                                if word[0] == '*':
+                                    strech = whitespace + '*'
+                                    functionToPut.put_rettype(strech)
+                                    functionToPut.put_name(word[1:])
+                                else:
+                                    functionToPut.put_name(word)
                                 whitespace = ""
                                 state = 6
                                 word = ""
@@ -134,7 +140,12 @@ class parserForFile:
                         else:
                             if c == '(':
                                 functionToPut.put_rettype(temp)
-                                functionToPut.put_name(word)
+                                if word[0] == '*':
+                                    strech = whitespace + '*'
+                                    functionToPut.put_rettype(strech)
+                                    functionToPut.put_name(word[1:])
+                                else:
+                                    functionToPut.put_name(word)
                                 word = ""
                                 temp = ""
                                 whitespace = ""
