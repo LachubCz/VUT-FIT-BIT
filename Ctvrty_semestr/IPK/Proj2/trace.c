@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <time.h>
+#include <arpa/inet.h>
 
 #define MAX_PATH 1024
 
@@ -15,7 +16,7 @@ int first_ttl = 1;
 int max_ttl = 30;
 char ip_address[MAX_PATH];
 
-//TODO kontrola spravnosti IP adresy
+//TODO: kontrola spravnosti IP adresy, kontrola zdali first_ttl, max_ttl obsahuji cisla
 //kontrola spravnosti argumentu
 void arguments (int argc, char const *argv[])
 {
@@ -258,7 +259,67 @@ int main(int argc, char const *argv[])
 {
 	//kontrola argumentu
 	arguments(argc, argv);
-	printf("%d %d %s\n", first_ttl, max_ttl, ip_address);
+	//printf("%d %d %s\n", first_ttl, max_ttl, ip_address);
+	
+	//struktura pro cas
+	struct timeval timeout;
+	//memset(&timeout, 0, sizeof(struct timeval)); //mozna bude treba funkce bzero nebo memset
+	timeout.tv_sec = 2;
+	timeout.tv_usec = 0;
+	
+	int sockfd;
+	int control;
+	int ttl = first_ttl;
 
+	struct sockaddr_in victim;
+	//memset(&victim, 0, sizeof(struct sockaddr_in)); //mozna bude treba funkce bzero nebo memset
+	victim.sin_family = AF_INET;
+	victim.sin_port = htons(33434);
+
+	in_addr_t adress = inet_addr(ip_address);
+	victim.sin_addr.s_addr = adress;
+
+	//vytvoreni socketu
+	sockfd = socket(AF_INET, SOCK_DGRAM, 0);  //mozna misto nuly IPPROTO_ICMP, nula znamena obecny socket
+	if (sockfd < 0)
+	{
+		fprintf(stderr, "Chyba pri vytvareni socketu.(1)\n");
+		exit(2);
+	}
+
+	//nastaveni options socketu
+	control = setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(struct timeval));  //nastaveni timeoutu
+	if (control < 0)  //mozna zde ma byt vetsi nez nula
+	{
+		fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu.(1)\n");
+		exit(2);
+	}
+
+	int one = 1;
+	control = setsockopt(sockfd, SOL_IP, IP_RECVERR, &one, sizeof(int));  //zjistit co presne je one 
+	if (control != 0)
+	{
+		fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu.(2)\n");
+		exit(2);
+	}
+
+	control = setsockopt(sockfd, SOL_IP, IP_RECVTTL, &one, sizeof(int));
+	if (control != 0)
+	{
+		fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu.(3)\n");
+		exit(2);
+	}
+
+	for (; ttl < max_ttl; ttl++)
+	{
+		control = setsockopt(sockfd, SOL_IP, IP_TTL, &ttl, sizeof(int));
+		if (control != 0)
+		{
+			fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu. (ttl = %d)(4)\n", ttl);
+			exit(2);
+		}
+
+		
+	}
 	return 0;
 }
