@@ -5,22 +5,25 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <netinet/in.h>
+#include <sys/time.h>
 #include <netdb.h>
+#include <errno.h>
 #include <time.h>
 #include <arpa/inet.h>
+#include <linux/errqueue.h>
 
-#define MAX_PATH 1024
+#define MAGIC_CONST 1024
 
 //globalni promenne pro ulozeni argumentu
 int first_ttl = 1;
 int max_ttl = 30;
-char ip_address[MAX_PATH];
+char ip_address[MAGIC_CONST];
 
 //TODO: kontrola spravnosti IP adresy, kontrola zdali first_ttl, max_ttl obsahuji cisla
 //kontrola spravnosti argumentu
 void arguments (int argc, char const *argv[])
 {
-	bzero(ip_address, MAX_PATH);
+	bzero(ip_address, MAGIC_CONST);
 
 	bool first_ttl_bool = false;
 	bool max_ttl_bool = false;
@@ -255,6 +258,76 @@ void arguments (int argc, char const *argv[])
 	}
 }
 
+void wait_recv(int fd){
+    fd_set fds;
+    struct timeval tv;
+    FD_ZERO(&fds);
+    FD_SET(fd, &fds);
+    tv.tv_sec = 1;
+    tv.tv_usec = 0;
+    select(fd+1, &fds, NULL, NULL, &tv);
+}
+
+int proc_error(int fd, int ttl){
+    char cbuf[512];
+    struct msghdr msg;
+    struct cmsghdr *cmsg;
+    struct iovec iov;
+    struct sock_extended_err *e;
+    struct sockaddr_in addr;
+    struct timeval tv;
+    char rcvbuf[80];
+    int rst, rethops;
+
+    iov.iov_base = &rcvbuf;
+    iov.iov_len = sizeof(rcvbuf);
+    msg.msg_name = (unsigned char*)&addr;
+    msg.msg_namelen = sizeof(addr);
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+    msg.msg_flags = 0;
+    msg.msg_control = cbuf;
+    msg.msg_controllen = sizeof(cbuf);
+
+    gettimeofday(&tv, NULL);
+    rst = recvmsg(fd, &msg, MSG_ERRQUEUE);
+    if(rst < 0){
+        //printf("%2d: %s \n", ttl, "no reply");
+        return -1;
+    }
+
+    for(cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)){
+        if(cmsg->cmsg_level == SOL_IP){
+            if(cmsg->cmsg_type == IP_RECVERR){
+                e = (struct sock_extended_err*) CMSG_DATA(cmsg);
+            }
+            else if(cmsg->cmsg_type == IP_TTL){
+                memcpy(&rethops, CMSG_DATA(cmsg), sizeof(rethops));
+            }
+        }
+    }
+
+    if(e == NULL){
+        return 0;
+    }
+
+    if(e->ee_origin == SO_EE_ORIGIN_LOCAL){
+        printf("%2d: %s \n", ttl, "[LOCALHOST]");
+        return 0;
+    }
+    else if(e->ee_origin == SO_EE_ORIGIN_ICMP){
+        char abuf[128];
+        struct sockaddr_in *sin = (struct sockaddr_in*)(e+1);
+        inet_ntop(AF_INET, &sin->sin_addr, abuf, sizeof(abuf));
+        printf("%2d: %s \n", ttl, abuf);
+        if(e->ee_errno == ECONNREFUSED){
+            return 1;
+        }
+        return 0;
+    }
+    return 0;
+}
+
 int main(int argc, char const *argv[])
 {
 	//kontrola argumentu
@@ -272,7 +345,7 @@ int main(int argc, char const *argv[])
 	int ttl = first_ttl;
 
 	struct sockaddr_in tovictim;
-	//memset(&tovictim, 0, sizeof(struct sockaddr_in)); //mozna bude treba funkce bzero nebo memset
+	memset(&tovictim, 0, sizeof(struct sockaddr_in)); //mozna bude treba funkce bzero nebo memset
 	tovictim.sin_family = AF_INET;
 	tovictim.sin_port = htons(33434);
 
@@ -280,7 +353,9 @@ int main(int argc, char const *argv[])
 	tovictim.sin_addr.s_addr = adress;
 
 	struct sockaddr_in fromvictim;
-	memset(&from, 0, sizeof(struct sockaddr_in));
+	memset(&fromvictim, 0, sizeof(struct sockaddr_in));
+
+	char useless[MAGIC_CONST] = {0};
 
 	//vytvoreni socketu
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);  //mozna misto nuly IPPROTO_ICMP, nula znamena obecny socket
@@ -315,6 +390,7 @@ int main(int argc, char const *argv[])
 
 	for (; ttl < max_ttl; ttl++)
 	{
+		int counter = 0; //pocitadlo opakovaneho odeslani socketu
 		control = setsockopt(sockfd, SOL_IP, IP_TTL, &ttl, sizeof(int));
 		if (control != 0)
 		{
@@ -324,21 +400,52 @@ int main(int argc, char const *argv[])
 
 		//memset(&from, 0, sizeof(struct sockaddr_in));
 		//target.sin_port = htons(port + ttl);
-		if(sendto(sockfd, &data, sizeof(data), 0, (struct sockaddr*)&target, sizeof(target)) == -1) //chce to odstinit data
+
+		control = sendto(sockfd, &useless, sizeof(useless), 0, (struct sockaddr*)&tovictim, sizeof(tovictim));
+		if (control == -1) //chce to odstinit data
 		{
-			fprintf(stderr, "Chyba pri odesilani socketu.(ttl = %d)(4)\n", ttl);
-			exit(3);
+			if (!(counter < 2))
+			{
+				fprintf(stderr, "Chyba pri odesilani socketu.(ttl = %d)(4)\n", ttl);
+				exit(3);
+			}
 		}
 
-		//wait_recv(fd);
-		if(recvfrom(sockfd, buf, sizeof(buf), MSG_DONTWAIT, (struct sockaddr*)&from, (socklen_t*)sizeof(from)) > 0) //chce to odstinit buf
+		
+		wait_recv(sockfd);
+		
+		control = recvfrom(sockfd, useless, sizeof(useless), MSG_DONTWAIT, (struct sockaddr*)&fromvictim, (socklen_t*)sizeof(fromvictim)); //chce to odstinit buf
+		if(control > 0)
 		{
-			printf("%2d : %s \n", ttl, inet_ntoa(from.sin_addr));
+			printf("%2d : %s \n", ttl, inet_ntoa(fromvictim.sin_addr));
 			return 0;
 		}
+		else
+		{
+			control = proc_error(sockfd, ttl);
+			switch (control)
+			{
+				case -1:
+					ttl--;
+				case 0:
+					break;
+				case 1:
+					return 0;
+			}
+		}
 
-		return proc_error(fd, ttl); //dodelat fci procerror
+		
 
+		//printf("%d\n", ttl);
+		/*
+		else
+		{
+			fprintf(stderr, "END(ttl = %d)\n", ttl);
+			exit(0);
+		}
+ 		*/
+		//return proc_error(fd, ttl); //dodelat fci procerror
+		counter++;
 	}
 	return 0;
 }
