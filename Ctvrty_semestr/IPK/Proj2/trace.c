@@ -271,13 +271,16 @@ int main(int argc, char const *argv[])
 	int control;
 	int ttl = first_ttl;
 
-	struct sockaddr_in victim;
-	//memset(&victim, 0, sizeof(struct sockaddr_in)); //mozna bude treba funkce bzero nebo memset
-	victim.sin_family = AF_INET;
-	victim.sin_port = htons(33434);
+	struct sockaddr_in tovictim;
+	//memset(&tovictim, 0, sizeof(struct sockaddr_in)); //mozna bude treba funkce bzero nebo memset
+	tovictim.sin_family = AF_INET;
+	tovictim.sin_port = htons(33434);
 
 	in_addr_t adress = inet_addr(ip_address);
-	victim.sin_addr.s_addr = adress;
+	tovictim.sin_addr.s_addr = adress;
+
+	struct sockaddr_in fromvictim;
+	memset(&from, 0, sizeof(struct sockaddr_in));
 
 	//vytvoreni socketu
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);  //mozna misto nuly IPPROTO_ICMP, nula znamena obecny socket
@@ -315,11 +318,27 @@ int main(int argc, char const *argv[])
 		control = setsockopt(sockfd, SOL_IP, IP_TTL, &ttl, sizeof(int));
 		if (control != 0)
 		{
-			fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu. (ttl = %d)(4)\n", ttl);
+			fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu.(ttl = %d)(4)\n", ttl);
 			exit(2);
 		}
 
-		
+		//memset(&from, 0, sizeof(struct sockaddr_in));
+		//target.sin_port = htons(port + ttl);
+		if(sendto(sockfd, &data, sizeof(data), 0, (struct sockaddr*)&target, sizeof(target)) == -1) //chce to odstinit data
+		{
+			fprintf(stderr, "Chyba pri odesilani socketu.(ttl = %d)(4)\n", ttl);
+			exit(3);
+		}
+
+		//wait_recv(fd);
+		if(recvfrom(sockfd, buf, sizeof(buf), MSG_DONTWAIT, (struct sockaddr*)&from, (socklen_t*)sizeof(from)) > 0) //chce to odstinit buf
+		{
+			printf("%2d : %s \n", ttl, inet_ntoa(from.sin_addr));
+			return 0;
+		}
+
+		return proc_error(fd, ttl); //dodelat fci procerror
+
 	}
 	return 0;
 }
