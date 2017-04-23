@@ -296,47 +296,48 @@ void wait_recv(int fd)
 
 int errorCheck(int sockfd, int ttl)
 {
-	char useless[MAGIC_CONST];  //retezec pro doprovodne data u zpravy
-	struct msghdr message;  //jednotlive hlavicky se ziskavaji z cmshgr pomoci CMSG_FIRSTHDR a CMSG_NXTHDR
-	struct cmsghdr *cmsg;  //hlavicka pro data asociovane s datagramem, ziskavaji se z ni jednotive msghdr
+	int rethops;
+
 	struct iovec iov;  //struktura pro shromazdovani/rozptylovani vstupu a vystupu, pouziva se v msghr
-	struct sock_extended_err *error;  //struktura, ktera se vyuziva pro ukladani erroru (prepinac IP_RECVERR)
+	char address[MAGIC_CONST];  //retezec pouzity ve strukture iovec
+	iov.iov_base = &address;  //adresa
+	iov.iov_len = sizeof(address);  //pocet bytu na prenost
+
+	char useless[MAGIC_CONST];  //retezec pro doprovodne data u zpravy
+	struct msghdr small_header;  //jednotlive hlavicky se ziskavaji z cmshgr pomoci CMSG_FIRSTHDR a CMSG_NXTHDR
+	small_header.msg_iov = &iov;  //shromazdovaci/rozptylovaci pole
+	small_header.msg_iovlen = 1;  //clenove ve shromazdovacim poli
+	small_header.msg_control = useless;  //doprovodne data
+	small_header.msg_controllen = sizeof(useless);  //delka doprovodnych dat
+	small_header.msg_flags = 0;  //flagy
+
 	struct timeval end;  //casova struktura pro zaznamenani prijeti packetu
-	char rcvbuf[MAGIC_CONST];
-	int rst, rethops;
-
-	iov.iov_base = &rcvbuf;  //adresa
-	iov.iov_len = sizeof(rcvbuf);  //pocet bytu na prenost
-
-	message.msg_iov = &iov;  //shromazdovaci/rozptylovaci pole
-	message.msg_iovlen = 1;  //clenove ve shromazdovacim poli
-	message.msg_control = useless;  //doprovodne data
-	message.msg_controllen = sizeof(useless);  //delka doprovodnych dat
-	message.msg_flags = 0;  //flagy
-
 	gettimeofday(&end, NULL);  //ziskani casu prijeti zpravy 
 
-	rst = recvmsg(sockfd, &message, MSG_ERRQUEUE);
-	if(rst < 0){
-		//printf("%2d: %s \n", ttl, "no reply");
+	int control;  //pomocna promenna pro kontrolu
+	control = recvmsg(sockfd, &small_header, MSG_ERRQUEUE);  //vraci pocet ziskanych bytu, pokud doslo k chybe, snizi se ttl packet se posle znovu z mainu
+	if(control < 0)
+	{	
 		return -1;
 	}
 
+	struct cmsghdr *big_header;  //hlavicka pro data asociovane s datagramem, ziskavaji se z ni jednotive msghdr
+	struct sock_extended_err *error;  //struktura, ktera se vyuziva pro ukladani erroru (prepinac IP_RECVERR)
 	//CMSG_FIRSTHDR - returns a pointer to the first cmsghdr in the ancillary data buffer associated with the passed msghdr
 	//CMSG_NXTHDR - returns the next valid cmsghdr after the passed cmsghdr.  It returns NULL when there isn't enough space left in the buffer
-	for(cmsg = CMSG_FIRSTHDR(&message); cmsg; cmsg = CMSG_NXTHDR(&message, cmsg))
+	for(big_header = CMSG_FIRSTHDR(&small_header); big_header; big_header = CMSG_NXTHDR(&small_header, big_header))
 	{
-		if(cmsg->cmsg_level == SOL_IP)
+		if(big_header->cmsg_level == SOL_IP)
 		{
-			if(cmsg->cmsg_type == IP_RECVERR)
+			if(big_header->cmsg_type == IP_RECVERR)
 			{
-				error = (struct sock_extended_err*) CMSG_DATA(cmsg);
+				error = (struct sock_extended_err*) CMSG_DATA(big_header);
 			}
 			else 
 			{
-				if(cmsg->cmsg_type == IP_TTL)
+				if(big_header->cmsg_type == IP_TTL)
 				{
-					memcpy(&rethops, CMSG_DATA(cmsg), sizeof(rethops));
+					memcpy(&rethops, CMSG_DATA(big_header), sizeof(rethops));
 				}
 			}
 		}
@@ -428,10 +429,10 @@ int main(int argc, char const *argv[])
 		exit(2);
 	}
 
+	int counter = 0; //pocitadlo opakovaneho odeslani socketu, v pripade nepodareneho odeslani se pokus zopakuje jeste jednou
 	//cyklus pro incrementaci tll a zasilani zprav cili
 	for (; ttl < max_ttl; ttl++)
 	{
-		int counter = 0; //pocitadlo opakovaneho odeslani socketu, v pripade nepodareneho odeslani se pokus zopakuje jeste jednou
 		control = setsockopt(sockfd, SOL_IP, IP_TTL, &ttl, sizeof(int));  //nastaveni ttl
 		if (control != 0)
 		{
@@ -451,6 +452,7 @@ int main(int argc, char const *argv[])
 		else  //pri uspesnem odeslani se zaznamenava cas
 		{
 			gettimeofday(&start, NULL);
+			counter = 0;
 		}
 
 		wait_recv(sockfd);
@@ -467,7 +469,8 @@ int main(int argc, char const *argv[])
 			switch (control)
 			{
 				case -1:
-					ttl--;
+					ttl--;  //nebezpeci smycky
+					break;
 				case 0:
 					break;
 				case 1:
