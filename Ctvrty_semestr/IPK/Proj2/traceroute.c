@@ -22,6 +22,7 @@ char ip_address[MAGIC_CONST];
 //globalni promenna pro pristup k casu odeslani pro vsechny funkce
 struct timeval start;
 int typeOfIP;
+char lastIP[MAGIC_CONST];
 
 /*
  * TODO: 
@@ -412,7 +413,7 @@ int errorCheck6(int sockfd, int ttl)
     small_header.msg_flags = 0;  //flagy
 
     struct timeval end;  //casova struktura pro zaznamenani prijeti packetu
-    
+
     int control;  //pomocna promenna pro kontrolu
     recvmsg(sockfd, &small_header, MSG_ERRQUEUE);  //vraci pocet ziskanych bytu, pokud doslo k chybe, snizi se ttl packet se posle znovu z mainu
     gettimeofday(&end, NULL);  //ziskani casu prijeti zpravy 
@@ -422,13 +423,18 @@ int errorCheck6(int sockfd, int ttl)
     big_header = CMSG_FIRSTHDR(&small_header);
     while(big_header)
     {
-        if(big_header->cmsg_level == SOL_IP)
+        //print("%d\n", big_header->cmsg_level);
+        if(big_header->cmsg_level == SOL_IPV6)
         {
-            if(big_header->cmsg_type == IP_RECVERR)
+            //printf("%d\n", big_header->cmsg_type);
+            if(big_header->cmsg_type == IPV6_RECVERR)
             {
+                //printf("nice\n");
                 error = (struct sock_extended_err*) CMSG_DATA(big_header);
             }
+            //printf("nice2\n");
         }
+        //printf("nice3\n");
         big_header = CMSG_NXTHDR(&small_header, big_header);
     }
 
@@ -438,12 +444,23 @@ int errorCheck6(int sockfd, int ttl)
     }
     else
     {
-        if(error->ee_origin == SO_EE_ORIGIN_ICMP)
+        //printf("t\n");
+        if(error->ee_origin == SO_EE_ORIGIN_ICMP6)
         {
+            //printf("z\n");
             char ip_address[MAGIC_CONST];
-            struct sockaddr_in *sin = (struct sockaddr_in*)(error+1);
-            inet_ntop(AF_INET, &sin->sin_addr, ip_address, sizeof(ip_address));
-            if (error->ee_type == 3)  //destination unrechable
+            //printf("u\n");
+            struct sockaddr_in6 *sin = (struct sockaddr_in6*)(error+1);
+            //printf("i\n");
+            inet_ntop(AF_INET6, &sin->sin6_addr, ip_address, sizeof(ip_address));
+            //printf("o\n");
+            if (strcmp(lastIP, ip_address)==0)
+            {
+                return 1;
+            }
+            bzero(lastIP, MAGIC_CONST);
+            strcpy(lastIP, ip_address);
+            if (error->ee_type == 1)  //destination unrechable
             {
                 if (error->ee_code == 0)  //network unreachable
                 {
@@ -473,7 +490,7 @@ int errorCheck6(int sockfd, int ttl)
             }
             else
             {
-                if (error->ee_type == 11)
+                if (error->ee_type == 3)
                 {
                     if (timeDifference(&start, &end) > 2000)  //rozhodovani o timeoutu
                     {
@@ -669,7 +686,7 @@ int main(int argc, char const *argv[])
                 exit(3);
             }
 
-            control = sendto(sockfd, &useless, sizeof(useless), 0, (struct sockaddr*)&tovictim, sizeof(struct sockaddr_in));  //nastaveni packetu
+            control = sendto(sockfd, &useless, sizeof(useless), 0, (struct sockaddr*)&tovictim, sizeof(struct sockaddr_in6));  //nastaveni packetu
             if (control == -1)
             {
                 if (!(counter < 2))  //pokud se neposlal packet ani na druhy pokus program konci s chybou
@@ -689,13 +706,14 @@ int main(int argc, char const *argv[])
             if(control > 0)  //control oznacuje pocet prijatych bytu, v pripade erroru je -1, pokud bylo zavreno spojeni hodnota je nula
             {
                 gettimeofday(&end, NULL);
-                inet_ntop(AF_INET6, &(fromvictim.sin6_addr), useless, MAGIC_CONST);
+                inet_ntop(AF_INET6, &(fromvictim.sin6_addr), useless, sizeof(useless));
                 printf("%2d   %s   %.3f ms\n", ttl, useless, timeDifference(&start, &end));
                 break;
             }
             else
             {
                 control = errorCheck6(sockfd, ttl);
+                //control = 0;
                 switch (control)
                 {
                     case 0:
