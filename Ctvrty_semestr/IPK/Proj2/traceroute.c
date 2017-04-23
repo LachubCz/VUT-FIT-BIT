@@ -21,8 +21,6 @@ char ip_address[MAGIC_CONST];
 
 //globalni promenna pro pristup k casu odeslani pro vsechny funkce
 struct timeval start;
-int typeOfIP;
-char lastIP[MAGIC_CONST];
 
 /*
  * TODO: 
@@ -267,6 +265,11 @@ void arguments (int argc, char const *argv[])
 			fprintf(stderr, "Chyba pri zadani argumentu.(16)\n");
 			exit(1);
 	}
+    
+    if (max_ttl_bool == true)
+    {
+        max_ttl += 1;
+    }
 }
 
 
@@ -423,18 +426,13 @@ int errorCheck6(int sockfd, int ttl)
     big_header = CMSG_FIRSTHDR(&small_header);
     while(big_header)
     {
-        //print("%d\n", big_header->cmsg_level);
         if(big_header->cmsg_level == SOL_IPV6)
         {
-            //printf("%d\n", big_header->cmsg_type);
             if(big_header->cmsg_type == IPV6_RECVERR)
             {
-                //printf("nice\n");
                 error = (struct sock_extended_err*) CMSG_DATA(big_header);
             }
-            //printf("nice2\n");
         }
-        //printf("nice3\n");
         big_header = CMSG_NXTHDR(&small_header, big_header);
     }
 
@@ -444,22 +442,11 @@ int errorCheck6(int sockfd, int ttl)
     }
     else
     {
-        //printf("t\n");
         if(error->ee_origin == SO_EE_ORIGIN_ICMP6)
         {
-            //printf("z\n");
             char ip_address[MAGIC_CONST];
-            //printf("u\n");
             struct sockaddr_in6 *sin = (struct sockaddr_in6*)(error+1);
-            //printf("i\n");
             inet_ntop(AF_INET6, &sin->sin6_addr, ip_address, sizeof(ip_address));
-            //printf("o\n");
-            if (strcmp(lastIP, ip_address)==0)
-            {
-                return 1;
-            }
-            bzero(lastIP, MAGIC_CONST);
-            strcpy(lastIP, ip_address);
             if (error->ee_type == 1)  //destination unrechable
             {
                 if (error->ee_code == 0)  //network unreachable
@@ -468,22 +455,15 @@ int errorCheck6(int sockfd, int ttl)
                 }
                 else
                 {
-                    if (error->ee_code == 1)  //host unreachable
+                    if (error->ee_code == 3)  //host unreachable
                     {
                         printf("%2d   %s   H!\n", ttl, ip_address);
                     }
                     else
                     {
-                        if (error->ee_code == 2)  //protocol unreachable
+                        if (error->ee_code == 1)  //communication administratively prohibited
                         {
-                            printf("%2d   %s   P!\n", ttl, ip_address);
-                        }
-                        else
-                        {
-                            if (error->ee_code == 13)  //communication administratively prohibited
-                            {
-                                printf("%2d   %s   X!\n", ttl, ip_address);
-                            }
+                            printf("%2d   %s   X!\n", ttl, ip_address);
                         }
                     }
                 }
@@ -539,6 +519,7 @@ int main(int argc, char const *argv[])
 	}
 
 	//zjisteni o jaky typ IP adresy jde
+    int typeOfIP;
 	switch(result->ai_family)
 	{
 		case AF_INET:
@@ -713,7 +694,6 @@ int main(int argc, char const *argv[])
             else
             {
                 control = errorCheck6(sockfd, ttl);
-                //control = 0;
                 switch (control)
                 {
                     case 0:
