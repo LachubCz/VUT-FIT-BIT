@@ -280,52 +280,57 @@ double timeDifference(struct timeval * start, struct timeval * end)
 }
 
 
-void wait_recv(int fd){
+void wait_recv(int fd)
+{
+	struct timeval timeout;
+	timeout.tv_sec = 2;
+	timeout.tv_usec = 0;
+
 	fd_set fds;
-	struct timeval tv;
 	FD_ZERO(&fds);
 	FD_SET(fd, &fds);
-	tv.tv_sec = 1;
-	tv.tv_usec = 0;
-	select(fd+1, &fds, NULL, NULL, &tv);
+
+	select(fd+1, &fds, NULL, NULL, &timeout);
 }
 
 
-int proc_error(int fd, int ttl){
-	char cbuf[512];
-	struct msghdr msg;
-	struct cmsghdr *cmsg;
-	struct iovec iov;
-	struct sock_extended_err *e;
-	struct sockaddr_in addr;
-	struct timeval end;
-	char rcvbuf[80];
+int errorCheck(int sockfd, int ttl)
+{
+	char useless[MAGIC_CONST];  //retezec pro doprovodne data u zpravy
+	struct msghdr message;  //jednotlive hlavicky se ziskavaji z cmshgr pomoci CMSG_FIRSTHDR a CMSG_NXTHDR
+	struct cmsghdr *cmsg;  //hlavicka pro data asociovane s datagramem, ziskavaji se z ni jednotive msghdr
+	struct iovec iov;  //struktura pro shromazdovani/rozptylovani vstupu a vystupu, pouziva se v msghr
+	struct sock_extended_err *error;  //struktura, ktera se vyuziva pro ukladani erroru (prepinac IP_RECVERR)
+	struct timeval end;  //casova struktura pro zaznamenani prijeti packetu
+	char rcvbuf[MAGIC_CONST];
 	int rst, rethops;
 
-	iov.iov_base = &rcvbuf;
-	iov.iov_len = sizeof(rcvbuf);
-	msg.msg_name = (unsigned char*)&addr;
-	msg.msg_namelen = sizeof(addr);
-	msg.msg_iov = &iov;
-	msg.msg_iovlen = 1;
-	msg.msg_flags = 0;
-	msg.msg_control = cbuf;
-	msg.msg_controllen = sizeof(cbuf);
+	iov.iov_base = &rcvbuf;  //adresa
+	iov.iov_len = sizeof(rcvbuf);  //pocet bytu na prenost
 
-	gettimeofday(&end, NULL);
-	rst = recvmsg(fd, &msg, MSG_ERRQUEUE);
+	message.msg_iov = &iov;  //shromazdovaci/rozptylovaci pole
+	message.msg_iovlen = 1;  //clenove ve shromazdovacim poli
+	message.msg_control = useless;  //doprovodne data
+	message.msg_controllen = sizeof(useless);  //delka doprovodnych dat
+	message.msg_flags = 0;  //flagy
+
+	gettimeofday(&end, NULL);  //ziskani casu prijeti zpravy 
+
+	rst = recvmsg(sockfd, &message, MSG_ERRQUEUE);
 	if(rst < 0){
 		//printf("%2d: %s \n", ttl, "no reply");
 		return -1;
 	}
 
-	for(cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg))
+	//CMSG_FIRSTHDR - returns a pointer to the first cmsghdr in the ancillary data buffer associated with the passed msghdr
+	//CMSG_NXTHDR - returns the next valid cmsghdr after the passed cmsghdr.  It returns NULL when there isn't enough space left in the buffer
+	for(cmsg = CMSG_FIRSTHDR(&message); cmsg; cmsg = CMSG_NXTHDR(&message, cmsg))
 	{
 		if(cmsg->cmsg_level == SOL_IP)
 		{
 			if(cmsg->cmsg_type == IP_RECVERR)
 			{
-				e = (struct sock_extended_err*) CMSG_DATA(cmsg);
+				error = (struct sock_extended_err*) CMSG_DATA(cmsg);
 			}
 			else 
 			{
@@ -337,22 +342,22 @@ int proc_error(int fd, int ttl){
 		}
 	}
 
-	if(e == NULL){
+	if(error == NULL){
 		return 0;
 	}
 
-	if(e->ee_origin == SO_EE_ORIGIN_LOCAL)
+	if(error->ee_origin == SO_EE_ORIGIN_LOCAL)
 	{
 		printf("%2d: %s \n", ttl, "[LOCALHOST]");
 		return 0;
 	}
-	else if(e->ee_origin == SO_EE_ORIGIN_ICMP)
+	else if(error->ee_origin == SO_EE_ORIGIN_ICMP)
 	{
 		char abuf[128];
-		struct sockaddr_in *sin = (struct sockaddr_in*)(e+1);
+		struct sockaddr_in *sin = (struct sockaddr_in*)(error+1);
 		inet_ntop(AF_INET, &sin->sin_addr, abuf, sizeof(abuf));
 		printf("%2d   %s   %.3f ms\n", ttl, abuf, timeDifference(&start, &end));
-		if(e->ee_errno == ECONNREFUSED)
+		if(error->ee_errno == ECONNREFUSED)
 		{
 			return 1;
 		}
@@ -434,7 +439,7 @@ int main(int argc, char const *argv[])
 			exit(2);
 		}
 
-		control = sendto(sockfd, &useless, sizeof(useless), 0, (struct sockaddr*)&tovictim, sizeof(sockaddr_in));  //nastaveni packetu
+		control = sendto(sockfd, &useless, sizeof(useless), 0, (struct sockaddr*)&tovictim, sizeof(struct sockaddr_in));  //nastaveni packetu
 		if (control == -1)
 		{
 			if (!(counter < 2))  //pokud se neposlal packet ani na druhy pokus program konci s chybou
@@ -450,15 +455,15 @@ int main(int argc, char const *argv[])
 
 		wait_recv(sockfd);
 		control = recvfrom(sockfd, useless, sizeof(useless), MSG_DONTWAIT, (struct sockaddr*)&fromvictim, (socklen_t*)sizeof(fromvictim)); //chce to odstinit buf
-		if(control > 0)
+		if(control > 0)  //control oznacuje pocet prijatych bytu, v pripade erroru je -1, pokud bylo zavreno spojeni hodnota je nula
 		{
 			gettimeofday(&end, NULL);
 			printf("%2d   %s   %.3f ms\n", ttl, inet_ntoa(fromvictim.sin_addr), timeDifference(&start, &end));
-			return 0;
+			break;
 		}
 		else
 		{
-			control = proc_error(sockfd, ttl);
+			control = errorCheck(sockfd, ttl);
 			switch (control)
 			{
 				case -1:
