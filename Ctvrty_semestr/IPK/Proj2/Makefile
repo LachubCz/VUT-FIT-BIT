@@ -1,13 +1,13 @@
 TRACEROUTE          = trace
 
-TRACEROUTE_OBJECTS  = $(trace.c=.o)
+TRACEROUTE_OBJECTS  = $(traceroute.c=.o)
 
-build: $(TRACEROUTE)
+assemble: $(TRACEROUTE)
 
-rebuild: clean $(TRACEROUTE)
+reassemble: clean $(TRACEROUTE)
 
 $(TRACEROUTE): $(TRACEROUTE_OBJECTS)
-		gcc -g trace.c -o $@
+		gcc -g traceroute.c -o $@
 
 clean:
 	rm -fr core* *~ $(TRACEROUTE_OBJECTS) $(TRACEROUTE) .make.state .sb
