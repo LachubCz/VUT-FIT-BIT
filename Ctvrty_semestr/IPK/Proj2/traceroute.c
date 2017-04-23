@@ -21,6 +21,7 @@ char ip_address[MAGIC_CONST];
 
 //globalni promenna pro pristup k casu odeslani pro vsechny funkce
 struct timeval start;
+int typeOfIP;
 
 /*
  * TODO: 
@@ -309,7 +310,7 @@ int errorCheck(int sockfd, int ttl)
 	
 	int control;  //pomocna promenna pro kontrolu
 	recvmsg(sockfd, &small_header, MSG_ERRQUEUE);  //vraci pocet ziskanych bytu, pokud doslo k chybe, snizi se ttl packet se posle znovu z mainu
-    gettimeofday(&end, NULL);  //ziskani casu prijeti zpravy 
+	gettimeofday(&end, NULL);  //ziskani casu prijeti zpravy 
 
 	struct cmsghdr *big_header;  //hlavicka pro data asociovane s datagramem, ziskavaji se z ni jednotive msghdr
 	struct sock_extended_err *error;  //struktura, ktera se vyuziva pro ukladani erroru (prepinac IP_RECVERR)
@@ -398,6 +399,37 @@ int main(int argc, char const *argv[])
 	//kontrola argumentu
 	arguments(argc, argv);
 	
+	//testovani spravnosti IP adresy a jejiho typu
+	int control;  //promena pro kontrolu navratovych hodnot
+	struct addrinfo hints;
+	struct addrinfo *result;
+
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = 0;
+
+	control = getaddrinfo(ip_address, NULL, &hints, &result);  //kontrola IP adrsy
+	if (control != 0)
+	{
+		fprintf(stderr, "Chyba pri zpracovani IP adresy.(%s)\n", gai_strerror(control));
+		exit(2);
+	}
+
+	//zjisteni o jaky typ IP adresy jde
+	switch(result->ai_family)
+	{
+		case AF_INET:
+			typeOfIP = 4;
+			break;
+		case AF_INET6:
+			typeOfIP = 6;
+			break;
+		default:
+			fprintf(stderr, "Neznamy typ IP adresy.(1)\n");
+			exit(2);
+			break;
+	}
+
 	//casova struktura pro timeout
 	struct timeval timeout;
 	timeout.tv_sec = 2;
@@ -407,7 +439,6 @@ int main(int argc, char const *argv[])
 	struct timeval end;
 
 	int sockfd;  //cislo socketu
-	int control;  //promena pro kontrolu navratovych hodnot
 	int ttl = first_ttl;  //pocitadlo aktualni hodnoty ttl
 
 	//nastaveni sitove adresy k cili
@@ -429,7 +460,7 @@ int main(int argc, char const *argv[])
 	if (sockfd < 0)
 	{
 		fprintf(stderr, "Chyba pri vytvareni socketu.(1)\n");
-		exit(2);
+		exit(3);
 	}
 
 	//nastaveni vlastnosti socketu
@@ -438,14 +469,14 @@ int main(int argc, char const *argv[])
 	if (control < 0)
 	{
 		fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu.(1)\n");
-		exit(2);
+		exit(3);
 	}
 
 	control = setsockopt(sockfd, SOL_IP, IP_RECVERR, &one, sizeof(int));  //nastaveni prijimani erroru
 	if (control != 0)
 	{
 		fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu.(2)\n");
-		exit(2);
+		exit(3);
 	}
 
 	int counter = 0; //pocitadlo opakovaneho odeslani socketu, v pripade nepodareneho odeslani se pokus zopakuje jeste jednou
@@ -456,7 +487,7 @@ int main(int argc, char const *argv[])
 		if (control != 0)
 		{
 			fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu.(ttl = %d)(4)\n", ttl);
-			exit(2);
+			exit(3);
 		}
 
 		control = sendto(sockfd, &useless, sizeof(useless), 0, (struct sockaddr*)&tovictim, sizeof(struct sockaddr_in));  //nastaveni packetu
@@ -465,7 +496,7 @@ int main(int argc, char const *argv[])
 			if (!(counter < 2))  //pokud se neposlal packet ani na druhy pokus program konci s chybou
 			{
 				fprintf(stderr, "Chyba pri odesilani socketu.(ttl = %d)(1)\n", ttl);
-				exit(3);
+				exit(4);
 			}
 		}
 		else  //pri uspesnem odeslani se zaznamenava cas
