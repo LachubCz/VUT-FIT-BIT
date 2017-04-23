@@ -16,7 +16,7 @@
 
 //globalni promenne pro ulozeni argumentu
 int first_ttl = 1;
-int max_ttl = 30;
+int max_ttl = 31;
 char ip_address[MAGIC_CONST];
 
 //globalni promenna pro pristup k casu odeslani pro vsechny funkce
@@ -24,7 +24,6 @@ struct timeval start;
 
 /*
  * TODO: 
- *  - kontrola spravnosti IP adresy
  *  - kontrola zdali first_ttl, max_ttl obsahuji cisla
  */
 
@@ -307,14 +306,10 @@ int errorCheck(int sockfd, int ttl)
 	small_header.msg_flags = 0;  //flagy
 
 	struct timeval end;  //casova struktura pro zaznamenani prijeti packetu
-	gettimeofday(&end, NULL);  //ziskani casu prijeti zpravy 
-
+	
 	int control;  //pomocna promenna pro kontrolu
-	control = recvmsg(sockfd, &small_header, MSG_ERRQUEUE);  //vraci pocet ziskanych bytu, pokud doslo k chybe, snizi se ttl packet se posle znovu z mainu
-	if(control < 0)
-	{   
-		return -1;
-	}
+	recvmsg(sockfd, &small_header, MSG_ERRQUEUE);  //vraci pocet ziskanych bytu, pokud doslo k chybe, snizi se ttl packet se posle znovu z mainu
+    gettimeofday(&end, NULL);  //ziskani casu prijeti zpravy 
 
 	struct cmsghdr *big_header;  //hlavicka pro data asociovane s datagramem, ziskavaji se z ni jednotive msghdr
 	struct sock_extended_err *error;  //struktura, ktera se vyuziva pro ukladani erroru (prepinac IP_RECVERR)
@@ -492,9 +487,6 @@ int main(int argc, char const *argv[])
 			control = errorCheck(sockfd, ttl);
 			switch (control)
 			{
-				case -1:
-					ttl--;  //nebezpeci smycky, pokud recvmsg vyhazuje neustale nulu
-					break;
 				case 0:
 					break;
 				case 1:
