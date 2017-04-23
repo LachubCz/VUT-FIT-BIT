@@ -340,22 +340,20 @@ int errorCheck(int sockfd, int ttl)
 	}
 	else
 	{
-		if(error->ee_origin == SO_EE_ORIGIN_LOCAL)
+		if(error->ee_origin == SO_EE_ORIGIN_ICMP)
 		{
-			printf("%2d: %s \n", ttl, "[LOCALHOST]");
-			return 0;
-		}
-		else if(error->ee_origin == SO_EE_ORIGIN_ICMP)
-		{
-			char abuf[128];
+			char ip_address[MAGIC_CONST];
 			struct sockaddr_in *sin = (struct sockaddr_in*)(error+1);
-			inet_ntop(AF_INET, &sin->sin_addr, abuf, sizeof(abuf));
-			printf("%2d   %s   %.3f ms\n", ttl, abuf, timeDifference(&start, &end));
+			inet_ntop(AF_INET, &sin->sin_addr, ip_address, sizeof(ip_address));
+			printf("%2d   %s   %.3f ms\n", ttl, ip_address, timeDifference(&start, &end));
 			if(error->ee_errno == ECONNREFUSED)
 			{
 				return 1;
 			}
-			return 0;
+			else
+			{
+				return 0;
+			}
 		}
 		return 0;
 	}
