@@ -291,7 +291,7 @@ void waitForSelect(int sockfd, struct timeval timeout)
 
 
 //prochazi errorove zpravy od serveru
-int errorCheck(int sockfd, int ttl)
+int errorCheck4(int sockfd, int ttl)
 {
 	struct iovec iov;  //struktura pro shromazdovani/rozptylovani vstupu a vystupu, pouziva se v msghr
 	char address[MAGIC_CONST];  //retezec pouzity ve strukture iovec
@@ -394,6 +394,112 @@ int errorCheck(int sockfd, int ttl)
 	}
 }
 
+
+//prochazi errorove zpravy od serveru
+int errorCheck6(int sockfd, int ttl)
+{
+    struct iovec iov;  //struktura pro shromazdovani/rozptylovani vstupu a vystupu, pouziva se v msghr
+    char address[MAGIC_CONST];  //retezec pouzity ve strukture iovec
+    iov.iov_base = &address;  //adresa
+    iov.iov_len = sizeof(address);  //pocet bytu na prenost
+
+    char useless[MAGIC_CONST];  //retezec pro doprovodne data u zpravy
+    struct msghdr small_header;  //jednotlive hlavicky se ziskavaji z cmshgr pomoci CMSG_FIRSTHDR a CMSG_NXTHDR
+    small_header.msg_iov = &iov;  //shromazdovaci/rozptylovaci pole
+    small_header.msg_iovlen = 1;  //clenove ve shromazdovacim poli
+    small_header.msg_control = useless;  //doprovodne data
+    small_header.msg_controllen = sizeof(useless);  //delka doprovodnych dat
+    small_header.msg_flags = 0;  //flagy
+
+    struct timeval end;  //casova struktura pro zaznamenani prijeti packetu
+    
+    int control;  //pomocna promenna pro kontrolu
+    recvmsg(sockfd, &small_header, MSG_ERRQUEUE);  //vraci pocet ziskanych bytu, pokud doslo k chybe, snizi se ttl packet se posle znovu z mainu
+    gettimeofday(&end, NULL);  //ziskani casu prijeti zpravy 
+
+    struct cmsghdr *big_header;  //hlavicka pro data asociovane s datagramem, ziskavaji se z ni jednotive msghdr
+    struct sock_extended_err *error;  //struktura, ktera se vyuziva pro ukladani erroru (prepinac IP_RECVERR)
+    big_header = CMSG_FIRSTHDR(&small_header);
+    while(big_header)
+    {
+        if(big_header->cmsg_level == SOL_IP)
+        {
+            if(big_header->cmsg_type == IP_RECVERR)
+            {
+                error = (struct sock_extended_err*) CMSG_DATA(big_header);
+            }
+        }
+        big_header = CMSG_NXTHDR(&small_header, big_header);
+    }
+
+    if(error == NULL)  //zadna errorova zprava -> program dospel cile, predani rizeni mainu a konec
+    {
+        return 0;
+    }
+    else
+    {
+        if(error->ee_origin == SO_EE_ORIGIN_ICMP)
+        {
+            char ip_address[MAGIC_CONST];
+            struct sockaddr_in *sin = (struct sockaddr_in*)(error+1);
+            inet_ntop(AF_INET, &sin->sin_addr, ip_address, sizeof(ip_address));
+            if (error->ee_type == 3)  //destination unrechable
+            {
+                if (error->ee_code == 0)  //network unreachable
+                {
+                    printf("%2d   %s   N!\n", ttl, ip_address);
+                }
+                else
+                {
+                    if (error->ee_code == 1)  //host unreachable
+                    {
+                        printf("%2d   %s   H!\n", ttl, ip_address);
+                    }
+                    else
+                    {
+                        if (error->ee_code == 2)  //protocol unreachable
+                        {
+                            printf("%2d   %s   P!\n", ttl, ip_address);
+                        }
+                        else
+                        {
+                            if (error->ee_code == 13)  //communication administratively prohibited
+                            {
+                                printf("%2d   %s   X!\n", ttl, ip_address);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (error->ee_type == 11)
+                {
+                    if (timeDifference(&start, &end) > 2000)  //rozhodovani o timeoutu
+                    {
+                        printf("%2d   %s   *\n", ttl, ip_address, timeDifference(&start, &end));
+                    }
+                    else
+                    {
+                        printf("%2d   %s   %.3f ms\n", ttl, ip_address, timeDifference(&start, &end));
+                    }
+                }
+            }
+
+            if(error->ee_errno == ECONNREFUSED)
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+        return 0;
+    }
+}
+
+
 int main(int argc, char const *argv[])
 {
 	//kontrola argumentu
@@ -441,90 +547,165 @@ int main(int argc, char const *argv[])
 	int sockfd;  //cislo socketu
 	int ttl = first_ttl;  //pocitadlo aktualni hodnoty ttl
 
-	//nastaveni sitove adresy k cili
-	struct sockaddr_in tovictim;
-	tovictim.sin_family = AF_INET;
-	tovictim.sin_port = htons(33434);
+    //retezec pro data z funkce recvfrom a sendto, neni vyuzivany, ale je treba
+    char useless[MAGIC_CONST] = {0};
+    int one = 1;  //kvuli nutnemu ukazeli pro IP_RECVERR
+    int counter = 0; //pocitadlo opakovaneho odeslani socketu, v pripade nepodareneho odeslani se pokus zopakuje jeste jednou
 
-	in_addr_t adress = inet_addr(ip_address);
-	tovictim.sin_addr.s_addr = adress;
+    if (typeOfIP == 4)  //IPv4
+    {
+        //nastaveni sitove adresy k cili
+        struct sockaddr_in tovictim;
+        tovictim.sin_family = AF_INET;
+        tovictim.sin_port = htons(33434);
 
-	//nastaveni sitove adresy od cile
-	struct sockaddr_in fromvictim;
+        in_addr_t adress = inet_addr(ip_address);
+        tovictim.sin_addr.s_addr = adress;
 
-	//retezec pro data z funkce recvfrom a sendto, neni vyuzivany, ale je treba
-	char useless[MAGIC_CONST] = {0};
+        //nastaveni sitove adresy od cile
+        struct sockaddr_in fromvictim;
 
-	//vytvoreni socketu
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);  //mozna misto nuly IPPROTO_ICMP, nula znamena obecny socket
-	if (sockfd < 0)
-	{
-		fprintf(stderr, "Chyba pri vytvareni socketu.(1)\n");
-		exit(3);
-	}
+        //vytvoreni socketu
+        sockfd = socket(AF_INET, SOCK_DGRAM, 0);  //mozna misto nuly IPPROTO_ICMP, nula znamena obecny socket
 
-	//nastaveni vlastnosti socketu
-	int one = 1;  //kvuli nutnemu ukazeli pro IP_RECVERR
-	control = setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(struct timeval));  //nastaveni timeoutu
-	if (control < 0)
-	{
-		fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu.(1)\n");
-		exit(3);
-	}
+        if (sockfd < 0)
+        {
+            fprintf(stderr, "Chyba pri vytvareni socketu.(1)(IPv4)\n");
+            exit(3);
+        }
 
-	control = setsockopt(sockfd, SOL_IP, IP_RECVERR, &one, sizeof(int));  //nastaveni prijimani erroru
-	if (control != 0)
-	{
-		fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu.(2)\n");
-		exit(3);
-	}
+        //nastaveni vlastnosti socketu
+        control = setsockopt(sockfd, SOL_IP, IP_RECVERR, &one, sizeof(int));  //nastaveni prijimani erroru
+        if (control != 0)
+        {
+            fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu.(2)(IPv4)\n");
+            exit(3);
+        }
 
-	int counter = 0; //pocitadlo opakovaneho odeslani socketu, v pripade nepodareneho odeslani se pokus zopakuje jeste jednou
-	//cyklus pro incrementaci tll a zasilani zprav cili
-	for (; ttl < max_ttl; ttl++)
-	{
-		control = setsockopt(sockfd, SOL_IP, IP_TTL, &ttl, sizeof(int));  //nastaveni ttl
-		if (control != 0)
-		{
-			fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu.(ttl = %d)(4)\n", ttl);
-			exit(3);
-		}
+        //cyklus pro incrementaci tll a zasilani zprav cili
+        for (; ttl < max_ttl; ttl++)
+        {
+            control = setsockopt(sockfd, SOL_IP, IP_TTL, &ttl, sizeof(int));  //nastaveni ttl
+            if (control != 0)
+            {
+                fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu.(ttl = %d)(4)(IPv4)\n", ttl);
+                exit(3);
+            }
 
-		control = sendto(sockfd, &useless, sizeof(useless), 0, (struct sockaddr*)&tovictim, sizeof(struct sockaddr_in));  //nastaveni packetu
-		if (control == -1)
-		{
-			if (!(counter < 2))  //pokud se neposlal packet ani na druhy pokus program konci s chybou
-			{
-				fprintf(stderr, "Chyba pri odesilani socketu.(ttl = %d)(1)\n", ttl);
-				exit(4);
-			}
-		}
-		else  //pri uspesnem odeslani se zaznamenava cas
-		{
-			gettimeofday(&start, NULL);
-			counter = 0;
-		}
+            control = sendto(sockfd, &useless, sizeof(useless), 0, (struct sockaddr*)&tovictim, sizeof(struct sockaddr_in));  //nastaveni packetu
+            if (control == -1)
+            {
+                if (!(counter < 2))  //pokud se neposlal packet ani na druhy pokus program konci s chybou
+                {
+                    fprintf(stderr, "Chyba pri odesilani socketu.(ttl = %d)(1)(IPv4)\n", ttl);
+                    exit(4);
+                }
+            }
+            else  //pri uspesnem odeslani se zaznamenava cas
+            {
+                gettimeofday(&start, NULL);
+                counter = 0;
+            }
 
-		waitForSelect(sockfd, timeout);
-		control = recvfrom(sockfd, useless, sizeof(useless), MSG_DONTWAIT, (struct sockaddr*)&fromvictim, (socklen_t*)sizeof(fromvictim)); //chce to odstinit buf
-		if(control > 0)  //control oznacuje pocet prijatych bytu, v pripade erroru je -1, pokud bylo zavreno spojeni hodnota je nula
-		{
-			gettimeofday(&end, NULL);
-			printf("%2d   %s   %.3f ms\n", ttl, inet_ntoa(fromvictim.sin_addr), timeDifference(&start, &end));
-			break;
-		}
-		else
-		{
-			control = errorCheck(sockfd, ttl);
-			switch (control)
-			{
-				case 0:
-					break;
-				case 1:
-					return 0;
-			}
-		}
-		counter++;
-	}
+            waitForSelect(sockfd, timeout);
+            control = recvfrom(sockfd, useless, sizeof(useless), MSG_DONTWAIT, (struct sockaddr*)&fromvictim, (socklen_t*)sizeof(fromvictim));
+            if(control > 0)  //control oznacuje pocet prijatych bytu, v pripade erroru je -1, pokud bylo zavreno spojeni hodnota je nula
+            {
+                gettimeofday(&end, NULL);
+                printf("%2d   %s   %.3f ms\n", ttl, inet_ntoa(fromvictim.sin_addr), timeDifference(&start, &end));
+                break;
+            }
+            else
+            {
+                control = errorCheck4(sockfd, ttl);
+                switch (control)
+                {
+                    case 0:
+                        break;
+                    case 1:
+                        return 0;
+                }
+            }
+            counter++;
+        }
+    }
+    else  //IPv6
+    {
+        struct sockaddr_in6 tovictim;
+        tovictim.sin6_family = AF_INET6;
+        tovictim.sin6_port = htons(33434);
+
+        struct sockaddr_in6 adress;
+        inet_pton(AF_INET6, ip_address, &(adress.sin6_addr));
+        tovictim.sin6_addr = adress.sin6_addr;
+
+        //nastaveni sitove adresy od cile
+        struct sockaddr_in6 fromvictim;
+
+        //vytvoreni socketu
+        sockfd = socket(AF_INET6, SOCK_DGRAM, 0);  //mozna misto nuly IPPROTO_ICMP, nula znamena obecny socket
+
+        if (sockfd < 0)
+        {
+            fprintf(stderr, "Chyba pri vytvareni socketu.(1)(IPv6)\n");
+            exit(3);
+        }
+
+        //nastaveni vlastnosti socketu
+        control = setsockopt(sockfd, SOL_IPV6, IPV6_RECVERR, &one, sizeof(int));  //nastaveni prijimani erroru
+        if (control != 0)
+        {
+            fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu.(2)(IPv6)\n");
+            exit(3);
+        }
+
+        //cyklus pro incrementaci tll a zasilani zprav cili
+        for (; ttl < max_ttl; ttl++)
+        {
+            control = setsockopt(sockfd, SOL_IPV6, IPV6_UNICAST_HOPS, &ttl, sizeof(int));  //nastaveni ttl
+            if (control != 0)
+            {
+                fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu.(ttl = %d)(4)(IPv6)\n", ttl);
+                exit(3);
+            }
+
+            control = sendto(sockfd, &useless, sizeof(useless), 0, (struct sockaddr*)&tovictim, sizeof(struct sockaddr_in));  //nastaveni packetu
+            if (control == -1)
+            {
+                if (!(counter < 2))  //pokud se neposlal packet ani na druhy pokus program konci s chybou
+                {
+                    fprintf(stderr, "Chyba pri odesilani socketu.(ttl = %d)(1)(IPv6)\n", ttl);
+                    exit(4);
+                }
+            }
+            else  //pri uspesnem odeslani se zaznamenava cas
+            {
+                gettimeofday(&start, NULL);
+                counter = 0;
+            }
+
+            waitForSelect(sockfd, timeout);
+            control = recvfrom(sockfd, useless, sizeof(useless), MSG_DONTWAIT, (struct sockaddr*)&fromvictim, (socklen_t*)sizeof(fromvictim));
+            if(control > 0)  //control oznacuje pocet prijatych bytu, v pripade erroru je -1, pokud bylo zavreno spojeni hodnota je nula
+            {
+                gettimeofday(&end, NULL);
+                inet_ntop(AF_INET6, &(fromvictim.sin6_addr), useless, MAGIC_CONST);
+                printf("%2d   %s   %.3f ms\n", ttl, useless, timeDifference(&start, &end));
+                break;
+            }
+            else
+            {
+                control = errorCheck6(sockfd, ttl);
+                switch (control)
+                {
+                    case 0:
+                        break;
+                    case 1:
+                        return 0;
+                }
+            }
+            counter++;
+        }
+    }
 	return 0;
 }
