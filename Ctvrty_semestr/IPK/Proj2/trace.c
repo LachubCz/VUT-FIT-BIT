@@ -18,6 +18,7 @@
 int first_ttl = 1;
 int max_ttl = 30;
 char ip_address[MAGIC_CONST];
+struct timeval start;
 
 //TODO: kontrola spravnosti IP adresy, kontrola zdali first_ttl, max_ttl obsahuji cisla
 //kontrola spravnosti argumentu
@@ -268,6 +269,15 @@ void wait_recv(int fd){
     select(fd+1, &fds, NULL, NULL, &tv);
 }
 
+double timeDifference(struct timeval * start, struct timeval * end)
+{
+	double end_us = end->tv_usec;
+	double end_s = end->tv_sec;
+	double start_us = start->tv_usec;
+	double start_s = start->tv_sec;
+	return (((end_us - start_us) / 1000) + ((end_s - start_s) * 1000));
+}
+
 int proc_error(int fd, int ttl){
     char cbuf[512];
     struct msghdr msg;
@@ -275,7 +285,7 @@ int proc_error(int fd, int ttl){
     struct iovec iov;
     struct sock_extended_err *e;
     struct sockaddr_in addr;
-    struct timeval tv;
+    struct timeval end;
     char rcvbuf[80];
     int rst, rethops;
 
@@ -289,20 +299,27 @@ int proc_error(int fd, int ttl){
     msg.msg_control = cbuf;
     msg.msg_controllen = sizeof(cbuf);
 
-    gettimeofday(&tv, NULL);
+    gettimeofday(&end, NULL);
     rst = recvmsg(fd, &msg, MSG_ERRQUEUE);
     if(rst < 0){
         //printf("%2d: %s \n", ttl, "no reply");
         return -1;
     }
 
-    for(cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)){
-        if(cmsg->cmsg_level == SOL_IP){
-            if(cmsg->cmsg_type == IP_RECVERR){
+    for(cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg))
+    {
+        if(cmsg->cmsg_level == SOL_IP)
+        {
+            if(cmsg->cmsg_type == IP_RECVERR)
+            {
                 e = (struct sock_extended_err*) CMSG_DATA(cmsg);
             }
-            else if(cmsg->cmsg_type == IP_TTL){
-                memcpy(&rethops, CMSG_DATA(cmsg), sizeof(rethops));
+            else 
+            {
+	            if(cmsg->cmsg_type == IP_TTL)
+	            {
+	                memcpy(&rethops, CMSG_DATA(cmsg), sizeof(rethops));
+	            }
             }
         }
     }
@@ -311,16 +328,19 @@ int proc_error(int fd, int ttl){
         return 0;
     }
 
-    if(e->ee_origin == SO_EE_ORIGIN_LOCAL){
+    if(e->ee_origin == SO_EE_ORIGIN_LOCAL)
+    {
         printf("%2d: %s \n", ttl, "[LOCALHOST]");
         return 0;
     }
-    else if(e->ee_origin == SO_EE_ORIGIN_ICMP){
+    else if(e->ee_origin == SO_EE_ORIGIN_ICMP)
+    {
         char abuf[128];
         struct sockaddr_in *sin = (struct sockaddr_in*)(e+1);
         inet_ntop(AF_INET, &sin->sin_addr, abuf, sizeof(abuf));
-        printf("%2d: %s \n", ttl, abuf);
-        if(e->ee_errno == ECONNREFUSED){
+        printf("%2d: %s   %.3f ms\n", ttl, abuf, timeDifference(&start, &end));
+        if(e->ee_errno == ECONNREFUSED)
+        {
             return 1;
         }
         return 0;
@@ -332,20 +352,19 @@ int main(int argc, char const *argv[])
 {
 	//kontrola argumentu
 	arguments(argc, argv);
-	//printf("%d %d %s\n", first_ttl, max_ttl, ip_address);
 	
 	//struktura pro cas
 	struct timeval timeout;
-	//memset(&timeout, 0, sizeof(struct timeval)); //mozna bude treba funkce bzero nebo memset
 	timeout.tv_sec = 2;
 	timeout.tv_usec = 0;
 	
+	struct timeval end;
+
 	int sockfd;
 	int control;
 	int ttl = first_ttl;
 
 	struct sockaddr_in tovictim;
-	memset(&tovictim, 0, sizeof(struct sockaddr_in)); //mozna bude treba funkce bzero nebo memset
 	tovictim.sin_family = AF_INET;
 	tovictim.sin_port = htons(33434);
 
@@ -410,14 +429,17 @@ int main(int argc, char const *argv[])
 				exit(3);
 			}
 		}
+		else
+		{
+			gettimeofday(&start, NULL);
+		}
 
-		
 		wait_recv(sockfd);
-		
 		control = recvfrom(sockfd, useless, sizeof(useless), MSG_DONTWAIT, (struct sockaddr*)&fromvictim, (socklen_t*)sizeof(fromvictim)); //chce to odstinit buf
 		if(control > 0)
 		{
-			printf("%2d : %s \n", ttl, inet_ntoa(fromvictim.sin_addr));
+			gettimeofday(&end, NULL);
+			printf("%2d : %s   %.3f ms\n", ttl, inet_ntoa(fromvictim.sin_addr), timeDifference(&start, &end));
 			return 0;
 		}
 		else
@@ -433,18 +455,6 @@ int main(int argc, char const *argv[])
 					return 0;
 			}
 		}
-
-		
-
-		//printf("%d\n", ttl);
-		/*
-		else
-		{
-			fprintf(stderr, "END(ttl = %d)\n", ttl);
-			exit(0);
-		}
- 		*/
-		//return proc_error(fd, ttl); //dodelat fci procerror
 		counter++;
 	}
 	return 0;
