@@ -296,8 +296,6 @@ void wait_recv(int fd)
 
 int errorCheck(int sockfd, int ttl)
 {
-	int rethops;
-
 	struct iovec iov;  //struktura pro shromazdovani/rozptylovani vstupu a vystupu, pouziva se v msghr
 	char address[MAGIC_CONST];  //retezec pouzity ve strukture iovec
 	iov.iov_base = &address;  //adresa
@@ -323,9 +321,8 @@ int errorCheck(int sockfd, int ttl)
 
 	struct cmsghdr *big_header;  //hlavicka pro data asociovane s datagramem, ziskavaji se z ni jednotive msghdr
 	struct sock_extended_err *error;  //struktura, ktera se vyuziva pro ukladani erroru (prepinac IP_RECVERR)
-	//CMSG_FIRSTHDR - returns a pointer to the first cmsghdr in the ancillary data buffer associated with the passed msghdr
-	//CMSG_NXTHDR - returns the next valid cmsghdr after the passed cmsghdr.  It returns NULL when there isn't enough space left in the buffer
-	for(big_header = CMSG_FIRSTHDR(&small_header); big_header; big_header = CMSG_NXTHDR(&small_header, big_header))
+	big_header = CMSG_FIRSTHDR(&small_header);
+	while(big_header)
 	{
 		if(big_header->cmsg_level == SOL_IP)
 		{
@@ -333,38 +330,35 @@ int errorCheck(int sockfd, int ttl)
 			{
 				error = (struct sock_extended_err*) CMSG_DATA(big_header);
 			}
-			else 
-			{
-				if(big_header->cmsg_type == IP_TTL)
-				{
-					memcpy(&rethops, CMSG_DATA(big_header), sizeof(rethops));
-				}
-			}
 		}
+		big_header = CMSG_NXTHDR(&small_header, big_header);
 	}
 
-	if(error == NULL){
+	if(error == NULL)  //zadna errorova zprava -> program dospel cile, predani rizeni mainu a konec
+	{
 		return 0;
 	}
-
-	if(error->ee_origin == SO_EE_ORIGIN_LOCAL)
+	else
 	{
-		printf("%2d: %s \n", ttl, "[LOCALHOST]");
-		return 0;
-	}
-	else if(error->ee_origin == SO_EE_ORIGIN_ICMP)
-	{
-		char abuf[128];
-		struct sockaddr_in *sin = (struct sockaddr_in*)(error+1);
-		inet_ntop(AF_INET, &sin->sin_addr, abuf, sizeof(abuf));
-		printf("%2d   %s   %.3f ms\n", ttl, abuf, timeDifference(&start, &end));
-		if(error->ee_errno == ECONNREFUSED)
+		if(error->ee_origin == SO_EE_ORIGIN_LOCAL)
 		{
-			return 1;
+			printf("%2d: %s \n", ttl, "[LOCALHOST]");
+			return 0;
+		}
+		else if(error->ee_origin == SO_EE_ORIGIN_ICMP)
+		{
+			char abuf[128];
+			struct sockaddr_in *sin = (struct sockaddr_in*)(error+1);
+			inet_ntop(AF_INET, &sin->sin_addr, abuf, sizeof(abuf));
+			printf("%2d   %s   %.3f ms\n", ttl, abuf, timeDifference(&start, &end));
+			if(error->ee_errno == ECONNREFUSED)
+			{
+				return 1;
+			}
+			return 0;
 		}
 		return 0;
 	}
-	return 0;
 }
 
 int main(int argc, char const *argv[])
@@ -422,13 +416,6 @@ int main(int argc, char const *argv[])
 		exit(2);
 	}
 
-	control = setsockopt(sockfd, SOL_IP, IP_RECVTTL, &one, sizeof(int));  //nastaveni prijmani ttl
-	if (control != 0)
-	{
-		fprintf(stderr, "Chyba pri nastavovani vlastnosti socketu.(3)\n");
-		exit(2);
-	}
-
 	int counter = 0; //pocitadlo opakovaneho odeslani socketu, v pripade nepodareneho odeslani se pokus zopakuje jeste jednou
 	//cyklus pro incrementaci tll a zasilani zprav cili
 	for (; ttl < max_ttl; ttl++)
@@ -469,7 +456,7 @@ int main(int argc, char const *argv[])
 			switch (control)
 			{
 				case -1:
-					ttl--;  //nebezpeci smycky
+					ttl--;  //nebezpeci smycky, pokud recvmsg vyhazuje neustale nulu
 					break;
 				case 0:
 					break;
