@@ -1,0 +1,25 @@
+.TH TRACE 1 "23.4.2017"
+.SH NAME
+trace \- print the route packets trace to network host
+.SH SYNOPSIS
+.B trace
+[\fB\-f\fR \fIFIRST_TTL\fR]
+[\fB\-m\fR \fIMAX_TTL\fR]
+.IR IP-ADDRESS
+.SH DESCRIPTION
+.B trace
+tracks the route packets taken from an IP network on their way to a given host. It uses TTL/Hop protocol limit (IPv4/IPv6) and ICMP TIME_EXCEEDED messages. Program also shows request time. Timeout is marked as *, ICMPv4/v6 messages host as H!, network as N!, protocol unreachale as P!, communication administratively prohibited as X!.
+.SH OPTIONS
+.TP
+.IP "-f first_ttl"
+Specifies which TTL will by used for the first socket. Implicit value is 1.
+.IP "-m max_ttl"
+Specifies maximal TTL. Implicit value is 30.
+.IP "ip-address"
+IPv4/IPv6 target address.
+.SH BUGS
+Program doesn't work with domain names, when they're iputed as 
+.IR ip-address
+argument.
+.SH AUTHOR
+Petr Buchal (xbucha02)
