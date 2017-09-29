@@ -1,0 +1,23 @@
+﻿<UserControl x:Class="AplikaciaWPF.Views.ActivityList"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:AplikaciaWPF.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid>
+        <DataGrid Margin="10" x:Name="DataGrid" VerticalAlignment="Top" AutoGenerateColumns="False">
+            <DataGrid.Columns >
+                <DataGridTextColumn Header="Název aktivity" Width="6*"/>
+                <DataGridTextColumn Header="Hodnocení" Width="5*"/>
+                <DataGridTextColumn Header="Min. bodů pro zápočet" Width="10*"/>
+                <DataGridTextColumn Header="Max. bodů" Width="5*"/>
+                <DataGridTextColumn Header="Počet registrovaných" Width="9*"/>
+                <DataGridTextColumn Header="Max. počet registrovaných" Width="11*"/>
+                <DataGridTextColumn Header="Začátek registrace" Width="8*"/>
+                <DataGridTextColumn Header="Konec registrace" Width="8*" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

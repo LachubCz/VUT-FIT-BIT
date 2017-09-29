@@ -1,0 +1,15 @@
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaWPF\bin\Debug\AplikaciaWPF.exe.config
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaWPF\obj\Debug\AplikaciaWPF.csprojResolveAssemblyReference.cache
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaWPF\obj\Debug\Views\MainWindow.g.cs
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaWPF\obj\Debug\Views\AddActivity.g.cs
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaWPF\obj\Debug\Views\AddScore.g.cs
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaWPF\obj\Debug\Views\AddStudent.g.cs
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaWPF\obj\Debug\Views\ActivityList.g.cs
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaWPF\obj\Debug\Views\ScoredActivityList.g.cs
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaWPF\obj\Debug\Views\StudentDetail.g.cs
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaWPF\obj\Debug\Views\StudentList.g.cs
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaWPF\obj\Debug\Views\SubjectDetail.g.cs
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaWPF\obj\Debug\App.g.cs
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaWPF\obj\Debug\GeneratedInternalTypeHelper.g.cs
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaWPF\obj\Debug\AplikaciaWPF_MarkupCompile.cache
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaWPF\obj\Debug\AplikaciaWPF_MarkupCompile.lref

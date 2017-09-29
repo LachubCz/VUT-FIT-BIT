@@ -1,0 +1,11 @@
+﻿<Application x:Class="AplikaciaWPF.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:AplikaciaWPF.Converters"
+             xmlns:app="clr-namespace:AplikaciaWPF"
+             StartupUri="Views/MainWindow.xaml">
+    <Application.Resources>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <app:ViewModelLocator x:Key="ViewModelLocator" />
+    </Application.Resources>
+</Application>

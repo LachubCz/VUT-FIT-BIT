@@ -1,0 +1,70 @@
+﻿<Window x:Class="AplikaciaWPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+        xmlns:viewmodels="clr-namespace:AplikaciaWPF.ViewModels"
+        xmlns:views="clr-namespace:AplikaciaWPF.Views"
+        mc:Ignorable="d"
+        Icon="../icon.png"
+        Title="Informační systém IWx" Height="768" Width="1024"
+        DataContext="{Binding Source={StaticResource ViewModelLocator}, Path=MainViewModel}"
+        d:DataContext="{d:DesignInstance viewmodels:MainViewModel, IsDesignTimeCreatable=False}">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <ei:CallMethodAction TargetObject="{Binding}" MethodName="OnLoad" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    <Grid>
+        <TabControl>
+            <TabItem Header="Předmety">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Label Grid.Column="0" Content="Predmet:"/>
+                        <ComboBox x:Name="SubjectComboBox" Grid.Column="1" ItemsSource="{Binding Subjects, Mode=OneWay}" SelectedValuePath="Id" DisplayMemberPath="Name">
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="SelectionChanged">
+                                    <i:InvokeCommandAction Command="{Binding ElementName=SubjectComboBox, Path=DataContext.SelectSubjectCommand}"
+                                                           CommandParameter="{Binding ElementName=SubjectComboBox, Path=SelectedItem}"/>
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                        </ComboBox>
+                        <views:SubjectDetail Grid.Row="1" Grid.ColumnSpan="2"></views:SubjectDetail>
+                    </Grid>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Studenti">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <views:StudentList Grid.Row="0"></views:StudentList>
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Width="136" Height="23" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12 10 0 20" Content="Přidat nového studenta" Command="{Binding CreateStudentCommand}"/>
+                    </Grid>
+                    <views:StudentDetail Grid.Row="2"></views:StudentDetail>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>

@@ -1,0 +1,16 @@
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\bin\Debug\AplikaciaModels.dll.config
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\bin\Debug\AplikaciaModels.dll
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\bin\Debug\AplikaciaModels.pdb
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\bin\Debug\AplikaciaDB.dll
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\bin\Debug\EntityFramework.dll
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\bin\Debug\EntityFramework.SqlServer.dll
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\bin\Debug\NHibernate.dll
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\bin\Debug\Iesi.Collections.dll
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\bin\Debug\AplikaciaDB.pdb
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\bin\Debug\EntityFramework.xml
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\bin\Debug\EntityFramework.SqlServer.xml
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\bin\Debug\NHibernate.xml
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\bin\Debug\Iesi.Collections.xml
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\obj\Debug\AplikaciaModels.csprojResolveAssemblyReference.cache
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\obj\Debug\AplikaciaModels.dll
+C:\Users\LachubCz_NTB\Desktop\Application\Students\AplikaciaModels\obj\Debug\AplikaciaModels.pdb

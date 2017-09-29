@@ -1,0 +1,3 @@
+Projekt: Solitare
+Členové týmu: Petr Buchal (xbucha02), Tomáš Holík (xholik13)
+...

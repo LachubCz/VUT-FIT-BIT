@@ -1,0 +1,85 @@
+#libraries
+wget https://github.com/junit-team/junit4/releases/download/r4.12/junit-4.12.jar
+wget http://central.maven.org/maven2/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
+#textures_general
+mkdir textures
+cd textures
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/background.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/card_back.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/empty.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/hint.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/icon.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/reassemble.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/selected.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/small_hint.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/small_selected.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/win.png
+#textures_clubs
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/C1.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/C2.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/C3.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/C4.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/C5.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/C6.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/C7.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/C8.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/C9.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/C10.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/C11.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/C12.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/C13.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/Cempty.png
+#textures_diamonds
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/D1.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/D2.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/D3.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/D4.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/D5.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/D6.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/D7.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/D8.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/D9.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/D10.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/D11.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/D12.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/D13.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/Dempty.png
+#textures_hearts
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/H1.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/H2.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/H3.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/H4.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/H5.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/H6.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/H7.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/H8.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/H9.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/H10.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/H11.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/H12.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/H13.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/Hempty.png
+#textures_spades
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/S1.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/S2.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/S3.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/S4.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/S5.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/S6.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/S7.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/S8.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/S9.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/S10.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/S11.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/S12.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/S13.png
+wget https://raw.githubusercontent.com/LachubCz/obrazky/master/Sempty.png
+#music
+cd ..
+mkdir music
+cd music
+wget https://github.com/LachubCz/obrazky/raw/master/m1.zip
+unzip m1.zip
+rm m1.zip
+wget https://github.com/LachubCz/obrazky/raw/master/m2.wav
+wget https://github.com/LachubCz/obrazky/raw/master/m3.wav

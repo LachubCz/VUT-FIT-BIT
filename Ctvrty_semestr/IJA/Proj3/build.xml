@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Ukol c.3" default="run" basedir=".">
+	
+	<target name="run" depends="compile">
+		<junit>
+			<test name="ija.ija2016.homework2.HomeWork2Test"/>
+			<formatter type="brief" usefile="false"/>
+			<classpath location="./lib/junit-4.12.jar"/>
+			<classpath location="./lib/hamcrest-core-1.3.jar"/>
+			<classpath location="build"/>
+		</junit>
+	</target>
+	
+	<path id="libs">
+		<pathelement location="./lib/junit-4.12.jar"/>
+		<pathelement location="./lib/hamcrest-core-1.3.jar"/>
+	</path>
+	
+	<target name="compile">
+		<javac includeantruntime="false" srcdir="./src" destdir="build" classpathref="libs"/>
+		<jar destfile = "./dest-client/ija-client.jar" basedir = "./build" includes="libs" />
+	</target>
+</project>
