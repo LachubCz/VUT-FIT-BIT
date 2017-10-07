@@ -1,0 +1,13 @@
+ISASHARK          = isashark
+
+ISASHARK_OBJECTS  = $(isashark.c=.o)
+
+assemble: $(ISASHARK)
+
+reassemble: clean $(ISASHARK)
+
+$(ISASHARK): $(ISASHARK_OBJECTS)
+		gcc -g isashark.c -o $@
+
+clean:
+	rm -fr core* *~ $(ISASHARK_OBJECTS) $(ISASHARK) .make.state .sb
