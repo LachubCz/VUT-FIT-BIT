@@ -4,6 +4,12 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <string.h>
+#include <pcap/pcap.h>
+#include <netinet/ether.h>
+
+#ifndef PCAP_ERRBUF_SIZE
+#define PCAP_ERRBUF_SIZE (256)
+#endif
 
 void PrintHelp()
 {
@@ -41,7 +47,10 @@ void ErrorFound(int i)
 			break;
 		case 8:
 			fprintf (stderr, "Non valid argument combination.\n");
-			break;			
+			break;	
+		case 9:
+			fprintf (stderr, "Can't open file for reading.\n");
+			break;
 	}
 	exit(1);
 }
@@ -50,7 +59,8 @@ int CharToInt (char *str)
 {
 	int length = strlen(str);
 	int number = 0;
-	for (int i=0; i<length; i++)
+	int i;
+	for (i=0; i<length; i++)
 	{
 		if (!isdigit(str[i]))
 		{
@@ -76,6 +86,7 @@ int main (int argc, char *argv[])
 	char avalue[256] = "";
 	char svalue[256] = "";
 	char fvalue[256] = "";
+	char filename[256] = "";
 	
 	opterr = 0;
 
@@ -116,8 +127,13 @@ int main (int argc, char *argv[])
 				break;
 			}
 
+
 	for (index = optind; index < argc; index++)
-    	ErrorFound(7);
+	{
+		//printf ("Non-option argument %s\n", argv[index]);
+		strcpy(filename, argv[index]);
+    	//ErrorFound(7);
+	}
 
 	if (hflag == true && strcmp(avalue, "") == 0 && strcmp(svalue, "") == 0 && strcmp(fvalue, "") == 0 && lvalue == -2)
 	{
@@ -125,10 +141,41 @@ int main (int argc, char *argv[])
 	}
 	else
 	{
-		ErrorFound(8);
+		if (hflag == true && (strcmp(avalue, "") != 0 || strcmp(svalue, "") == 0 || strcmp(fvalue, "") == 0 || lvalue == -2))
+		{
+			ErrorFound(8);
+		}
 	}
 
-	printf ("hflag = %d, avalue = %s, svalue = %s, lvalue = %d, fvalue = %s\n", hflag, avalue, svalue, lvalue, fvalue);
+	printf("%s\n", filename);
+	//printf ("hflag = %d, avalue = %s, svalue = %s, lvalue = %d, fvalue = %s\n", hflag, avalue, svalue, lvalue, fvalue);
+
+	pcap_t *handle; //ukazatel na soubor s pakety
+	const u_char *packet;
+	char errbuf[256];
+	struct pcap_pkthdr header;
+
+	//nepopsane struktury
+	const struct tcphdr *my_tcp;
+  	const struct udphdr *my_udp;
+  	struct ether_header *eptr;
+
+	if ((handle = pcap_open_offline(filename,errbuf)) == NULL)
+		ErrorFound(9);
+
+	int i = pcap_datalink(handle);
+
+	printf("%d\n", i);
+
+	while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
+	{
+		printf("Length: %d\n", header.len);
+
+
+    eptr = (struct ether_header *) packet;
+    printf("\tSource MAC: %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost));
+    printf("\tDestination MAC: %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
+	}
 
 	return 0;
 }
