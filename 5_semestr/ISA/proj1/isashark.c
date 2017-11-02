@@ -6,10 +6,35 @@
 #include <string.h>
 #include <pcap/pcap.h>
 #include <netinet/ether.h>
+#include <arpa/inet.h>
+#include <inttypes.h>
 
 #ifndef PCAP_ERRBUF_SIZE
 #define PCAP_ERRBUF_SIZE (256)
 #endif
+
+struct ADHeader {
+    uint8_t AD_dhost[6];
+    uint8_t AD_shost[6];
+    uint16_t AD_tpid;
+    uint16_t AD_tci;
+    uint16_t AD_tpid2;
+    uint16_t AD_tci2;
+    uint16_t AD_ether_type;
+};
+
+struct QHeader {
+  /* u_char Q_dhost[6];
+    u_char Q_shost[6];
+    u_short Q_tpid;
+    u_short Q_ether_type;
+ */
+    uint8_t Q_dhost[6];
+    uint8_t Q_shost[6];
+    uint16_t Q_tpid1;
+    uint16_t Q_tpid2;
+    uint16_t Q_ether_type;
+};
 
 void PrintHelp()
 {
@@ -147,7 +172,7 @@ int main (int argc, char *argv[])
 		}
 	}
 
-	printf("%s\n", filename);
+	//printf("%s\n", filename);
 	//printf ("hflag = %d, avalue = %s, svalue = %s, lvalue = %d, fvalue = %s\n", hflag, avalue, svalue, lvalue, fvalue);
 
 	pcap_t *handle; //ukazatel na soubor s pakety
@@ -159,23 +184,105 @@ int main (int argc, char *argv[])
 	const struct tcphdr *my_tcp;
   	const struct udphdr *my_udp;
   	struct ether_header *eptr;
+  	struct ADHeader *adptr;
+	struct QHeader *qptr;
 
 	if ((handle = pcap_open_offline(filename,errbuf)) == NULL)
 		ErrorFound(9);
 
-	int i = pcap_datalink(handle);
+	//int i = pcap_datalink(handle);
 
-	printf("%d\n", i);
-
+	//printf("%d\n", i);
+	
 	while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
 	{
-		printf("Length: %d\n", header.len);
+		
+		//printf("Length: %d\n", header.len);
+	int EthTypeSize;
 
+    	eptr = (struct ether_header *) packet;
+    	//printf("\tSource MAC: %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost));
+    	//printf("\tDestination MAC: %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
 
-    eptr = (struct ether_header *) packet;
-    printf("\tSource MAC: %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost));
-    printf("\tDestination MAC: %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
+    	//printf("%s\n", packet);
+
+    	switch (ntohs(eptr->ether_type))
+    	{
+    		case 0x0800: //ETHERTYPE_IP IPV4
+    		EthTypeSize = 14;
+    		printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
+    		//printf("ETHERTYPE_IP IPV4\n");
+    		break;
+
+    		case 0x86DD: //ETHERTYPE_IP IPV6
+    		EthTypeSize = 14;
+    		printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
+    		//printf("ETHERTYPE_IP IPV6\n");
+    		break;
+
+    		case 0x8100: //IEEE 802.1Q
+    		EthTypeSize = 18;
+    		printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
+    		qptr = (struct QHeader *) packet;
+ 
+    			if (ntohs(qptr->Q_ether_type) == 0x0800)//neni zde osetreny ten wtf soubor
+    			{
+    				//printf("IPV4\n" );
+    			}
+    			else
+    			{
+    				if (ntohs(qptr->Q_ether_type) == 0x86DD)
+    				{
+    					//printf("IPV6\n" );
+    				}
+    				else
+    				{
+    					//printf("other\n");
+    				}
+    			}
+    		break;
+
+    		case 0x88a8: //IEEE 802.1ad
+    		EthTypeSize = 22;
+    		printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
+			adptr = (struct ADHeader *) packet;
+    		//printf("IEEE 802.1Q\n");
+    		//    		qptr = (struct QHeader *) packet;
+    		//printf("IEEE 802.1Q\n");	
+    		    		//printf("%s\n", );
+    		    //printf("%x\n", qptr->Q_ether_type);
+    		    //printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&qptr->Q_shost), ether_ntoa((const struct ether_addr *)&qptr->Q_dhost));
+    			if (ntohs(adptr->AD_ether_type) == 0x0800)
+    			{
+    				printf("IPV4\n" );
+    			}
+    			else
+    			{
+    				if (ntohs(adptr->AD_ether_type) == 0x86DD)
+    				{
+    					printf("IPV6\n" );
+    				}
+    				else
+    				{
+    					printf("other\n");
+    				}
+    			}
+    		break;
+
+    		default:
+    		EthTypeSize = -1;
+    		//printf("wtf\n");
+    		break;
+    	}
+    	/*
+    	if (/* condition 
+    	{
+    		
+    	}
+    	my_ip = (struct ip*) (packet+SIZE_ETHERNET);)*/
+
 	}
+
 
 	return 0;
 }
