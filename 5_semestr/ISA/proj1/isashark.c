@@ -13,6 +13,30 @@
 #define PCAP_ERRBUF_SIZE (256)
 #endif
 
+struct sniff_ip {
+#if BYTE_ORDER == LITTLE_ENDIAN
+             u_char  ip_hl:4,                /* header length */
+                     ip_v:4;                 /* version */
+#endif
+#if BYTE_ORDER == BIG_ENDIAN
+            u_char  ip_v:4,                 /* version */
+                    ip_hl:4;                /* header length */
+#endif
+    u_char ip_tos;		    /* type of service */
+    u_short ip_len;		    /* total length */
+    u_short ip_id;		    /* identification */
+    u_short ip_off;		    /* fragment offset field */
+#define	IP_RF 0x8000			/* reserved fragment flag */
+#define	IP_DF 0x4000			/* dont fragment flag */
+#define	IP_MF 0x2000			/* more fragments flag */
+#define	IP_OFFMASK 0x1fff		/* mask for fragmenting bits */
+/*(flags_fragmentOffset & 0x4000) != 0*/
+    u_char ip_ttl;		    /* time to live */
+    u_char ip_p;		    /* protocol */
+    u_short ip_sum;		    /* checksum */
+    struct in_addr ip_src,ip_dst; /* source and dest address */
+};
+
 struct ADHeader {
     uint8_t AD_dhost[6];
     uint8_t AD_shost[6];
@@ -186,6 +210,7 @@ int main (int argc, char *argv[])
   	struct ether_header *eptr;
   	struct ADHeader *adptr;
 	struct QHeader *qptr;
+	struct sniff_ip *ip_layer;
 
 	if ((handle = pcap_open_offline(filename,errbuf)) == NULL)
 		ErrorFound(9);
@@ -227,17 +252,32 @@ int main (int argc, char *argv[])
  
     			if (ntohs(qptr->Q_ether_type) == 0x0800)//neni zde osetreny ten wtf soubor
     			{
-    				//printf("IPV4\n" );
+    				printf("IPV4\n" );
     			}
     			else
     			{
     				if (ntohs(qptr->Q_ether_type) == 0x86DD)
     				{
-    					//printf("IPV6\n" );
+    					printf("IPV6\n" );
+    					    				u_int size_ip;
+
+    				ip_layer = (struct sniff_ip*) (packet+EthTypeSize);
+    				//size_ip = ip->ip_hl;
+    				switch (ip_layer->ip_p){
+    					case 6:
+    					printf("TCT\n");
+    					break;
+						case 17: // UDP protocol
+						printf("UDP\n");
+						break;
+						default:
+						printf("shit\n");
+						break;
+    			}
     				}
     				else
     				{
-    					//printf("other\n");
+    					printf("other\n");
     				}
     			}
     		break;
@@ -255,12 +295,27 @@ int main (int argc, char *argv[])
     			if (ntohs(adptr->AD_ether_type) == 0x0800)
     			{
     				printf("IPV4\n" );
-    			}
+    				u_int size_ip;
+
+    				ip_layer = (struct sniff_ip*) (packet+EthTypeSize);
+    				//size_ip = ip->ip_hl;
+    				switch (ip_layer->ip_p){
+    					case 6:
+    					printf("TCT\n");
+    					break;
+						case 17: // UDP protocol
+						printf("UDP\n");
+						break;
+						default:
+						printf("shit\n");
+						break;
+    			}}
     			else
     			{
     				if (ntohs(adptr->AD_ether_type) == 0x86DD)
     				{
     					printf("IPV6\n" );
+
     				}
     				else
     				{
