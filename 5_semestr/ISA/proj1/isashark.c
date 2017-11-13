@@ -14,59 +14,59 @@
 #endif
 
 struct IPv6Header {
-    union {
-        struct ip6_hdrctl {
-            u_int32_t ip6_un1_flow;	/* 20 bits of flow-ID */
-            u_int16_t ip6_un1_plen;	/* payload length */
-            u_int8_t  ip6_un1_nxt;	/* next header */
-            u_int8_t  ip6_un1_hlim;	/* hop limit */
-        } ip6_un1;
-        u_int8_t ip6_un2_vfc;	/* 4 bits version, top 4 bits class */
-    } ip6_ctlun;
-    struct in6_addr ip6_src;	/* source address */
-    struct in6_addr ip6_dst;	/* destination address */
+	union {
+		struct ip6_hdrctl {
+			u_int32_t ip6_un1_flow;	/* 20 bits of flow-ID */
+			u_int16_t ip6_un1_plen;	/* payload length */
+			u_int8_t  ip6_un1_nxt;	/* next header */
+			u_int8_t  ip6_un1_hlim;	/* hop limit */
+		} ip6_un1;
+		u_int8_t ip6_un2_vfc;	/* 4 bits version, top 4 bits class */
+	} ip6_ctlun;
+	struct in6_addr ip6_src;	/* source address */
+	struct in6_addr ip6_dst;	/* destination address */
 };
 
 struct IPv4Header {
 	#if BYTE_ORDER == LITTLE_ENDIAN
-        u_char  ip_hl:4,                /* header length */
-        ip_v:4;                 /* version */
+		u_char  ip_hl:4,				/* header length */
+		ip_v:4;				 /* version */
 	#endif
 	#if BYTE_ORDER == BIG_ENDIAN
-        u_char  ip_v:4,                 /* version */
-        ip_hl:4;                /* header length */
+		u_char  ip_v:4,				 /* version */
+		ip_hl:4;				/* header length */
 	#endif
-    u_char ip_tos;		    /* type of service */
-    u_short ip_len;		    /* total length */
-    u_short ip_id;		    /* identification */
-    u_short ip_off;		    /* fragment offset field */
+	u_char ip_tos;			/* type of service */
+	u_short ip_len;			/* total length */
+	u_short ip_id;			/* identification */
+	u_short ip_off;			/* fragment offset field */
 	#define	IP_RF 0x8000			/* reserved fragment flag */
 	#define	IP_DF 0x4000			/* dont fragment flag */
 	#define	IP_MF 0x2000			/* more fragments flag */
 	#define	IP_OFFMASK 0x1fff		/* mask for fragmenting bits */
 	/*(flags_fragmentOffset & 0x4000) != 0*/
-    u_char ip_ttl;		    /* time to live */
-    u_char ip_p;		    /* protocol */
-    u_short ip_sum;		    /* checksum */
-    struct in_addr ip_src,ip_dst; /* source and dest address */
+	u_char ip_ttl;			/* time to live */
+	u_char ip_p;			/* protocol */
+	u_short ip_sum;			/* checksum */
+	struct in_addr ip_src,ip_dst; /* source and dest address */
 };
 
 struct ADHeader {
-    uint8_t AD_dhost[6];
-    uint8_t AD_shost[6];
-    uint16_t AD_tpid;
-    uint16_t AD_tci;
-    uint16_t AD_tpid2;
-    uint16_t AD_tci2;
-    uint16_t AD_ether_type;
+	uint8_t AD_dhost[6];
+	uint8_t AD_shost[6];
+	uint16_t AD_tpid;
+	uint16_t AD_tci;
+	uint16_t AD_tpid2;
+	uint16_t AD_tci2;
+	uint16_t AD_ether_type;
 };
 
 struct QHeader {
-    uint8_t Q_dhost[6];
-    uint8_t Q_shost[6];
-    uint16_t Q_tpid1;
-    uint16_t Q_tpid2;
-    uint16_t Q_ether_type;
+	uint8_t Q_dhost[6];
+	uint8_t Q_shost[6];
+	uint16_t Q_tpid1;
+	uint16_t Q_tpid2;
+	uint16_t Q_ether_type;
 };
 
 void PrintHelp()
@@ -190,7 +190,7 @@ int main (int argc, char *argv[])
 	{
 		//printf ("Non-option argument %s\n", argv[index]);
 		strcpy(filename, argv[index]);
-    	//ErrorFound(7);
+		//ErrorFound(7);
 	}
 
 	if (hflag == true && strcmp(avalue, "") == 0 && strcmp(svalue, "") == 0 && strcmp(fvalue, "") == 0 && lvalue == -2)
@@ -219,138 +219,199 @@ int main (int argc, char *argv[])
   	struct ether_header *eptr;
   	struct ADHeader *adptr;
 	struct QHeader *qptr;
-	struct IPv4Header *ipv4ptr;
-	struct IPv6Header *ipv6ptr;
-
+	struct IPv4Header *ipv4ptr;  //struktura pro IPv4 hlavicku
+	struct IPv6Header *ipv6ptr;  //struktura pro IPv6 hlavicku
 
 	if ((handle = pcap_open_offline(filename,errbuf)) == NULL)
 		ErrorFound(9);
-
-	//int i = pcap_datalink(handle);
-
-	//printf("%d\n", i);
 	
 	while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
 	{
-		
-		//printf("Length: %d\n", header.len);
-	int EthTypeSize;
+		int EthTypeSize;
+		eptr = (struct ether_header *) packet;
 
-    	eptr = (struct ether_header *) packet;
-    	//printf("\tSource MAC: %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost));
-    	//printf("\tDestination MAC: %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
-
-    	//printf("%s\n", packet);
-
-    	switch (ntohs(eptr->ether_type))
-    	{
-    		case 0x0800: //ETHERTYPE_IP IPV4
-    		EthTypeSize = 14;
-    		printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
-    		//printf("ETHERTYPE_IP IPV4\n");
-    		ipv4ptr = (struct IPv4Header*) (packet+14);
-    		break;
-
-    		case 0x86DD: //ETHERTYPE_IP IPV6
-    		EthTypeSize = 14;
-    		printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
-    		//printf("ETHERTYPE_IP IPV6\n");
-    		ipv6ptr = (struct IPv6Header*) (packet+14);
-    		break;
-
-    		case 0x8100: //IEEE 802.1Q
-    		EthTypeSize = 18;
-    		printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
-    		qptr = (struct QHeader *) packet;
- 
-    			if (ntohs(qptr->Q_ether_type) == 0x0800)//neni zde osetreny ten wtf soubor
-    			{
-    				printf("IPV4\n" );
-    			}
-    			else
-    			{
-    				if (ntohs(qptr->Q_ether_type) == 0x86DD)
-    				{
-    					printf("IPV6\n" );
-    					u_int size_ip;
-
-    				ipv6ptr = (struct IPv6Header*) (packet+18);
-    				switch (ipv6ptr->ip_p){
-    					case 6:
-    					printf("TCT\n");
-    					break;
-						case 17: // UDP protocol
+		switch (ntohs(eptr->ether_type))
+		{
+			case 0x0800: //ETHERTYPE_IP IPV4
+			{
+				EthTypeSize = 14;
+				printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
+				ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
+				switch (ipv4ptr->ip_p)
+				{
+					case 6:  //TCP protocol
+					{
+						printf("TCP\n");
+						break;
+					}
+					case 17: //UDP protocol
+					{
 						printf("UDP\n");
 						break;
-						default:
-						printf("%x\n", ipv6ptr->ip_p);
-						printf("shit\n");
+					}
+
+					default:
+					{
+						printf("%x - Nor TCP nor UDP.\n", ipv4ptr->ip_p);
 						break;
-    			}
-    				}
-    				else
-    				{
-    					printf("other\n");
-    				}
-    			}
-    		break;
-
-    		case 0x88a8: //IEEE 802.1ad
-    		EthTypeSize = 22;
-    		printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
-			adptr = (struct ADHeader *) packet;
-    		//printf("IEEE 802.1Q\n");
-    		//    		qptr = (struct QHeader *) packet;
-    		//printf("IEEE 802.1Q\n");	
-    		    		//printf("%s\n", );
-    		    //printf("%x\n", qptr->Q_ether_type);
-    		    //printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&qptr->Q_shost), ether_ntoa((const struct ether_addr *)&qptr->Q_dhost));
-    			if (ntohs(adptr->AD_ether_type) == 0x0800)
-    			{
-    				printf("IPV4\n" );
-    				u_int size_ip;
-
-    				ip_layer = (struct sniff_ip*) (packet+EthTypeSize);
-    				//size_ip = ip->ip_hl;
-    				switch (ip_layer->ip_p){
-    					case 6:
-    					printf("TCT\n");
-    					break;
-						case 17: // UDP protocol
+					}
+				}
+				break;
+			}
+			case 0x86DD: //ETHERTYPE_IP IPV6
+			{
+				EthTypeSize = 14;
+				printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
+				ipv6ptr = (struct IPv6Header*) (packet+EthTypeSize);
+				switch (ipv6ptr->ip_p)
+				{
+					case 6:  //TCP protocol
+					{
+						printf("TCP\n");
+						break;
+					}
+					case 17: //UDP protocol
+					{
 						printf("UDP\n");
 						break;
-						default:
-						printf("shit\n");
+					}
+
+					default:
+					{
+						printf("%x - Nor TCP nor UDP.\n", ipv6ptr->ip_p);
 						break;
-    			}}
-    			else
-    			{
-    				if (ntohs(adptr->AD_ether_type) == 0x86DD)
-    				{
-    					printf("IPV6\n" );
+					}
+				}
+				break;
+			}
+			case 0x8100: //IEEE 802.1Q
+			{
+				EthTypeSize = 18;
+				printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
+				qptr = (struct QHeader *) packet;
 
-    				}
-    				else
-    				{
-    					printf("other\n");
-    				}
-    			}
-    		break;
+				if (ntohs(qptr->Q_ether_type) == 0x0800) //IPv4
+				{
+					ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
+					switch (ipv4ptr->ip_p)
+					{
+						case 6:  //TCP protocol
+						{
+							printf("TCP\n");
+							break;
+						}
+						case 17: //UDP protocol
+						{
+							printf("UDP\n");
+							break;
+						}
 
-    		default:
-    		EthTypeSize = -1;
-    		//printf("wtf\n");
-    		break;
-    	}
-    	/*
-    	if (/* condition 
-    	{
-    		
-    	}
-    	my_ip = (struct ip*) (packet+SIZE_ETHERNET);)*/
+						default:
+						{
+							printf("%x - Nor TCP nor UDP.\n", ipv4ptr->ip_p);
+							break;
+						}
+					}
+				}
+				else 
+				{
+					if (ntohs(qptr->Q_ether_type) == 0x86DD) //IPv6
+					{
+						ipv6ptr = (struct IPv6Header*) (packet+EthTypeSize);
+						switch (ipv6ptr->ip_p)
+						{
+							case 6:  //TCP protocol
+							{
+								printf("TCP\n");
+								break;
+							}
+							case 17: //UDP protocol
+							{
+								printf("UDP\n");
+								break;
+							}
 
+							default:
+							{
+								printf("%x - Nor TCP nor UDP.\n", ipv6ptr->ip_p);
+								break;
+							}
+						}
+					}
+					else
+					{
+						printf("Nor IPv4 nor IPv6.\n");
+					}
+				}
+				break;
+			}
+			case 0x88a8: //IEEE 802.1ad
+			{
+				EthTypeSize = 22;
+				printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
+				adptr = (struct ADHeader *) packet;
+				
+				if (ntohs(adptr->AD_ether_type) == 0x0800) //IPv4
+				{
+					ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
+					switch (ipv4ptr->ip_p)
+					{
+						case 6:  //TCP protocol
+						{
+							printf("TCP\n");
+							break;
+						}
+						case 17: //UDP protocol
+						{
+							printf("UDP\n");
+							break;
+						}
+
+						default:
+						{
+							printf("%x - Nor TCP nor UDP.\n", ipv4ptr->ip_p);
+							break;
+						}
+					}
+				}
+				else 
+				{
+					if (ntohs(adptr->AD_ether_type) == 0x86DD) //IPv6
+					{
+						ipv6ptr = (struct IPv6Header*) (packet+EthTypeSize);
+						switch (ipv6ptr->ip_p)
+						{
+							case 6:  //TCP protocol
+							{
+								printf("TCP\n");
+								break;
+							}
+							case 17: //UDP protocol
+							{
+								printf("UDP\n");
+								break;
+							}
+
+							default:
+							{
+								printf("%x - Nor TCP nor UDP.\n", ipv6ptr->ip_p);
+								break;
+							}
+						}
+					}
+					else
+					{
+						printf("Nor IPv4 nor IPv6.\n");
+					}
+				}
+			break;
+			}
+			default: //chyba osetrit
+			{
+				EthTypeSize = -1;
+				break;
+			}
+		}
 	}
-
-
 	return 0;
 }
