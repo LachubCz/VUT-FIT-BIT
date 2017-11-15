@@ -13,6 +13,35 @@
 #define PCAP_ERRBUF_SIZE (256)
 #endif
 
+struct TCPHeader {
+    u_short th_sport;	/* source port */
+    u_short th_dport;	/* destination port */
+    u_int th_seq;		/* sequence number */
+    u_int th_ack;		/* acknowledgement number */
+    u_char th_offx2;	/* data offset, rsvd */
+#define TH_OFF(th)	(((th)->th_offx2 & 0xf0) >> 4)
+    u_char th_flags;
+#define TH_FIN 0x01
+#define TH_SYN 0x02
+#define TH_RST 0x04
+#define TH_PUSH 0x08
+#define TH_ACK 0x10
+#define TH_URG 0x20
+#define TH_ECE 0x40
+#define TH_CWR 0x80
+#define TH_FLAGS (TH_FIN|TH_SYN|TH_RST|TH_ACK|TH_URG|TH_ECE|TH_CWR)
+    u_short th_win;		/* window */
+    u_short th_sum;		/* checksum */
+    u_short th_urp;		/* urgent pointer */
+};
+
+struct UDPHeader {
+    u_short	uh_sport;		/* source port */
+    u_short	uh_dport;		/* destination port */
+    short	uh_ulen;		/* udp length */
+    u_short	uh_sum;			/* udp checksum */
+};
+
 struct IPv6Header {
 	union {
 		struct ip6_hdrctl {
@@ -48,12 +77,13 @@ struct IPv4Header {
 	u_char ip_ttl;			/* time to live */
 	u_char ip_p;			/* protocol */
 	u_short ip_sum;			/* checksum */
-	struct in_addr ip_src,ip_dst; /* source and dest address */
+	struct in_addr ip_src; /* source address*/
+	struct in_addr ip_dst; /* source and dest address */
 };
 
 struct ADHeader {
-	uint8_t AD_dhost[6];
-	uint8_t AD_shost[6];
+	uint8_t AD_dhost[ETHER_ADDR_LEN];
+	uint8_t AD_shost[ETHER_ADDR_LEN];
 	uint16_t AD_tpid;
 	uint16_t AD_tci;
 	uint16_t AD_tpid2;
@@ -62,11 +92,17 @@ struct ADHeader {
 };
 
 struct QHeader {
-	uint8_t Q_dhost[6];
-	uint8_t Q_shost[6];
+	uint8_t Q_dhost[ETHER_ADDR_LEN];
+	uint8_t Q_shost[ETHER_ADDR_LEN];
 	uint16_t Q_tpid1;
 	uint16_t Q_tpid2;
 	uint16_t Q_ether_type;
+};
+
+struct EthernetHeader {
+    u_char ether_dhost[ETHER_ADDR_LEN]; /* Destination host address */
+    u_char ether_shost[ETHER_ADDR_LEN]; /* Source host address */
+    u_short ether_type; /* IP? ARP? RARP? list of ethertypes https://en.wikipedia.org/wiki/EtherType */
 };
 
 void PrintHelp()
@@ -133,6 +169,75 @@ int CharToInt (char *str)
 	}
 
 	return number;
+}
+
+int CorrectMacAdress(char *str)
+{
+	char Temp[256];
+	strcpy(Temp, str);
+	char Temp2[256];
+	char ReconstructedMacAdress[256];
+	int i = 0;
+	int counter = 0;
+	int e = 0;
+	while(i < (strlen(Temp) + 1))
+	{
+		if (Temp[i] != ':' && strlen(Temp) > i)
+		{
+			Temp2[counter] = Temp[i];
+			counter++;
+		}
+		else
+		{
+			if (counter == 2)
+			{
+				if (i< strlen(Temp))
+				{
+					ReconstructedMacAdress[e] = Temp2[0];
+					e++;
+					ReconstructedMacAdress[e] = Temp2[1];
+					e++;
+					ReconstructedMacAdress[e] = ':';
+					e++;
+				}
+				else
+				{
+					ReconstructedMacAdress[e] = Temp2[0];
+					e++;
+					ReconstructedMacAdress[e] = Temp2[1];
+					e++;
+					ReconstructedMacAdress[e] = '\0';
+					e++;
+				}
+				counter = 0;
+			}
+			else
+			{
+				if (i < strlen(Temp))
+				{
+					ReconstructedMacAdress[e] = '0';
+					e++;
+					ReconstructedMacAdress[e] = Temp2[0];
+					e++;
+					ReconstructedMacAdress[e] = ':';
+					e++;
+				}
+				else
+				{
+					ReconstructedMacAdress[e] = '0';
+					e++;
+					ReconstructedMacAdress[e] = Temp2[0];
+					e++;
+					ReconstructedMacAdress[e] = '\0';
+					e++;
+				}
+				counter = 0;
+			}
+		}
+		i++;
+	}
+	strcpy(str,ReconstructedMacAdress);
+	return 0;
 }
 
 int main (int argc, char *argv[])
@@ -221,13 +326,23 @@ int main (int argc, char *argv[])
 	struct QHeader *qptr;
 	struct IPv4Header *ipv4ptr;  //struktura pro IPv4 hlavicku
 	struct IPv6Header *ipv6ptr;  //struktura pro IPv6 hlavicku
+	const struct TCPHeader *tcpptr;    // pointer to the beginning of TCP header
+	const struct UDPHeader *udpptr;    // pointer to the beginning of UDP header
+	char printAbleIPv4src[INET6_ADDRSTRLEN];
+	char printAbleIPv4dst[INET6_ADDRSTRLEN];
+	char printAbleIPv6src[INET6_ADDRSTRLEN];
+	char printAbleIPv6dst[INET6_ADDRSTRLEN];
+	int PacketNumber = 0;
+
 
 	if ((handle = pcap_open_offline(filename,errbuf)) == NULL)
 		ErrorFound(9);
 	
 	while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
 	{
-		int EthTypeSize;
+		int EthTypeSize = 0;
+		int IpSize = 0;
+		PacketNumber++;
 		eptr = (struct ether_header *) packet;
 
 		switch (ntohs(eptr->ether_type))
@@ -239,6 +354,11 @@ int main (int argc, char *argv[])
 				ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
 				switch (ipv4ptr->ip_p)
 				{
+					case 1:  //ICMP protocol
+					{
+						printf("ICMP\n");
+						break;
+					}
 					case 6:  //TCP protocol
 					{
 						printf("TCP\n");
@@ -249,7 +369,6 @@ int main (int argc, char *argv[])
 						printf("UDP\n");
 						break;
 					}
-
 					default:
 					{
 						printf("%x - Nor TCP nor UDP.\n", ipv4ptr->ip_p);
@@ -263,7 +382,7 @@ int main (int argc, char *argv[])
 				EthTypeSize = 14;
 				printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
 				ipv6ptr = (struct IPv6Header*) (packet+EthTypeSize);
-				switch (ipv6ptr->ip_p)
+				switch (ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt)
 				{
 					case 6:  //TCP protocol
 					{
@@ -275,10 +394,14 @@ int main (int argc, char *argv[])
 						printf("UDP\n");
 						break;
 					}
-
+					case 58:  //ICMPv6
+					{
+						printf("ICMPv6\n");
+						break;
+					}
 					default:
 					{
-						printf("%x - Nor TCP nor UDP.\n", ipv6ptr->ip_p);
+						printf("%x - Nor TCP nor UDP.\n", ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt);
 						break;
 					}
 				}
@@ -287,14 +410,21 @@ int main (int argc, char *argv[])
 			case 0x8100: //IEEE 802.1Q
 			{
 				EthTypeSize = 18;
-				printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
+				//printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
 				qptr = (struct QHeader *) packet;
 
 				if (ntohs(qptr->Q_ether_type) == 0x0800) //IPv4
 				{
 					ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
+					IpSize = ipv4ptr->ip_hl*4;
+
 					switch (ipv4ptr->ip_p)
 					{
+						case 1:  //ICMP protocol
+						{
+							printf("ICMP\n");
+							break;
+						}
 						case 6:  //TCP protocol
 						{
 							printf("TCP\n");
@@ -305,7 +435,6 @@ int main (int argc, char *argv[])
 							printf("UDP\n");
 							break;
 						}
-
 						default:
 						{
 							printf("%x - Nor TCP nor UDP.\n", ipv4ptr->ip_p);
@@ -318,7 +447,9 @@ int main (int argc, char *argv[])
 					if (ntohs(qptr->Q_ether_type) == 0x86DD) //IPv6
 					{
 						ipv6ptr = (struct IPv6Header*) (packet+EthTypeSize);
-						switch (ipv6ptr->ip_p)
+						IpSize = 40;  //checknout co je ve skutecnosti payload len
+
+						switch (ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt)
 						{
 							case 6:  //TCP protocol
 							{
@@ -327,13 +458,37 @@ int main (int argc, char *argv[])
 							}
 							case 17: //UDP protocol
 							{
-								printf("UDP\n");
+								char MacSrc[256];
+								char MacDst[256];
+								strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&eptr->ether_shost));
+								strcpy(MacDst, ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
+								CorrectMacAdress(MacSrc);
+								CorrectMacAdress(MacDst);
+								udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize);
+								printf("%d: %lu%lu %d | Ethernet: %s %s %d | IPv6: %s %s %d | UDP: %d %d\n",
+								PacketNumber,
+								header.ts.tv_sec,
+								header.ts.tv_usec,
+								header.len,
+								MacSrc,
+								MacDst,
+								ntohs(qptr->Q_tpid2),
+								inet_ntop(AF_INET6, &(ipv6ptr->ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN),
+								inet_ntop(AF_INET6, &(ipv6ptr->ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN),
+								ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_hlim,
+								ntohs(udpptr->uh_sport),
+								ntohs(udpptr->uh_dport));
+								//printf("UDP\n");
 								break;
 							}
-
+							case 58:  //ICMPv6
+							{
+								printf("ICMPv6\n");
+								break;
+							}
 							default:
 							{
-								printf("%x - Nor TCP nor UDP.\n", ipv6ptr->ip_p);
+								printf("%x - Nor TCP nor UDP.\n", ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt);
 								break;
 							}
 						}
@@ -356,6 +511,11 @@ int main (int argc, char *argv[])
 					ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
 					switch (ipv4ptr->ip_p)
 					{
+						case 1:  //ICMP protocol
+						{
+							printf("ICMP\n");
+							break;
+						}
 						case 6:  //TCP protocol
 						{
 							printf("TCP\n");
@@ -366,7 +526,6 @@ int main (int argc, char *argv[])
 							printf("UDP\n");
 							break;
 						}
-
 						default:
 						{
 							printf("%x - Nor TCP nor UDP.\n", ipv4ptr->ip_p);
@@ -379,7 +538,7 @@ int main (int argc, char *argv[])
 					if (ntohs(adptr->AD_ether_type) == 0x86DD) //IPv6
 					{
 						ipv6ptr = (struct IPv6Header*) (packet+EthTypeSize);
-						switch (ipv6ptr->ip_p)
+						switch (ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt)
 						{
 							case 6:  //TCP protocol
 							{
@@ -391,10 +550,14 @@ int main (int argc, char *argv[])
 								printf("UDP\n");
 								break;
 							}
-
+							case 58:  //ICMPv6
+							{
+								printf("ICMPv6\n");
+								break;
+							}
 							default:
 							{
-								printf("%x - Nor TCP nor UDP.\n", ipv6ptr->ip_p);
+								printf("%x - Nor TCP nor UDP.\n", ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt);
 								break;
 							}
 						}
