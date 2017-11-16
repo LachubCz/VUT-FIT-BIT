@@ -13,6 +13,22 @@
 #define PCAP_ERRBUF_SIZE (256)
 #endif
 
+struct PacketData {
+	int Layer1;
+	struct ether_header *eptr;
+	struct ADHeader *adptr;
+	struct QHeader *qptr;
+	int Layer2;
+	struct IPv4Header *ipv4ptr;
+	struct IPv6Header *ipv6ptr;
+	int Layer3;
+	struct TCPHeader *tcpptr;
+	struct UDPHeader *udpptr;
+	int PacketNumber;
+	struct timeval ts;
+	bpf_u_int32 len;
+};
+
 struct TCPHeader {
     u_short th_sport;	/* source port */
     u_short th_dport;	/* destination port */
@@ -97,12 +113,6 @@ struct QHeader {
 	uint16_t Q_tpid1;
 	uint16_t Q_tpid2;
 	uint16_t Q_ether_type;
-};
-
-struct EthernetHeader {
-    u_char ether_dhost[ETHER_ADDR_LEN]; /* Destination host address */
-    u_char ether_shost[ETHER_ADDR_LEN]; /* Source host address */
-    u_short ether_type; /* IP? ARP? RARP? list of ethertypes https://en.wikipedia.org/wiki/EtherType */
 };
 
 void PrintHelp()
@@ -240,6 +250,120 @@ int CorrectMacAdress(char *str)
 	return 0;
 }
 
+int GetNumberOfPackets(char *filename)
+{
+	int counter = 0;
+	pcap_t *handle; //ukazatel na soubor s pakety
+	const u_char *packet;
+	char errbuf[256];
+	struct pcap_pkthdr header;
+
+	if ((handle = pcap_open_offline(filename,errbuf)) == NULL)
+		ErrorFound(9);
+	
+	while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
+	{
+		counter++;
+	}
+
+	pcap_close(handle);
+	return counter;
+}
+
+struct PacketData *newPacketData () 
+{
+    struct PacketData *retVal = malloc (sizeof (struct PacketData));
+
+    if (retVal == NULL)
+        return NULL;
+
+    retVal->eptr = malloc (sizeof (struct ether_header));
+    if (retVal->eptr == NULL) 
+    {
+        free (retVal);
+        return NULL;
+    }
+
+    retVal->adptr = malloc (sizeof (struct ADHeader));
+    if (retVal->adptr == NULL) 
+    {
+        free (retVal);
+        return NULL;
+    }
+
+    retVal->qptr = malloc (sizeof (struct QHeader));
+    if (retVal->qptr == NULL) 
+    {
+        free (retVal);
+        return NULL;
+    }
+
+    retVal->ipv4ptr = malloc (sizeof (struct IPv4Header));
+    if (retVal->ipv4ptr == NULL) 
+    {
+        free (retVal);
+        return NULL;
+    }
+
+    retVal->ipv6ptr = malloc (sizeof (struct IPv6Header));
+    if (retVal->ipv6ptr == NULL) 
+    {
+        free (retVal);
+        return NULL;
+    }
+
+    retVal->tcpptr = malloc (sizeof (struct TCPHeader));
+    if (retVal->tcpptr == NULL) 
+    {
+        free (retVal);
+        return NULL;
+    }
+
+    retVal->udpptr = malloc (sizeof (struct UDPHeader));
+    if (retVal->udpptr == NULL) 
+    {
+        free (retVal);
+        return NULL;
+    }
+
+    retVal->Layer1 = 0;
+    retVal->Layer2 = 0;
+    retVal->Layer3 = 0;
+    retVal->PacketNumber = 0;
+    retVal->len = 0;
+    retVal->ts.tv_usec = 0;
+    retVal->ts.tv_sec = 0;
+
+    return retVal;
+}
+
+void printPacket(struct PacketData *PacketList)
+{
+	char MacSrc[256];
+	char MacDst[256];
+	char printAbleIPv6src[INET6_ADDRSTRLEN];
+	char printAbleIPv6dst[INET6_ADDRSTRLEN];
+	//struct QHeader *qptr = PacketList->qptr;
+	strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&PacketList->qptr->Q_shost));
+	strcpy(MacDst, ether_ntoa((const struct ether_addr *)&PacketList->qptr->Q_dhost));
+	CorrectMacAdress(MacSrc);
+	CorrectMacAdress(MacDst);
+	//udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize);
+	printf("%d: %lu%lu %d | Ethernet: %s %s %d | IPv6: %s %s %d | UDP: %d %d\n",
+	PacketList->PacketNumber,
+	PacketList->ts.tv_sec,
+	PacketList->ts.tv_usec,
+	PacketList->len,
+	MacSrc,
+	MacDst,
+	ntohs(PacketList->qptr->Q_tpid2),
+	inet_ntop(AF_INET6, &(PacketList->ipv6ptr->ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN),
+	inet_ntop(AF_INET6, &(PacketList->ipv6ptr->ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN),
+	PacketList->ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_hlim,
+	ntohs(PacketList->udpptr->uh_sport),
+	ntohs(PacketList->udpptr->uh_dport));
+}
+
 int main (int argc, char *argv[])
 {
 	bool hflag = false;
@@ -334,10 +458,17 @@ int main (int argc, char *argv[])
 	char printAbleIPv6dst[INET6_ADDRSTRLEN];
 	int PacketNumber = 0;
 
-
 	if ((handle = pcap_open_offline(filename,errbuf)) == NULL)
 		ErrorFound(9);
 	
+	int NumberOfPackets = GetNumberOfPackets(filename);
+	
+	struct PacketData *PacketList[NumberOfPackets];
+	for (int i = 0; i < NumberOfPackets; i++)
+	{
+		PacketList[i] = newPacketData();
+	}
+
 	while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
 	{
 		int EthTypeSize = 0;
@@ -458,26 +589,14 @@ int main (int argc, char *argv[])
 							}
 							case 17: //UDP protocol
 							{
-								char MacSrc[256];
-								char MacDst[256];
-								strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&eptr->ether_shost));
-								strcpy(MacDst, ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
-								CorrectMacAdress(MacSrc);
-								CorrectMacAdress(MacDst);
 								udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize);
-								printf("%d: %lu%lu %d | Ethernet: %s %s %d | IPv6: %s %s %d | UDP: %d %d\n",
-								PacketNumber,
-								header.ts.tv_sec,
-								header.ts.tv_usec,
-								header.len,
-								MacSrc,
-								MacDst,
-								ntohs(qptr->Q_tpid2),
-								inet_ntop(AF_INET6, &(ipv6ptr->ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN),
-								inet_ntop(AF_INET6, &(ipv6ptr->ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN),
-								ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_hlim,
-								ntohs(udpptr->uh_sport),
-								ntohs(udpptr->uh_dport));
+								memcpy(PacketList[PacketNumber - 1]->qptr, qptr, EthTypeSize);
+								memcpy(PacketList[PacketNumber - 1]->ipv6ptr, ipv6ptr, IpSize);
+								memcpy(PacketList[PacketNumber - 1]->udpptr, udpptr, (header.len - EthTypeSize - IpSize));
+								PacketList[PacketNumber - 1]->PacketNumber = PacketNumber;
+								PacketList[PacketNumber - 1]->ts = header.ts;
+								PacketList[PacketNumber - 1]->len = header.len;
+								printPacket(PacketList[PacketNumber - 1]);
 								//printf("UDP\n");
 								break;
 							}
@@ -576,5 +695,6 @@ int main (int argc, char *argv[])
 			}
 		}
 	}
+	pcap_close(handle);
 	return 0;
 }
