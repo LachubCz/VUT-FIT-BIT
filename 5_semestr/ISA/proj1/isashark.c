@@ -15,7 +15,7 @@
 
 struct PacketData {
 	int Layer1;
-	struct ether_header *eptr;
+	struct ETHHeader *eptr;
 	struct ADHeader *adptr;
 	struct QHeader *qptr;
 	int Layer2;
@@ -28,6 +28,8 @@ struct PacketData {
 	struct timeval ts;
 	bpf_u_int32 len;
 };
+
+
 
 struct TCPHeader {
     u_short th_sport;	/* source port */
@@ -113,6 +115,12 @@ struct QHeader {
 	uint16_t Q_tpid1;
 	uint16_t Q_tpid2;
 	uint16_t Q_ether_type;
+};
+
+struct ETHHeader {
+    uint8_t ether_dhost[ETHER_ADDR_LEN];
+    uint8_t ether_shost[ETHER_ADDR_LEN];
+    uint16_t ether_type;
 };
 
 void PrintHelp()
@@ -273,11 +281,10 @@ int GetNumberOfPackets(char *filename)
 struct PacketData *newPacketData () 
 {
     struct PacketData *retVal = malloc (sizeof (struct PacketData));
-
     if (retVal == NULL)
         return NULL;
 
-    retVal->eptr = malloc (sizeof (struct ether_header));
+    retVal->eptr = malloc (sizeof (struct ETHHeader));
     if (retVal->eptr == NULL) 
     {
         free (retVal);
@@ -325,7 +332,23 @@ struct PacketData *newPacketData ()
         free (retVal);
         return NULL;
     }
-
+    /*
+    //printf("0\n");
+	retVal->eptr = NULL;
+	//printf("1\n");
+	retVal->adptr = NULL;
+	//printf("2\n");
+	retVal->qptr = NULL;
+	//printf("3\n");
+	retVal->ipv4ptr = NULL;
+	//printf("4\n");
+	retVal->ipv6ptr = NULL;
+	//printf("5\n");
+	retVal->tcpptr = NULL;
+	//printf("6\n");
+	retVal->udpptr = NULL;
+	//printf("7\n");
+*/
     retVal->Layer1 = 0;
     retVal->Layer2 = 0;
     retVal->Layer3 = 0;
@@ -343,25 +366,116 @@ void printPacket(struct PacketData *PacketList)
 	char MacDst[256];
 	char printAbleIPv6src[INET6_ADDRSTRLEN];
 	char printAbleIPv6dst[INET6_ADDRSTRLEN];
-	//struct QHeader *qptr = PacketList->qptr;
-	strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&PacketList->eptr->ether_shost));
-	strcpy(MacDst, ether_ntoa((const struct ether_addr *)&PacketList->eptr->ether_dhost));
-	CorrectMacAdress(MacSrc);
-	CorrectMacAdress(MacDst);
-	//udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize);
-	printf("%d: %lu%lu %d | Ethernet: %s %s %d | IPv6: %s %s %d | UDP: %d %d\n",
-	PacketList->PacketNumber,
-	PacketList->ts.tv_sec,
-	PacketList->ts.tv_usec,
-	PacketList->len,
-	MacSrc,
-	MacDst,
-	ntohs(PacketList->qptr->Q_tpid2),
-	inet_ntop(AF_INET6, &(PacketList->ipv6ptr->ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN),
-	inet_ntop(AF_INET6, &(PacketList->ipv6ptr->ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN),
-	PacketList->ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_hlim,
-	ntohs(PacketList->udpptr->uh_sport),
-	ntohs(PacketList->udpptr->uh_dport));
+
+	switch (PacketList->Layer1)
+	{
+		case 0:  //Ethernet
+		{
+			strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&PacketList->eptr->ether_shost));
+			strcpy(MacDst, ether_ntoa((const struct ether_addr *)&PacketList->eptr->ether_dhost));
+			CorrectMacAdress(MacSrc);
+			CorrectMacAdress(MacDst);
+
+			printf("%d: %ld%06ld %d | Ethernet: %s %s | ",
+				PacketList->PacketNumber,
+				PacketList->ts.tv_sec,
+				PacketList->ts.tv_usec,
+				PacketList->len,
+				MacSrc,
+				MacDst);
+			break;
+		}
+		case 1:  //IEEE 802.1Q
+		{
+			strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&PacketList->qptr->Q_shost));
+			strcpy(MacDst, ether_ntoa((const struct ether_addr *)&PacketList->qptr->Q_dhost));
+			CorrectMacAdress(MacSrc);
+			CorrectMacAdress(MacDst);
+
+			printf("%d: %ld%06ld %d | Ethernet: %s %s %d | ",
+				PacketList->PacketNumber,
+				PacketList->ts.tv_sec,
+				PacketList->ts.tv_usec,
+				PacketList->len,
+				MacSrc,
+				MacDst,
+				ntohs(PacketList->qptr->Q_tpid2)); //tisknu spatne nhtons
+			break;
+		}
+		case 2:  //IEEE 802.1ad
+		{
+			strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&PacketList->eptr->ether_shost));
+			strcpy(MacDst, ether_ntoa((const struct ether_addr *)&PacketList->eptr->ether_dhost));
+			CorrectMacAdress(MacSrc);
+			CorrectMacAdress(MacDst);
+
+			printf("%d: %ld%06ld %d | Ethernet: %s %s %d %d | ",
+				PacketList->PacketNumber,
+				PacketList->ts.tv_sec,
+				PacketList->ts.tv_usec,
+				PacketList->len,
+				MacSrc,
+				MacDst,
+				ntohs(PacketList->qptr->Q_tpid2),
+				ntohs(PacketList->qptr->Q_tpid2));
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+
+	switch (PacketList->Layer2)
+	{
+		case 0:  //IPv4
+		{
+			printf("IPv4: %s %s %d | ",
+				inet_ntoa(PacketList->ipv4ptr->ip_src),
+				inet_ntoa(PacketList->ipv4ptr->ip_dst),
+				PacketList->ipv4ptr->ip_ttl);
+			break;
+		}
+		case 1:  //IPv6
+		{
+			printf("IPv6: %s %s %d | ",
+				inet_ntop(AF_INET6, &(PacketList->ipv6ptr->ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN),
+				inet_ntop(AF_INET6, &(PacketList->ipv6ptr->ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN),
+				PacketList->ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_hlim);
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+
+	switch (PacketList->Layer3)
+	{
+		case 0:  //TCP
+		{
+			break;
+		}
+		case 1:  //UDP
+		{
+			printf("UDP: %d %d\n", 
+				ntohs(PacketList->udpptr->uh_sport),
+				ntohs(PacketList->udpptr->uh_dport));
+			break;
+		}
+		case 2:  //ICMPv4
+		{
+			break;
+		}
+		case 3:  //ICMPv6
+		{
+			break;
+		}
+		default: 
+		{
+			break;
+		}
+	}
 }
 
 int main (int argc, char *argv[])
@@ -445,7 +559,7 @@ int main (int argc, char *argv[])
 	//nepopsane struktury
 	const struct tcphdr *my_tcp;
   	const struct udphdr *my_udp;
-  	struct ether_header *eptr;
+  	struct ETHHeader *eptr;
   	struct ADHeader *adptr;
 	struct QHeader *qptr;
 	struct IPv4Header *ipv4ptr;  //struktura pro IPv4 hlavicku
@@ -467,10 +581,15 @@ int main (int argc, char *argv[])
 	//printf("%d\n", NumberOfPackets);
 	for (int i = 0; i < NumberOfPackets; i++)
 	{
-		//struct PacketData *ForTransfer = 
+		/*struct PacketData *ForTransfer = 
+		printf("houvn\n");
+		if (ForTransfer == NULL)
+		{
+			printf("shit\n");
+		}*/
 		PacketList[i] = newPacketData();
 		//memset(&(PacketList[i]), 0, sizeof (struct ));
-		printPacket(PacketList[i]);
+		//printPacket(PacketList[i]);
 	}
 
 	while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
@@ -478,7 +597,7 @@ int main (int argc, char *argv[])
 		int EthTypeSize = 0;
 		int IpSize = 0;
 		PacketNumber++;
-		eptr = (struct ether_header *) packet;
+		eptr = (struct ETHHeader *) packet;
 
 		switch (ntohs(eptr->ether_type))
 		{
@@ -518,7 +637,7 @@ int main (int argc, char *argv[])
 			case 0x86DD: //ETHERTYPE_IP IPV6
 			{
 				EthTypeSize = 14;
-				printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
+				//printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
 				ipv6ptr = (struct IPv6Header*) (packet+EthTypeSize);
 				IpSize = 40;  //checknout co je ve skutecnosti payload len
 				switch (ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt)
@@ -534,21 +653,21 @@ int main (int argc, char *argv[])
 						udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize);
 
 						PacketList[PacketNumber - 1]->PacketNumber = PacketNumber;
-						printf("1\n");
-						memcpy(PacketList[PacketNumber - 1]->eptr, eptr, EthTypeSize);
+
+						PacketList[PacketNumber - 1]->eptr = malloc(sizeof(struct ETHHeader));
+						memcpy(PacketList[PacketNumber - 1]->eptr, (struct ETHHeader *) packet, EthTypeSize);
 						PacketList[PacketNumber - 1]->Layer1 = 0;  //Ethernet
-						printf("2\n");
+						
 						memcpy(PacketList[PacketNumber - 1]->ipv6ptr, ipv6ptr, IpSize);
-						PacketList[PacketNumber - 1]->Layer2 = 1;  //IPv4
-						printf("3\n");
+						PacketList[PacketNumber - 1]->Layer2 = 1;  //IPv6
+
 						memcpy(PacketList[PacketNumber - 1]->udpptr, udpptr, (header.len - EthTypeSize - IpSize));							
 						PacketList[PacketNumber - 1]->Layer3 = 1;  //UDP
-						printf("4\n");
 
 						PacketList[PacketNumber - 1]->ts = header.ts;
 						PacketList[PacketNumber - 1]->len = header.len;
 						printPacket(PacketList[PacketNumber - 1]);
-						printf("UDP\n");
+						//printf("UDP\n");
 						break;
 					}
 					case 58:  //ICMPv6
