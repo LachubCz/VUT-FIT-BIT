@@ -344,8 +344,8 @@ void printPacket(struct PacketData *PacketList)
 	char printAbleIPv6src[INET6_ADDRSTRLEN];
 	char printAbleIPv6dst[INET6_ADDRSTRLEN];
 	//struct QHeader *qptr = PacketList->qptr;
-	strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&PacketList->qptr->Q_shost));
-	strcpy(MacDst, ether_ntoa((const struct ether_addr *)&PacketList->qptr->Q_dhost));
+	strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&PacketList->eptr->ether_shost));
+	strcpy(MacDst, ether_ntoa((const struct ether_addr *)&PacketList->eptr->ether_dhost));
 	CorrectMacAdress(MacSrc);
 	CorrectMacAdress(MacDst);
 	//udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize);
@@ -464,9 +464,13 @@ int main (int argc, char *argv[])
 	int NumberOfPackets = GetNumberOfPackets(filename);
 	
 	struct PacketData *PacketList[NumberOfPackets];
+	//printf("%d\n", NumberOfPackets);
 	for (int i = 0; i < NumberOfPackets; i++)
 	{
+		//struct PacketData *ForTransfer = 
 		PacketList[i] = newPacketData();
+		//memset(&(PacketList[i]), 0, sizeof (struct ));
+		printPacket(PacketList[i]);
 	}
 
 	while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
@@ -483,6 +487,7 @@ int main (int argc, char *argv[])
 				EthTypeSize = 14;
 				printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
 				ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
+				IpSize = ipv4ptr->ip_hl*4;
 				switch (ipv4ptr->ip_p)
 				{
 					case 1:  //ICMP protocol
@@ -497,7 +502,9 @@ int main (int argc, char *argv[])
 					}
 					case 17: //UDP protocol
 					{
-						printf("UDP\n");
+
+			
+						//printf("UDP\n");
 						break;
 					}
 					default:
@@ -513,6 +520,7 @@ int main (int argc, char *argv[])
 				EthTypeSize = 14;
 				printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
 				ipv6ptr = (struct IPv6Header*) (packet+EthTypeSize);
+				IpSize = 40;  //checknout co je ve skutecnosti payload len
 				switch (ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt)
 				{
 					case 6:  //TCP protocol
@@ -522,6 +530,24 @@ int main (int argc, char *argv[])
 					}
 					case 17: //UDP protocol
 					{
+
+						udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize);
+
+						PacketList[PacketNumber - 1]->PacketNumber = PacketNumber;
+						printf("1\n");
+						memcpy(PacketList[PacketNumber - 1]->eptr, eptr, EthTypeSize);
+						PacketList[PacketNumber - 1]->Layer1 = 0;  //Ethernet
+						printf("2\n");
+						memcpy(PacketList[PacketNumber - 1]->ipv6ptr, ipv6ptr, IpSize);
+						PacketList[PacketNumber - 1]->Layer2 = 1;  //IPv4
+						printf("3\n");
+						memcpy(PacketList[PacketNumber - 1]->udpptr, udpptr, (header.len - EthTypeSize - IpSize));							
+						PacketList[PacketNumber - 1]->Layer3 = 1;  //UDP
+						printf("4\n");
+
+						PacketList[PacketNumber - 1]->ts = header.ts;
+						PacketList[PacketNumber - 1]->len = header.len;
+						printPacket(PacketList[PacketNumber - 1]);
 						printf("UDP\n");
 						break;
 					}
@@ -563,6 +589,7 @@ int main (int argc, char *argv[])
 						}
 						case 17: //UDP protocol
 						{
+
 							printf("UDP\n");
 							break;
 						}
@@ -590,12 +617,19 @@ int main (int argc, char *argv[])
 							case 17: //UDP protocol
 							{
 								udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize);
-								memcpy(PacketList[PacketNumber - 1]->qptr, qptr, EthTypeSize);
-								memcpy(PacketList[PacketNumber - 1]->ipv6ptr, ipv6ptr, IpSize);
-								memcpy(PacketList[PacketNumber - 1]->udpptr, udpptr, (header.len - EthTypeSize - IpSize));
+
 								PacketList[PacketNumber - 1]->PacketNumber = PacketNumber;
+
+								memcpy(PacketList[PacketNumber - 1]->qptr, qptr, EthTypeSize);
+								PacketList[PacketNumber - 1]->Layer1 = 1;  //IEEE 802.1Q
+								memcpy(PacketList[PacketNumber - 1]->ipv6ptr, ipv6ptr, IpSize);
+								PacketList[PacketNumber - 1]->Layer2 = 1;  //IPv6
+								memcpy(PacketList[PacketNumber - 1]->udpptr, udpptr, (header.len - EthTypeSize - IpSize));
+								PacketList[PacketNumber - 1]->Layer3 = 1;  //UDP
+
 								PacketList[PacketNumber - 1]->ts = header.ts;
 								PacketList[PacketNumber - 1]->len = header.len;
+
 								printPacket(PacketList[PacketNumber - 1]);
 								//printf("UDP\n");
 								break;
@@ -696,5 +730,10 @@ int main (int argc, char *argv[])
 		}
 	}
 	pcap_close(handle);
+
+	//printPacket(PacketList[3]);
+	//printPacket(PacketList[4]);
+	//printPacket(PacketList[5]);
+	//printPacket(PacketList[6]);
 	return 0;
 }
