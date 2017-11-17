@@ -332,23 +332,7 @@ struct PacketData *newPacketData ()
         free (retVal);
         return NULL;
     }
-    /*
-    //printf("0\n");
-	retVal->eptr = NULL;
-	//printf("1\n");
-	retVal->adptr = NULL;
-	//printf("2\n");
-	retVal->qptr = NULL;
-	//printf("3\n");
-	retVal->ipv4ptr = NULL;
-	//printf("4\n");
-	retVal->ipv6ptr = NULL;
-	//printf("5\n");
-	retVal->tcpptr = NULL;
-	//printf("6\n");
-	retVal->udpptr = NULL;
-	//printf("7\n");
-*/
+
     retVal->Layer1 = 0;
     retVal->Layer2 = 0;
     retVal->Layer3 = 0;
@@ -478,6 +462,27 @@ void printPacket(struct PacketData *PacketList)
 	}
 }
 
+int GetMax(struct PacketData *PacketList[], int NumberOfPackets)
+{
+	int Max = 0;
+	int Order = 0;
+	int i;
+	for (i = 0; i < NumberOfPackets; i++)
+	{
+		if (i == 0)
+		{
+			Max = PacketList[i]->len;
+			Order = i;
+		}
+		if (PacketList[i]->len >= Max)
+		{
+			Max = PacketList[i]->len;
+			Order = i;
+		}
+	}
+	return Order;
+}
+
 int main (int argc, char *argv[])
 {
 	bool hflag = false;
@@ -485,7 +490,7 @@ int main (int argc, char *argv[])
 	int index;
 	int lvalue = -2;
 	char avalue[256] = "";
-	char svalue[256] = "";
+	int svalue = -2;
 	char fvalue[256] = "";
 	char filename[256] = "";
 	
@@ -493,40 +498,48 @@ int main (int argc, char *argv[])
 
 	while ((c = getopt (argc, argv, "ha:s:l:f:")) != -1)
 	switch (c)
-		{
-			case 'h':
-				hflag = true;
-				break;
-			case 'a':
-				strcpy(avalue, optarg);
-				break;
-			case 's':
-				strcpy(svalue, optarg);
-				break;
-			case 'l':
-				lvalue = CharToInt(optarg);
-				if (lvalue < 0)
-					ErrorFound(0);
-				break;
-			case 'f':
-				strcpy(fvalue, optarg);
-				break;
-			case '?':
-				if (optopt == 'a')
-					ErrorFound(1);
-				else if (optopt == 's')
-					ErrorFound(2);
-				else if (optopt == 'l')
-					ErrorFound(3);
-				else if (optopt == 'f')
-					ErrorFound(4);
-				else if (isprint (optopt))
-					ErrorFound(5);
-				else
-					ErrorFound(6);
-			default:
-				break;
+	{
+		case 'h':
+			hflag = true;
+			break;
+		case 'a':
+			strcpy(avalue, optarg);
+			break;
+		case 's':
+			if (strcmp(optarg, "packets") == 0)
+			{
+				svalue = 0;
 			}
+			if (strcmp(optarg, "bytes") == 0)
+			{
+				svalue = 1;
+			}
+			//strcpy(svalue, optarg);
+			break;
+		case 'l':
+			lvalue = CharToInt(optarg);
+			if (lvalue < 0)
+				ErrorFound(0);
+			break;
+		case 'f':
+			strcpy(fvalue, optarg);
+			break;
+		case '?':
+			if (optopt == 'a')
+				ErrorFound(1);
+			else if (optopt == 's')
+				ErrorFound(2);
+			else if (optopt == 'l')
+				ErrorFound(3);
+			else if (optopt == 'f')
+				ErrorFound(4);
+			else if (isprint (optopt))
+				ErrorFound(5);
+			else
+				ErrorFound(6);
+		default:
+			break;
+	}
 
 
 	for (index = optind; index < argc; index++)
@@ -536,13 +549,13 @@ int main (int argc, char *argv[])
 		//ErrorFound(7);
 	}
 
-	if (hflag == true && strcmp(avalue, "") == 0 && strcmp(svalue, "") == 0 && strcmp(fvalue, "") == 0 && lvalue == -2)
+	if (hflag == true && strcmp(avalue, "") == 0 && svalue == -2 && strcmp(fvalue, "") == 0 && lvalue == -2)
 	{
 		PrintHelp();
 	}
 	else
 	{
-		if (hflag == true && (strcmp(avalue, "") != 0 || strcmp(svalue, "") == 0 || strcmp(fvalue, "") == 0 || lvalue == -2))
+		if (hflag == true && (strcmp(avalue, "") != 0 || svalue != -2 || strcmp(fvalue, "") != 0 || lvalue != -2))
 		{
 			ErrorFound(8);
 		}
@@ -578,18 +591,10 @@ int main (int argc, char *argv[])
 	int NumberOfPackets = GetNumberOfPackets(filename);
 	
 	struct PacketData *PacketList[NumberOfPackets];
-	//printf("%d\n", NumberOfPackets);
+
 	for (int i = 0; i < NumberOfPackets; i++)
 	{
-		/*struct PacketData *ForTransfer = 
-		printf("houvn\n");
-		if (ForTransfer == NULL)
-		{
-			printf("shit\n");
-		}*/
 		PacketList[i] = newPacketData();
-		//memset(&(PacketList[i]), 0, sizeof (struct ));
-		//printPacket(PacketList[i]);
 	}
 
 	while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
@@ -598,6 +603,9 @@ int main (int argc, char *argv[])
 		int IpSize = 0;
 		PacketNumber++;
 		eptr = (struct ETHHeader *) packet;
+
+
+
 
 		switch (ntohs(eptr->ether_type))
 		{
@@ -621,9 +629,7 @@ int main (int argc, char *argv[])
 					}
 					case 17: //UDP protocol
 					{
-
-			
-						//printf("UDP\n");
+						printf("UDP\n");
 						break;
 					}
 					default:
@@ -666,7 +672,7 @@ int main (int argc, char *argv[])
 
 						PacketList[PacketNumber - 1]->ts = header.ts;
 						PacketList[PacketNumber - 1]->len = header.len;
-						printPacket(PacketList[PacketNumber - 1]);
+						//printPacket(PacketList[PacketNumber - 1]);
 						//printf("UDP\n");
 						break;
 					}
@@ -848,11 +854,33 @@ int main (int argc, char *argv[])
 			}
 		}
 	}
+
+	//razeni
+	switch (svalue)
+	{
+		case 0:  //packets
+		{
+			break;
+		}
+		case 1:  //bytes
+		{
+			int Temp;
+			for (int i = 0; i < NumberOfPackets; i++)
+			{
+				Temp = GetMax(PacketList, NumberOfPackets);
+				printPacket(PacketList[Temp]);
+				PacketList[Temp]->len = 0;
+				//uvolneni zdroju
+			}
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+	
 	pcap_close(handle);
 
-	//printPacket(PacketList[3]);
-	//printPacket(PacketList[4]);
-	//printPacket(PacketList[5]);
-	//printPacket(PacketList[6]);
 	return 0;
 }
