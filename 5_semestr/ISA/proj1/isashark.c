@@ -442,13 +442,13 @@ void printPacket(struct PacketData *PacketList)
 		}
 		case 1:  //UDP
 		{
-			printf("UDP: %d %d\n", 
-				ntohs(PacketList->udpptr->uh_sport),
-				ntohs(PacketList->udpptr->uh_dport));
 			break;
 		}
 		case 2:  //ICMPv4
 		{
+			printf("UDP: %d %d\n", 
+				ntohs(PacketList->udpptr->uh_sport),
+				ntohs(PacketList->udpptr->uh_dport));
 			break;
 		}
 		case 3:  //ICMPv6
@@ -570,8 +570,6 @@ int main (int argc, char *argv[])
 	struct pcap_pkthdr header;
 
 	//nepopsane struktury
-	const struct tcphdr *my_tcp;
-  	const struct udphdr *my_udp;
   	struct ETHHeader *eptr;
   	struct ADHeader *adptr;
 	struct QHeader *qptr;
@@ -579,10 +577,7 @@ int main (int argc, char *argv[])
 	struct IPv6Header *ipv6ptr;  //struktura pro IPv6 hlavicku
 	const struct TCPHeader *tcpptr;    // pointer to the beginning of TCP header
 	const struct UDPHeader *udpptr;    // pointer to the beginning of UDP header
-	char printAbleIPv4src[INET6_ADDRSTRLEN];
-	char printAbleIPv4dst[INET6_ADDRSTRLEN];
-	char printAbleIPv6src[INET6_ADDRSTRLEN];
-	char printAbleIPv6dst[INET6_ADDRSTRLEN];
+
 	int PacketNumber = 0;
 
 	if ((handle = pcap_open_offline(filename,errbuf)) == NULL)
@@ -604,255 +599,162 @@ int main (int argc, char *argv[])
 		PacketNumber++;
 		eptr = (struct ETHHeader *) packet;
 
-
-
-
 		switch (ntohs(eptr->ether_type))
 		{
 			case 0x0800: //ETHERTYPE_IP IPV4
 			{
 				EthTypeSize = 14;
-				printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
-				ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
 				IpSize = ipv4ptr->ip_hl*4;
-				switch (ipv4ptr->ip_p)
-				{
-					case 1:  //ICMP protocol
-					{
-						printf("ICMP\n");
-						break;
-					}
-					case 6:  //TCP protocol
-					{
-						printf("TCP\n");
-						break;
-					}
-					case 17: //UDP protocol
-					{
-						printf("UDP\n");
-						break;
-					}
-					default:
-					{
-						printf("%x - Nor TCP nor UDP.\n", ipv4ptr->ip_p);
-						break;
-					}
-				}
+
+				PacketList[PacketNumber - 1]->eptr = malloc(sizeof(struct ETHHeader));
+				memcpy(PacketList[PacketNumber - 1]->eptr, (struct ETHHeader *) packet, EthTypeSize);
+				PacketList[PacketNumber - 1]->Layer1 = 0;
+				
 				break;
 			}
 			case 0x86DD: //ETHERTYPE_IP IPV6
 			{
 				EthTypeSize = 14;
-				//printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
-				ipv6ptr = (struct IPv6Header*) (packet+EthTypeSize);
-				IpSize = 40;  //checknout co je ve skutecnosti payload len
-				switch (ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt)
-				{
-					case 6:  //TCP protocol
-					{
-						printf("TCP\n");
-						break;
-					}
-					case 17: //UDP protocol
-					{
+				IpSize = 40;
 
-						udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize);
+				PacketList[PacketNumber - 1]->eptr = malloc(sizeof(struct ETHHeader));
+				memcpy(PacketList[PacketNumber - 1]->eptr, (struct ETHHeader *) packet, EthTypeSize);
+				PacketList[PacketNumber - 1]->Layer1 = 0;
 
-						PacketList[PacketNumber - 1]->PacketNumber = PacketNumber;
-
-						PacketList[PacketNumber - 1]->eptr = malloc(sizeof(struct ETHHeader));
-						memcpy(PacketList[PacketNumber - 1]->eptr, (struct ETHHeader *) packet, EthTypeSize);
-						PacketList[PacketNumber - 1]->Layer1 = 0;  //Ethernet
-						
-						memcpy(PacketList[PacketNumber - 1]->ipv6ptr, ipv6ptr, IpSize);
-						PacketList[PacketNumber - 1]->Layer2 = 1;  //IPv6
-
-						memcpy(PacketList[PacketNumber - 1]->udpptr, udpptr, (header.len - EthTypeSize - IpSize));							
-						PacketList[PacketNumber - 1]->Layer3 = 1;  //UDP
-
-						PacketList[PacketNumber - 1]->ts = header.ts;
-						PacketList[PacketNumber - 1]->len = header.len;
-						//printPacket(PacketList[PacketNumber - 1]);
-						//printf("UDP\n");
-						break;
-					}
-					case 58:  //ICMPv6
-					{
-						printf("ICMPv6\n");
-						break;
-					}
-					default:
-					{
-						printf("%x - Nor TCP nor UDP.\n", ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt);
-						break;
-					}
-				}
 				break;
 			}
 			case 0x8100: //IEEE 802.1Q
 			{
 				EthTypeSize = 18;
-				//printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
 				qptr = (struct QHeader *) packet;
 
-				if (ntohs(qptr->Q_ether_type) == 0x0800) //IPv4
+				PacketList[PacketNumber - 1]->qptr = malloc(sizeof(struct QHeader));
+				memcpy(PacketList[PacketNumber - 1]->qptr, (struct QHeader *) packet, EthTypeSize);
+				PacketList[PacketNumber - 1]->Layer1 = 1;
+
+				switch (ntohs(qptr->Q_ether_type))
 				{
-					ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
-					IpSize = ipv4ptr->ip_hl*4;
-
-					switch (ipv4ptr->ip_p)
+					case 0x0800:  //IPv4
 					{
-						case 1:  //ICMP protocol
-						{
-							printf("ICMP\n");
-							break;
-						}
-						case 6:  //TCP protocol
-						{
-							printf("TCP\n");
-							break;
-						}
-						case 17: //UDP protocol
-						{
-
-							printf("UDP\n");
-							break;
-						}
-						default:
-						{
-							printf("%x - Nor TCP nor UDP.\n", ipv4ptr->ip_p);
-							break;
-						}
+						IpSize = ipv4ptr->ip_hl*4;
+						break;
+					}
+					case 0x86DD:  //IPv6
+					{
+						IpSize = 40;
+						break;
+					}
+					default:  //not IPv6 nor IPv4 OSETRIT
+					{
+						break;
 					}
 				}
-				else 
-				{
-					if (ntohs(qptr->Q_ether_type) == 0x86DD) //IPv6
-					{
-						ipv6ptr = (struct IPv6Header*) (packet+EthTypeSize);
-						IpSize = 40;  //checknout co je ve skutecnosti payload len
 
-						switch (ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt)
-						{
-							case 6:  //TCP protocol
-							{
-								printf("TCP\n");
-								break;
-							}
-							case 17: //UDP protocol
-							{
-								udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize);
-
-								PacketList[PacketNumber - 1]->PacketNumber = PacketNumber;
-
-								memcpy(PacketList[PacketNumber - 1]->qptr, qptr, EthTypeSize);
-								PacketList[PacketNumber - 1]->Layer1 = 1;  //IEEE 802.1Q
-								memcpy(PacketList[PacketNumber - 1]->ipv6ptr, ipv6ptr, IpSize);
-								PacketList[PacketNumber - 1]->Layer2 = 1;  //IPv6
-								memcpy(PacketList[PacketNumber - 1]->udpptr, udpptr, (header.len - EthTypeSize - IpSize));
-								PacketList[PacketNumber - 1]->Layer3 = 1;  //UDP
-
-								PacketList[PacketNumber - 1]->ts = header.ts;
-								PacketList[PacketNumber - 1]->len = header.len;
-
-								printPacket(PacketList[PacketNumber - 1]);
-								//printf("UDP\n");
-								break;
-							}
-							case 58:  //ICMPv6
-							{
-								printf("ICMPv6\n");
-								break;
-							}
-							default:
-							{
-								printf("%x - Nor TCP nor UDP.\n", ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt);
-								break;
-							}
-						}
-					}
-					else
-					{
-						printf("Nor IPv4 nor IPv6.\n");
-					}
-				}
 				break;
 			}
 			case 0x88a8: //IEEE 802.1ad
 			{
 				EthTypeSize = 22;
-				printf("| Ethernet %s %s\n",ether_ntoa((const struct ether_addr *)&eptr->ether_shost), ether_ntoa((const struct ether_addr *)&eptr->ether_dhost));
 				adptr = (struct ADHeader *) packet;
-				
-				if (ntohs(adptr->AD_ether_type) == 0x0800) //IPv4
+
+				PacketList[PacketNumber - 1]->adptr = malloc(sizeof(struct ADHeader));
+				memcpy(PacketList[PacketNumber - 1]->adptr, (struct ADHeader *) packet, EthTypeSize);
+				PacketList[PacketNumber - 1]->Layer1 = 2;
+
+				switch (ntohs(adptr->AD_ether_type))
 				{
-					ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
-					switch (ipv4ptr->ip_p)
+					case 0x0800:  //IPv4
 					{
-						case 1:  //ICMP protocol
-						{
-							printf("ICMP\n");
-							break;
-						}
-						case 6:  //TCP protocol
-						{
-							printf("TCP\n");
-							break;
-						}
-						case 17: //UDP protocol
-						{
-							printf("UDP\n");
-							break;
-						}
-						default:
-						{
-							printf("%x - Nor TCP nor UDP.\n", ipv4ptr->ip_p);
-							break;
-						}
+						IpSize = ipv4ptr->ip_hl*4;
+						break;
+					}
+					case 0x86DD:  //IPv6
+					{
+						IpSize = 40;
+						break;
+					}
+					default:  //not IPv6 nor IPv4 OSETRIT
+					{
+						break;
 					}
 				}
-				else 
-				{
-					if (ntohs(adptr->AD_ether_type) == 0x86DD) //IPv6
-					{
-						ipv6ptr = (struct IPv6Header*) (packet+EthTypeSize);
-						switch (ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt)
-						{
-							case 6:  //TCP protocol
-							{
-								printf("TCP\n");
-								break;
-							}
-							case 17: //UDP protocol
-							{
-								printf("UDP\n");
-								break;
-							}
-							case 58:  //ICMPv6
-							{
-								printf("ICMPv6\n");
-								break;
-							}
-							default:
-							{
-								printf("%x - Nor TCP nor UDP.\n", ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt);
-								break;
-							}
-						}
-					}
-					else
-					{
-						printf("Nor IPv4 nor IPv6.\n");
-					}
-				}
-			break;
-			}
-			default: //chyba osetrit
-			{
-				EthTypeSize = -1;
-				break;
+
+				break;	
 			}
 		}
+
+		if (ntohs(eptr->ether_type) == 0x0800 || (ntohs(eptr->ether_type) == 0x8100 && ntohs(qptr->Q_ether_type) == 0x0800) || (ntohs(eptr->ether_type) == 0x88a8 && ntohs(adptr->AD_ether_type) == 0x0800))
+		{
+			ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
+			memcpy(PacketList[PacketNumber - 1]->ipv4ptr, ipv4ptr, IpSize);
+			PacketList[PacketNumber - 1]->Layer2 = 0;
+			switch(ipv4ptr->ip_p)
+			{
+				case 1:  //ICMP protocol
+				{
+					break;
+				}
+				case 6:  //TCP protocol
+				{
+					break;
+				}
+				case 17: //UDP protocol
+				{
+					udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize);
+
+					memcpy(PacketList[PacketNumber - 1]->udpptr, udpptr, (header.len - EthTypeSize - IpSize));							
+					PacketList[PacketNumber - 1]->Layer3 = 2;  
+
+					break;
+				}
+				case 58:  //ICMPv6
+				{
+					break;
+				}
+				default:  //Nor TCP nor UDP nor ICMPv4 nor ICMPv6
+				{
+					break;
+				}
+			}		}
+
+		if (ntohs(eptr->ether_type) == 0x86DD || (ntohs(eptr->ether_type) == 0x8100 && ntohs(qptr->Q_ether_type) == 0x86DD) || (ntohs(eptr->ether_type) == 0x88a8 && ntohs(adptr->AD_ether_type) == 0x86DD))
+		{
+			ipv6ptr = (struct IPv6Header*) (packet+EthTypeSize);
+			memcpy(PacketList[PacketNumber - 1]->ipv6ptr, ipv6ptr, IpSize);
+			PacketList[PacketNumber - 1]->Layer2 = 1;
+			switch (ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt)
+			{
+				case 1:  //ICMP protocol
+				{
+					break;
+				}
+				case 6:  //TCP protocol
+				{
+					break;
+				}
+				case 17: //UDP protocol
+				{
+					udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize);
+
+					memcpy(PacketList[PacketNumber - 1]->udpptr, udpptr, (header.len - EthTypeSize - IpSize));							
+					PacketList[PacketNumber - 1]->Layer3 = 2;  
+
+					break;
+				}
+				case 58:  //ICMPv6
+				{
+					break;
+				}
+				default:  //Nor TCP nor UDP nor ICMPv4 nor ICMPv6
+				{
+					break;
+				}
+			}
+		}
+
+		PacketList[PacketNumber - 1]->ts = header.ts;
+		PacketList[PacketNumber - 1]->len = header.len;
+		PacketList[PacketNumber - 1]->PacketNumber = PacketNumber;	
 	}
 
 	//razeni
