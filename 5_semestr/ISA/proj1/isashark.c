@@ -583,7 +583,8 @@ int main (int argc, char *argv[])
 			case 0x0800: //ETHERTYPE_IP IPV4
 			{
 				EthTypeSize = 14;
-				IpSize = ipv4ptr->ip_hl*4;
+				//IpSize = ipv4ptr->ip_hl*4;
+				IpSize = 20;
 
 				PacketList[PacketNumber - 1].eptr = *eptr;
 				PacketList[PacketNumber - 1].Layer1 = 0;
@@ -612,7 +613,8 @@ int main (int argc, char *argv[])
 				{
 					case 0x0800:  //IPv4
 					{
-						IpSize = ipv4ptr->ip_hl*4;
+						//IpSize = ipv4ptr->ip_hl*4;
+						IpSize = 20;
 						break;
 					}
 					case 0x86DD:  //IPv6
@@ -640,7 +642,8 @@ int main (int argc, char *argv[])
 				{
 					case 0x0800:  //IPv4
 					{
-						IpSize = ipv4ptr->ip_hl*4;
+						//IpSize = ipv4ptr->ip_hl*4;
+						IpSize = 20;
 						break;
 					}
 					case 0x86DD:  //IPv6
