@@ -10,6 +10,9 @@ todo
 - dopsat return value kontroly
 - dokumentace
 - readme
+- parametry
+- defaulty
+- prázdný soubor
 
 
 

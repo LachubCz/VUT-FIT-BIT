@@ -282,6 +282,172 @@ int GetNumberOfPackets(char *filename)
 	return counter;
 }
 
+struct AggrData {
+	uint8_t Aggr_shost[ETHER_ADDR_LEN];
+	uint8_t Aggr_dhost[ETHER_ADDR_LEN];
+   	struct in_addr Aggr_ip_src;
+	struct in_addr Aggr_ip_dst;
+	struct in6_addr Aggr_ip6_src;
+	struct in6_addr Aggr_ip6_dst;
+	u_short	uh_sport;
+    u_short	uh_dport;
+
+	int NumberOfPackets;
+	bpf_u_int32 len;
+};
+
+void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, int avalue, int svalue)
+{
+	int ItemsCount = 0;
+	bool IsIn = false;
+	std::vector<AggrData> AggrPacketList(NumberOfPackets);
+	switch(avalue)
+	{
+		case 0:
+		{
+			for (int i = 0; i < NumberOfPackets; i++)
+			{
+				switch(PacketList.at(i).Layer1)
+				{
+					case 0:
+					{
+						int e = 0;
+						for (e = 0; e < ItemsCount; e++)
+						{
+							if (memcmp(AggrPacketList.at(e).Aggr_shost, PacketList.at(i).eptr.ether_shost, ETHER_ADDR_LEN) == 0)
+							{	
+								IsIn = true;
+
+								AggrPacketList.at(e).NumberOfPackets++; 
+								AggrPacketList.at(e).len += PacketList.at(i).len;
+								
+								break;
+							}
+							else
+							{
+								IsIn = false;
+							}
+						}
+						if (IsIn == false)
+						{
+							memcpy(AggrPacketList.at(e).Aggr_shost, PacketList.at(i).eptr.ether_shost, ETHER_ADDR_LEN);
+
+							AggrPacketList.at(e).NumberOfPackets = 1; 
+							AggrPacketList.at(e).len = PacketList.at(i).len;
+
+							ItemsCount++;
+						}
+
+						IsIn = false;
+						break;
+					}
+					case 1:
+					{
+						int e = 0;
+						for (e = 0; e < ItemsCount; e++)
+						{
+							if (memcmp(AggrPacketList.at(e).Aggr_shost, PacketList.at(i).qptr.Q_shost, ETHER_ADDR_LEN) == 0)
+							{
+								IsIn = true;
+
+								AggrPacketList.at(e).NumberOfPackets++; 
+								AggrPacketList.at(e).len += PacketList.at(i).len;
+
+								break;
+							}
+							else
+							{
+								IsIn = false;
+							}
+						}
+						if (IsIn == false)
+						{
+							memcpy(AggrPacketList.at(e).Aggr_shost, PacketList.at(i).qptr.Q_shost, ETHER_ADDR_LEN);
+
+							AggrPacketList.at(e).NumberOfPackets = 1; 
+							AggrPacketList.at(e).len = PacketList.at(i).len;
+
+							ItemsCount++;
+						}
+
+						IsIn = false;
+						break;
+					}
+					case 2:
+					{
+						int e = 0;
+						for (e = 0; e < ItemsCount; e++)
+						{
+							if (memcmp(AggrPacketList.at(e).Aggr_shost, PacketList.at(i).adptr.AD_shost, ETHER_ADDR_LEN) == 0)
+							{
+								IsIn = true;
+
+								AggrPacketList.at(e).NumberOfPackets++; 
+								AggrPacketList.at(e).len += PacketList.at(i).len;
+
+								break;
+							}
+							else
+							{
+								IsIn = false;
+							}
+						}
+						if (IsIn == false)
+						{
+							memcpy(AggrPacketList.at(e).Aggr_shost, PacketList.at(i).adptr.AD_shost, ETHER_ADDR_LEN);
+
+							AggrPacketList.at(e).NumberOfPackets = 1; 
+							AggrPacketList.at(e).len = PacketList.at(i).len;
+
+							ItemsCount++;
+						}
+						
+						IsIn = false;
+						break;
+					}
+					default:
+					{
+						break;
+					}
+				}
+			}
+			break;
+		}
+		case 1:
+		{
+			break;
+		}
+		case 2:
+		{
+			break;
+		}
+		case 3:
+		{
+			break;
+		}
+		case 4:
+		{
+			break;
+		}
+		case 5:
+		{
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+
+	for (int i = 0; i < ItemsCount; ++i)
+	{
+		printf("%s %d %d\n", ether_ntoa((const struct ether_addr *)&AggrPacketList.at(i).Aggr_shost), AggrPacketList.at(i).NumberOfPackets, AggrPacketList.at(i).len);
+	}
+	
+}
+
+
+
 void printPacket(struct PacketData PacketList)
 {
 	char MacSrc[256];
@@ -464,13 +630,11 @@ int GetMax(std::vector<PacketData> PacketList, int NumberOfPackets)
 
 int main (int argc, char *argv[])
 {
-
-
 	bool hflag = false;
 	int c;
 	int index;
 	int lvalue = -2;
-	char avalue[256] = "";
+	int avalue = -2;
 	int svalue = -2;
 	char fvalue[256] = "";
 	char filename[256] = "";
@@ -484,7 +648,31 @@ int main (int argc, char *argv[])
 			hflag = true;
 			break;
 		case 'a':
-			strcpy(avalue, optarg);
+			if (strcmp(optarg, "srcmac") == 0)
+			{
+				avalue = 0;
+			}
+			if (strcmp(optarg, "dstmac") == 0)
+			{
+				avalue = 1;
+			}
+			if (strcmp(optarg, "srcip") == 0)
+			{
+				avalue = 2;
+			}
+			if (strcmp(optarg, "dstip") == 0)
+			{
+				avalue = 3;
+			}
+			if (strcmp(optarg, "srcport") == 0)
+			{
+				avalue = 4;
+			}
+			if (strcmp(optarg, "dstport") == 0)
+			{
+				avalue = 5;
+			}
+			//strcpy(avalue, optarg);
 			break;
 		case 's':
 			if (strcmp(optarg, "packets") == 0)
@@ -530,13 +718,13 @@ int main (int argc, char *argv[])
 		//ErrorFound(7);
 	}
 
-	if (hflag == true && strcmp(avalue, "") == 0 && svalue == -2 && strcmp(fvalue, "") == 0 && lvalue == -2)
+	if (hflag == true && avalue == -2 && svalue == -2 && strcmp(fvalue, "") == 0 && lvalue == -2)
 	{
 		PrintHelp();
 	}
 	else
 	{
-		if (hflag == true && (strcmp(avalue, "") != 0 || svalue != -2 || strcmp(fvalue, "") != 0 || lvalue != -2))
+		if (hflag == true && (avalue != -2 || svalue != -2 || strcmp(fvalue, "") != 0 || lvalue != -2))
 		{
 			ErrorFound(8);
 		}
@@ -752,37 +940,44 @@ int main (int argc, char *argv[])
 		PacketList[PacketNumber - 1].PacketNumber = PacketNumber;
 	}
 
-	//razeni
-	switch (svalue)
+	if (avalue == -2)
 	{
-		case -2:
+		//razeni
+		switch (svalue)
 		{
-			for (int i = 0; i < NumberOfPackets; i++)
+			case -2:
 			{
-				printPacket(PacketList.at(i));
+				for (int i = 0; i < NumberOfPackets; i++)
+				{
+					printPacket(PacketList.at(i));
+				}
+				break;
 			}
-			break;
-		}
-		case 0:  //packets
-		{
-			break;
-		}
-		case 1:  //bytes
-		{
-			int Temp;
-			for (int i = 0; i < NumberOfPackets; i++)
+			case 0:  //packets
 			{
-				Temp = GetMax(PacketList, NumberOfPackets);
-				printPacket(PacketList.at(Temp));
-				PacketList[Temp].len = 0;
-				//uvolneni zdroju
+				break;
 			}
-			break;
+			case 1:  //bytes
+			{
+				int Temp;
+				for (int i = 0; i < NumberOfPackets; i++)
+				{
+					Temp = GetMax(PacketList, NumberOfPackets);
+					printPacket(PacketList.at(Temp));
+					PacketList[Temp].len = 0;
+					//uvolneni zdroju
+				}
+				break;
+			}
+			default:
+			{
+				break;
+			}
 		}
-		default:
-		{
-			break;
-		}
+	}
+	else
+	{
+		printPacketAggr(PacketList, NumberOfPackets, avalue, svalue);
 	}
 
 	pcap_close(handle);
