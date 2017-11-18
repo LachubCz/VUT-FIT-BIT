@@ -8,9 +8,9 @@
 #include <netinet/ether.h>
 #include <arpa/inet.h>
 #include <inttypes.h>
+
 #include <vector>
 #include <string>
-
 #include <stack>
 #include <iostream>
 using namespace std;
@@ -46,6 +46,11 @@ struct UDPHeader {
     u_short	uh_dport;		/* destination port */
     short	uh_ulen;		/* udp length */
     u_short	uh_sum;			/* udp checksum */
+};
+
+struct IPv6ExtHeader{
+    uint8_t  ip6e_nxt;		/* next header.  */
+    uint8_t  ip6e_len;
 };
 
 struct IPv6Header {
@@ -1756,6 +1761,7 @@ int main (int argc, char *argv[])
 	struct QHeader *qptr;
 	struct IPv4Header *ipv4ptr;  //struktura pro IPv4 hlavicku
 	struct IPv6Header *ipv6ptr;  //struktura pro IPv6 hlavicku
+	struct IPv6ExtHeader *ext;
 	const struct TCPHeader *tcpptr;    // pointer to the beginning of TCP header
 	const struct UDPHeader *udpptr;    // pointer to the beginning of UDP header
 
@@ -1910,41 +1916,100 @@ int main (int argc, char *argv[])
 			PacketList[PacketNumber - 1].ipv6ptr = *ipv6ptr;
 			PacketList[PacketNumber - 1].Layer2 = 1;
 
-			switch (ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt)
+			u_int8_t  ip6_un1_nxt = ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt;
+			
+			bool NextHeaders = true;
+			int extraLenght = 0;
+
+			while (NextHeaders)
 			{
-				case 1:  //ICMP protocol
+				switch (ip6_un1_nxt)
 				{
-					PacketList[PacketNumber - 1].Layer3 = 0;
-					break;
-				}
-				case 6:  //TCP protocol
-				{
-					tcpptr = (struct TCPHeader *) (packet+EthTypeSize+IpSize);
+					case 0:  //IPv6 Hop-by-Hop Option
+					{
+						ext = (struct IPv6ExtHeader*) (packet+EthTypeSize+IpSize+extraLenght);
 
-					PacketList[PacketNumber - 1].tcpptr = *tcpptr;
-					PacketList[PacketNumber - 1].Layer3 = 1;
+						ip6_un1_nxt = ext->ip6e_nxt;
+						extraLenght += ext->ip6e_len + 8;
 
-					break;
-				}
-				case 17: //UDP protocol
-				{
-					udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize);
+						break;
+					}
+					case 43:  //Routing Header for IPv6
+					{
+						ext = (struct IPv6ExtHeader*) (packet+EthTypeSize+IpSize+extraLenght);
 
-					PacketList[PacketNumber - 1].udpptr = *udpptr;
-					PacketList[PacketNumber - 1].Layer3 = 2;  
+						ip6_un1_nxt = ext->ip6e_nxt;
+						extraLenght += ext->ip6e_len + 8;
 
-					break;
-				}
-				case 58:  //ICMPv6
-				{
-					PacketList[PacketNumber - 1].Layer3 = 3;
-					break;
-				}
-				default:  //Nor TCP nor UDP nor ICMPv4 nor ICMPv6
-				{
-					break;
+						break;
+					}
+					case 44:  //Fragment Header for IPv6
+					{
+						ext = (struct IPv6ExtHeader*) (packet+EthTypeSize+IpSize+extraLenght);
+
+						ip6_un1_nxt = ext->ip6e_nxt;
+						extraLenght += ext->ip6e_len + 8;
+
+						break;
+					}
+					case 60:  //Destination Options for IPv6
+					{
+						ext = (struct IPv6ExtHeader*) (packet+EthTypeSize+IpSize+extraLenght);
+
+						ip6_un1_nxt = ext->ip6e_nxt;
+						extraLenght += ext->ip6e_len + 8;
+
+						break;
+					}
+					default:
+					{
+						switch(ip6_un1_nxt)
+						{
+							case 1:  //ICMP protocol
+							{
+								PacketList[PacketNumber - 1].Layer3 = 0;
+
+								NextHeaders = false;
+								break;
+							}
+							case 6:  //TCP protocol
+							{
+								tcpptr = (struct TCPHeader *) (packet+EthTypeSize+IpSize+extraLenght);
+
+								PacketList[PacketNumber - 1].tcpptr = *tcpptr;
+								PacketList[PacketNumber - 1].Layer3 = 1;
+								
+								NextHeaders = false;
+								break;
+							}
+							case 17: //UDP protocol
+							{
+								udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize+extraLenght);
+
+								PacketList[PacketNumber - 1].udpptr = *udpptr;
+								PacketList[PacketNumber - 1].Layer3 = 2;  
+
+								NextHeaders = false;
+								break;
+							}
+							case 58:  //ICMPv6
+							{
+								PacketList[PacketNumber - 1].Layer3 = 3;
+								
+								NextHeaders = false;
+								break;
+							}
+							default:  //Nor TCP nor UDP nor ICMPv4 nor ICMPv6
+							{
+								NextHeaders = false;
+								break;
+							}
+						}
+						break;
+					}
 				}
 			}
+
 		}
 
 		PacketList[PacketNumber - 1].ts = header.ts;
