@@ -1,0 +1,17 @@
+
+
+
+
+todo
+- extension header IP header
+- fragmentace
+- filtr, agregace
+- ICMP
+- dopsat return value kontroly
+- dokumentace
+- readme
+
+
+
+snad hotovo
+- tpid hlavičky

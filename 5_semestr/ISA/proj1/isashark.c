@@ -19,10 +19,6 @@ using namespace std;
 #define PCAP_ERRBUF_SIZE (256)
 #endif
 
-
-
-
-
 struct TCPHeader {
     u_short th_sport;	/* source port */
     u_short th_dport;	/* destination port */
@@ -325,7 +321,7 @@ void printPacket(struct PacketData PacketList)
 				PacketList.len,
 				MacSrc,
 				MacDst,
-				ntohs(PacketList.qptr.Q_tpid2)); //tisknu spatne nhtons
+				ntohs(PacketList.qptr.Q_tpid2 & 0xFFF)); //tisknu spatne nhtons
 			break;
 		}
 		case 2:  //IEEE 802.1ad
@@ -342,8 +338,8 @@ void printPacket(struct PacketData PacketList)
 				PacketList.len,
 				MacSrc,
 				MacDst,
-				ntohs(PacketList.qptr.Q_tpid2),
-				ntohs(PacketList.qptr.Q_tpid2));
+				ntohs(PacketList.adptr.AD_tci )& 0xFFF,
+				ntohs(PacketList.adptr.AD_tci2 )& 0xFFF);
 			break;
 		}
 		default:
@@ -381,7 +377,8 @@ void printPacket(struct PacketData PacketList)
 	{
 		case 0:  //ICMPv4
 		{
-
+			printf("ICMPv4: \n"); 
+			break;
 		}
 		case 1:  //TCP
 		{
@@ -434,6 +431,7 @@ void printPacket(struct PacketData PacketList)
 		}
 		case 3:  //ICMPv6
 		{
+			printf("ICMPv6: \n"); 
 			break;
 		}
 		default: 
@@ -673,6 +671,7 @@ int main (int argc, char *argv[])
 			{
 				case 1:  //ICMP protocol
 				{
+					PacketList[PacketNumber - 1].Layer3 = 0;
 					break;
 				}
 				case 6:  //TCP protocol
@@ -699,6 +698,7 @@ int main (int argc, char *argv[])
 				}
 				default:  //Nor TCP nor UDP nor ICMPv4 nor ICMPv6
 				{
+					PacketList[PacketNumber - 1].Layer3 = 3;
 					break;
 				}
 			}		}
@@ -714,6 +714,7 @@ int main (int argc, char *argv[])
 			{
 				case 1:  //ICMP protocol
 				{
+					PacketList[PacketNumber - 1].Layer3 = 0;
 					break;
 				}
 				case 6:  //TCP protocol
@@ -736,6 +737,7 @@ int main (int argc, char *argv[])
 				}
 				case 58:  //ICMPv6
 				{
+					PacketList[PacketNumber - 1].Layer3 = 3;
 					break;
 				}
 				default:  //Nor TCP nor UDP nor ICMPv4 nor ICMPv6
