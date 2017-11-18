@@ -287,6 +287,9 @@ struct AggrData {
 	uint8_t Aggr_dhost[ETHER_ADDR_LEN];
    	struct in_addr Aggr_ip_src;
 	struct in_addr Aggr_ip_dst;
+
+	int IpType;
+
 	struct in6_addr Aggr_ip6_src;
 	struct in6_addr Aggr_ip6_dst;
 	u_short	uh_sport;
@@ -320,7 +323,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 
 								AggrPacketList.at(e).NumberOfPackets++; 
 								AggrPacketList.at(e).len += PacketList.at(i).len;
-								
+
 								break;
 							}
 							else
@@ -411,18 +414,352 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 				}
 			}
+			for (int i = 0; i < ItemsCount; ++i)
+			{
+				printf("%s %d %d\n", 
+					ether_ntoa((const struct ether_addr *)&AggrPacketList.at(i).Aggr_shost), 
+					AggrPacketList.at(i).NumberOfPackets, 
+					AggrPacketList.at(i).len);
+			}
 			break;
 		}
 		case 1:
 		{
+			for (int i = 0; i < NumberOfPackets; i++)
+			{
+				switch(PacketList.at(i).Layer1)
+				{
+					case 0:
+					{
+						int e = 0;
+						for (e = 0; e < ItemsCount; e++)
+						{
+							if (memcmp(AggrPacketList.at(e).Aggr_dhost, PacketList.at(i).eptr.ether_dhost, ETHER_ADDR_LEN) == 0)
+							{	
+								IsIn = true;
+
+								AggrPacketList.at(e).NumberOfPackets++; 
+								AggrPacketList.at(e).len += PacketList.at(i).len;
+								
+								break;
+							}
+							else
+							{
+								IsIn = false;
+							}
+						}
+						if (IsIn == false)
+						{
+							memcpy(AggrPacketList.at(e).Aggr_dhost, PacketList.at(i).eptr.ether_dhost, ETHER_ADDR_LEN);
+
+							AggrPacketList.at(e).NumberOfPackets = 1; 
+							AggrPacketList.at(e).len = PacketList.at(i).len;
+
+							ItemsCount++;
+						}
+
+						IsIn = false;
+						break;
+					}
+					case 1:
+					{
+						int e = 0;
+						for (e = 0; e < ItemsCount; e++)
+						{
+							if (memcmp(AggrPacketList.at(e).Aggr_dhost, PacketList.at(i).qptr.Q_dhost, ETHER_ADDR_LEN) == 0)
+							{
+								IsIn = true;
+
+								AggrPacketList.at(e).NumberOfPackets++; 
+								AggrPacketList.at(e).len += PacketList.at(i).len;
+
+								break;
+							}
+							else
+							{
+								IsIn = false;
+							}
+						}
+						if (IsIn == false)
+						{
+							memcpy(AggrPacketList.at(e).Aggr_dhost, PacketList.at(i).qptr.Q_dhost, ETHER_ADDR_LEN);
+
+							AggrPacketList.at(e).NumberOfPackets = 1; 
+							AggrPacketList.at(e).len = PacketList.at(i).len;
+
+							ItemsCount++;
+						}
+
+						IsIn = false;
+						break;
+					}
+					case 2:
+					{
+						int e = 0;
+						for (e = 0; e < ItemsCount; e++)
+						{
+							if (memcmp(AggrPacketList.at(e).Aggr_dhost, PacketList.at(i).adptr.AD_dhost, ETHER_ADDR_LEN) == 0)
+							{
+								IsIn = true;
+
+								AggrPacketList.at(e).NumberOfPackets++; 
+								AggrPacketList.at(e).len += PacketList.at(i).len;
+
+								break;
+							}
+							else
+							{
+								IsIn = false;
+							}
+						}
+						if (IsIn == false)
+						{
+							memcpy(AggrPacketList.at(e).Aggr_dhost, PacketList.at(i).adptr.AD_dhost, ETHER_ADDR_LEN);
+
+							AggrPacketList.at(e).NumberOfPackets = 1; 
+							AggrPacketList.at(e).len = PacketList.at(i).len;
+
+							ItemsCount++;
+						}
+						
+						IsIn = false;
+						break;
+					}
+					default:
+					{
+						break;
+					}
+				}
+			}
+			for (int i = 0; i < ItemsCount; ++i)
+			{
+				printf("%s %d %d\n", 
+					ether_ntoa((const struct ether_addr *)&AggrPacketList.at(i).Aggr_dhost), 
+					AggrPacketList.at(i).NumberOfPackets, 
+					AggrPacketList.at(i).len);
+			}
 			break;
 		}
 		case 2:
 		{
+			for (int i = 0; i < NumberOfPackets; i++)
+			{
+				switch (PacketList.at(i).Layer2)
+				{
+					case 0:
+					{
+						char IPv4Src[256];
+						strcpy(IPv4Src,inet_ntoa(PacketList.at(i).ipv4ptr.ip_src));
+
+						int e = 0;
+						for (e = 0; e < ItemsCount; e++)
+						{
+							if (strcmp(inet_ntoa(AggrPacketList.at(e).Aggr_ip_src), IPv4Src) == 0)
+							{	
+								IsIn = true;
+
+								AggrPacketList.at(e).NumberOfPackets++; 
+								AggrPacketList.at(e).len += PacketList.at(i).len;
+
+								break;
+							}
+							else
+							{
+								IsIn = false;
+							}
+							
+						}
+						
+						if (IsIn == false)
+						{
+							AggrPacketList.at(e).Aggr_ip_src = PacketList.at(i).ipv4ptr.ip_src;	//, 4);
+
+							AggrPacketList.at(e).IpType = 0;
+							AggrPacketList.at(e).NumberOfPackets = 1; 
+							AggrPacketList.at(e).len = PacketList.at(i).len;
+
+							ItemsCount++;
+						}
+						
+						IsIn = false;
+						break;
+					}
+					case 1:
+					{
+						char IPv6Src[256];
+						char printAbleIPv6src[INET6_ADDRSTRLEN];
+						strcpy(IPv6Src,inet_ntop(AF_INET6, &(PacketList.at(i).ipv6ptr.ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN));
+
+						int e = 0;
+						for (e = 0; e < ItemsCount; e++)
+						{
+							if (strcmp(inet_ntop(AF_INET6, &(AggrPacketList.at(e).Aggr_ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN), IPv6Src) == 0)
+							{	
+								IsIn = true;
+
+								AggrPacketList.at(e).IpType = 1;
+								AggrPacketList.at(e).NumberOfPackets++; 
+								AggrPacketList.at(e).len += PacketList.at(i).len;
+
+								break;
+							}
+							else
+							{
+								IsIn = false;
+							}
+							
+						}
+						
+						if (IsIn == false)
+						{
+							AggrPacketList.at(e).Aggr_ip6_src = PacketList.at(i).ipv6ptr.ip6_src;	//, 4);
+
+							AggrPacketList.at(e).IpType = 1;
+							AggrPacketList.at(e).NumberOfPackets = 1; 
+							AggrPacketList.at(e).len = PacketList.at(i).len;
+
+							ItemsCount++;
+						}
+						
+						IsIn = false;
+						break;
+					}
+					default:
+					{
+						break;
+					}
+				}
+			}
+			for (int i = 0; i < ItemsCount; ++i)
+			{
+				if (AggrPacketList.at(i).IpType == 0)
+				{
+					printf("%s %d %d\n", 
+						inet_ntoa(AggrPacketList.at(i).Aggr_ip_src), 
+						AggrPacketList.at(i).NumberOfPackets, 
+						AggrPacketList.at(i).len);
+				}
+				else
+				{
+					char printAbleIPv6src[INET6_ADDRSTRLEN];
+					printf("%s %d %d\n", 
+						inet_ntop(AF_INET6, &(AggrPacketList.at(i).Aggr_ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN), 
+						AggrPacketList.at(i).NumberOfPackets, 
+						AggrPacketList.at(i).len);
+				}
+			}
+
 			break;
 		}
 		case 3:
 		{
+			for (int i = 0; i < NumberOfPackets; i++)
+			{
+				switch (PacketList.at(i).Layer2)
+				{
+					case 0:
+					{
+						char IPv4Dst[256];
+						strcpy(IPv4Dst,inet_ntoa(PacketList.at(i).ipv4ptr.ip_dst));
+
+						int e = 0;
+						for (e = 0; e < ItemsCount; e++)
+						{
+							if (strcmp(inet_ntoa(AggrPacketList.at(e).Aggr_ip_dst), IPv4Dst) == 0)
+							{	
+								IsIn = true;
+
+								AggrPacketList.at(e).NumberOfPackets++; 
+								AggrPacketList.at(e).len += PacketList.at(i).len;
+
+								break;
+							}
+							else
+							{
+								IsIn = false;
+							}
+							
+						}
+						
+						if (IsIn == false)
+						{
+							AggrPacketList.at(e).Aggr_ip_dst = PacketList.at(i).ipv4ptr.ip_dst;	//, 4);
+
+							AggrPacketList.at(e).IpType = 0;
+							AggrPacketList.at(e).NumberOfPackets = 1; 
+							AggrPacketList.at(e).len = PacketList.at(i).len;
+
+							ItemsCount++;
+						}
+						
+						IsIn = false;
+						break;
+					}
+					case 1:
+					{
+						char IPv6Dst[256];
+						char printAbleIPv6dst[INET6_ADDRSTRLEN];
+
+						strcpy(IPv6Dst,inet_ntop(AF_INET6, &(PacketList.at(i).ipv6ptr.ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN));
+						int e = 0;
+						for (e = 0; e < ItemsCount; e++)
+						{
+							if (strcmp(inet_ntop(AF_INET6, &(AggrPacketList.at(e).Aggr_ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN), IPv6Dst) == 0)
+							{	
+								IsIn = true;
+
+								AggrPacketList.at(e).IpType = 1;
+								AggrPacketList.at(e).NumberOfPackets++; 
+								AggrPacketList.at(e).len += PacketList.at(i).len;
+
+								break;
+							}
+							else
+							{
+								IsIn = false;
+							}
+							
+						}
+						
+						if (IsIn == false)
+						{
+							AggrPacketList.at(e).Aggr_ip6_dst = PacketList.at(i).ipv6ptr.ip6_dst;	//, 4);
+
+							AggrPacketList.at(e).IpType = 1;
+							AggrPacketList.at(e).NumberOfPackets = 1; 
+							AggrPacketList.at(e).len = PacketList.at(i).len;
+
+							ItemsCount++;
+						}
+						
+						IsIn = false;
+						break;
+					}
+					default:
+					{
+						break;
+					}
+				}
+			}
+			for (int i = 0; i < ItemsCount; ++i)
+			{
+				if (AggrPacketList.at(i).IpType == 0)
+				{
+					printf("%s %d %d\n", 
+						inet_ntoa(AggrPacketList.at(i).Aggr_ip_dst), 
+						AggrPacketList.at(i).NumberOfPackets, 
+						AggrPacketList.at(i).len);
+				}
+				else
+				{
+					char printAbleIPv6dst[INET6_ADDRSTRLEN];
+					printf("%s %d %d\n", 
+						inet_ntop(AF_INET6, &(AggrPacketList.at(i).Aggr_ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN), 
+						AggrPacketList.at(i).NumberOfPackets, 
+						AggrPacketList.at(i).len);
+				}
+			}
+
 			break;
 		}
 		case 4:
@@ -437,16 +774,8 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 		{
 			break;
 		}
-	}
-
-	for (int i = 0; i < ItemsCount; ++i)
-	{
-		printf("%s %d %d\n", ether_ntoa((const struct ether_addr *)&AggrPacketList.at(i).Aggr_shost), AggrPacketList.at(i).NumberOfPackets, AggrPacketList.at(i).len);
-	}
-	
+	}	
 }
-
-
 
 void printPacket(struct PacketData PacketList)
 {
@@ -979,6 +1308,8 @@ int main (int argc, char *argv[])
 	{
 		printPacketAggr(PacketList, NumberOfPackets, avalue, svalue);
 	}
+
+	//FILTR
 
 	pcap_close(handle);
 
