@@ -7,34 +7,27 @@
 #include <pcap/pcap.h>
 #include <netinet/ether.h>
 #include <arpa/inet.h>
-#include <stdint.h>
 #include <inttypes.h>
+#include <vector>
+#include <string>
+
+#include <stack>
+#include <iostream>
+using namespace std;
 
 #ifndef PCAP_ERRBUF_SIZE
 #define PCAP_ERRBUF_SIZE (256)
 #endif
 
-struct PacketData {
-	int Layer1;
-	struct ETHHeader *eptr;
-	struct ADHeader *adptr;
-	struct QHeader *qptr;
-	int Layer2;
-	struct IPv4Header *ipv4ptr;
-	struct IPv6Header *ipv6ptr;
-	int Layer3;
-	struct TCPHeader *tcpptr;
-	struct UDPHeader *udpptr;
-	int PacketNumber;
-	struct timeval ts;
-	bpf_u_int32 len;
-};
+
+
+
 
 struct TCPHeader {
     u_short th_sport;	/* source port */
     u_short th_dport;	/* destination port */
-    uint32_t th_seq;		/* sequence number */
-    uint32_t th_ack;		/* acknowledgement number */
+    u_int th_seq;		/* sequence number */
+    u_int th_ack;		/* acknowledgement number */
     u_char th_offx2;	/* data offset, rsvd */
 #define TH_OFF(th)	(((th)->th_offx2 & 0xf0) >> 4)
     u_char th_flags;
@@ -94,11 +87,8 @@ struct IPv4Header {
 	u_char ip_ttl;			/* time to live */
 	u_char ip_p;			/* protocol */
 	u_short ip_sum;			/* checksum */
-	struct in_addr ip_src;
-	struct in_addr ip_dst; /* source address*/
-	//uint32_t ip_src;
-	//uint32_t ip_dst;
-	 /* source and dest address */
+	struct in_addr ip_src; /* source address*/
+	struct in_addr ip_dst; /* source and dest address */
 };
 
 struct ADHeader {
@@ -123,6 +113,22 @@ struct ETHHeader {
     uint8_t ether_dhost[ETHER_ADDR_LEN];
     uint8_t ether_shost[ETHER_ADDR_LEN];
     uint16_t ether_type;
+};
+
+struct PacketData {
+	int Layer1;
+	struct ETHHeader eptr;
+	struct ADHeader adptr;
+	struct QHeader qptr;
+	int Layer2;
+	struct IPv4Header ipv4ptr;
+	struct IPv6Header ipv6ptr;
+	int Layer3;
+	struct TCPHeader tcpptr;
+	struct UDPHeader udpptr;
+	int PacketNumber;
+	struct timeval ts;
+	bpf_u_int32 len;
 };
 
 void PrintHelp()
@@ -280,130 +286,64 @@ int GetNumberOfPackets(char *filename)
 	return counter;
 }
 
-struct PacketData *newPacketData () 
-{
-    struct PacketData *retVal = malloc (sizeof (struct PacketData));
-    if (retVal == NULL)
-        return NULL;
-
-    retVal->eptr = malloc (sizeof (struct ETHHeader));
-    if (retVal->eptr == NULL) 
-    {
-        free (retVal);
-        return NULL;
-    }
-
-    retVal->adptr = malloc (sizeof (struct ADHeader));
-    if (retVal->adptr == NULL) 
-    {
-        free (retVal);
-        return NULL;
-    }
-
-    retVal->qptr = malloc (sizeof (struct QHeader));
-    if (retVal->qptr == NULL) 
-    {
-        free (retVal);
-        return NULL;
-    }
-
-    retVal->ipv4ptr = malloc (sizeof (struct IPv4Header));
-    if (retVal->ipv4ptr == NULL) 
-    {
-        free (retVal);
-        return NULL;
-    }
-
-    retVal->ipv6ptr = malloc (sizeof (struct IPv6Header));
-    if (retVal->ipv6ptr == NULL) 
-    {
-        free (retVal);
-        return NULL;
-    }
-
-    retVal->tcpptr = malloc (sizeof (struct TCPHeader));
-    if (retVal->tcpptr == NULL) 
-    {
-        free (retVal);
-        return NULL;
-    }
-
-    retVal->udpptr = malloc (sizeof (struct UDPHeader));
-    if (retVal->udpptr == NULL) 
-    {
-        free (retVal);
-        return NULL;
-    }
-
-    retVal->Layer1 = 0;
-    retVal->Layer2 = 0;
-    retVal->Layer3 = 0;
-    retVal->PacketNumber = 0;
-    retVal->len = 0;
-    retVal->ts.tv_usec = 0;
-    retVal->ts.tv_sec = 0;
-
-    return retVal;
-}
-
-void printPacket(struct PacketData *PacketList)
+void printPacket(struct PacketData PacketList)
 {
 	char MacSrc[256];
 	char MacDst[256];
 	char printAbleIPv6src[INET6_ADDRSTRLEN];
 	char printAbleIPv6dst[INET6_ADDRSTRLEN];
 
-	switch (PacketList->Layer1)
+	switch (PacketList.Layer1)
 	{
 		case 0:  //Ethernet
 		{
-			strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&PacketList->eptr->ether_shost));
-			strcpy(MacDst, ether_ntoa((const struct ether_addr *)&PacketList->eptr->ether_dhost));
+			strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&PacketList.eptr.ether_shost));
+			strcpy(MacDst, ether_ntoa((const struct ether_addr *)&PacketList.eptr.ether_dhost));
 			CorrectMacAdress(MacSrc);
 			CorrectMacAdress(MacDst);
 
 			printf("%d: %ld%06ld %d | Ethernet: %s %s | ",
-				PacketList->PacketNumber,
-				PacketList->ts.tv_sec,
-				PacketList->ts.tv_usec,
-				PacketList->len,
+				PacketList.PacketNumber,
+				PacketList.ts.tv_sec,
+				PacketList.ts.tv_usec,
+				PacketList.len,
 				MacSrc,
 				MacDst);
 			break;
 		}
 		case 1:  //IEEE 802.1Q
 		{
-			strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&PacketList->qptr->Q_shost));
-			strcpy(MacDst, ether_ntoa((const struct ether_addr *)&PacketList->qptr->Q_dhost));
+			strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&PacketList.qptr.Q_shost));
+			strcpy(MacDst, ether_ntoa((const struct ether_addr *)&PacketList.qptr.Q_dhost));
 			CorrectMacAdress(MacSrc);
 			CorrectMacAdress(MacDst);
 
 			printf("%d: %ld%06ld %d | Ethernet: %s %s %d | ",
-				PacketList->PacketNumber,
-				PacketList->ts.tv_sec,
-				PacketList->ts.tv_usec,
-				PacketList->len,
+				PacketList.PacketNumber,
+				PacketList.ts.tv_sec,
+				PacketList.ts.tv_usec,
+				PacketList.len,
 				MacSrc,
 				MacDst,
-				ntohs(PacketList->qptr->Q_tpid2)); //tisknu spatne nhtons
+				ntohs(PacketList.qptr.Q_tpid2)); //tisknu spatne nhtons
 			break;
 		}
 		case 2:  //IEEE 802.1ad
 		{
-			strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&PacketList->eptr->ether_shost));
-			strcpy(MacDst, ether_ntoa((const struct ether_addr *)&PacketList->eptr->ether_dhost));
+			strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&PacketList.eptr.ether_shost));
+			strcpy(MacDst, ether_ntoa((const struct ether_addr *)&PacketList.eptr.ether_dhost));
 			CorrectMacAdress(MacSrc);
 			CorrectMacAdress(MacDst);
 
 			printf("%d: %ld%06ld %d | Ethernet: %s %s %d %d | ",
-				PacketList->PacketNumber,
-				PacketList->ts.tv_sec,
-				PacketList->ts.tv_usec,
-				PacketList->len,
+				PacketList.PacketNumber,
+				PacketList.ts.tv_sec,
+				PacketList.ts.tv_usec,
+				PacketList.len,
 				MacSrc,
 				MacDst,
-				ntohs(PacketList->qptr->Q_tpid2),
-				ntohs(PacketList->qptr->Q_tpid2));
+				ntohs(PacketList.qptr.Q_tpid2),
+				ntohs(PacketList.qptr.Q_tpid2));
 			break;
 		}
 		default:
@@ -412,23 +352,23 @@ void printPacket(struct PacketData *PacketList)
 		}
 	}
 
-	switch (PacketList->Layer2)
+	switch (PacketList.Layer2)
 	{
 		case 0:  //IPv4
 		{
 			printf("IPv4: %s ",
-				inet_ntoa(PacketList->ipv4ptr->ip_src));
+				inet_ntoa(PacketList.ipv4ptr.ip_src));
 			printf("%s %d | ",
-				inet_ntoa(PacketList->ipv4ptr->ip_dst),
-				PacketList->ipv4ptr->ip_ttl);
+				inet_ntoa(PacketList.ipv4ptr.ip_dst),
+				PacketList.ipv4ptr.ip_ttl);
 			break;
 		}
 		case 1:  //IPv6
 		{
 			printf("IPv6: %s %s %d | ",
-				inet_ntop(AF_INET6, &(PacketList->ipv6ptr->ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN),
-				inet_ntop(AF_INET6, &(PacketList->ipv6ptr->ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN),
-				PacketList->ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_hlim);
+				inet_ntop(AF_INET6, &(PacketList.ipv6ptr.ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN),
+				inet_ntop(AF_INET6, &(PacketList.ipv6ptr.ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN),
+				PacketList.ipv6ptr.ip6_ctlun.ip6_un1.ip6_un1_hlim);
 			break;
 		}
 		default:
@@ -437,37 +377,63 @@ void printPacket(struct PacketData *PacketList)
 		}
 	}
 
-	switch (PacketList->Layer3)
+	switch (PacketList.Layer3)
 	{
 		case 0:  //ICMPv4
 		{
-			printf("ICMPv4: \n");
-			break;
+
 		}
 		case 1:  //TCP
 		{
-
-			//sprintf(neo, "%02x", PacketList->tcpptr->th_seq[0]);
-			//printf("%s\n", neo);
-			printf("TCP: %d %d %u %u\n",
-				ntohs(PacketList->tcpptr->th_sport),
-				ntohs(PacketList->tcpptr->th_dport),
-				PacketList->tcpptr->th_seq & 0xff,
-				PacketList->tcpptr->th_ack & 0xff);
-			/*sprintf(ntohl(PacketList->tcpptr->th_seq),	
-    			ntohl(PacketList->tcpptr->th_ack));*/
+			printf("TCP: %d %d %u %u ",
+				ntohs(PacketList.tcpptr.th_sport),
+				ntohs(PacketList.tcpptr.th_dport),
+				PacketList.tcpptr.th_seq & 0xff,
+				PacketList.tcpptr.th_ack & 0xff);
+			if (PacketList.tcpptr.th_flags & TH_CWR)
+        		printf("C");
+    		else
+    			printf(".");
+    		if (PacketList.tcpptr.th_flags & TH_ECE)
+        		printf("E");
+    		else
+    			printf(".");
+    		if (PacketList.tcpptr.th_flags & TH_URG)
+        		printf("U");
+    		else
+    			printf(".");
+    		if (PacketList.tcpptr.th_flags & TH_ACK)
+        		printf("A");
+    		else
+    			printf(".");
+    		if (PacketList.tcpptr.th_flags & TH_PUSH)
+        		printf("P");
+    		else
+    			printf(".");
+    		if (PacketList.tcpptr.th_flags & TH_RST)
+        		printf("R");
+    		else
+    			printf(".");
+    		if (PacketList.tcpptr.th_flags & TH_SYN)
+        		printf("S");
+    		else
+    			printf(".");
+    		if (PacketList.tcpptr.th_flags & TH_FIN)
+        		printf("F");
+    		else
+    			printf(".");
+    		printf("\n");
 			break;
 		}
 		case 2:  //UDP
 		{
 			printf("UDP: %d %d\n", 
-				ntohs(PacketList->udpptr->uh_sport),
-				ntohs(PacketList->udpptr->uh_dport));
+				ntohs(PacketList.udpptr.uh_sport),
+				ntohs(PacketList.udpptr.uh_dport));
 			break;
 		}
 		case 3:  //ICMPv6
 		{
-			printf("ICMPv6:\n");
 			break;
 		}
 		default: 
@@ -477,7 +443,7 @@ void printPacket(struct PacketData *PacketList)
 	}
 }
 
-int GetMax(struct PacketData *PacketList[], int NumberOfPackets)
+int GetMax(std::vector<PacketData> PacketList, int NumberOfPackets)
 {
 	int Max = 0;
 	int Order = 0;
@@ -486,12 +452,12 @@ int GetMax(struct PacketData *PacketList[], int NumberOfPackets)
 	{
 		if (i == 0)
 		{
-			Max = PacketList[i]->len;
+			Max = PacketList.at(i).len;
 			Order = i;
 		}
-		if (PacketList[i]->len >= Max)
+		if (PacketList.at(i).len >= Max)
 		{
-			Max = PacketList[i]->len;
+			Max = PacketList.at(i).len;
 			Order = i;
 		}
 	}
@@ -500,6 +466,8 @@ int GetMax(struct PacketData *PacketList[], int NumberOfPackets)
 
 int main (int argc, char *argv[])
 {
+
+
 	bool hflag = false;
 	int c;
 	int index;
@@ -600,13 +568,9 @@ int main (int argc, char *argv[])
 	
 	int NumberOfPackets = GetNumberOfPackets(filename);
 	
-	struct PacketData *PacketList[NumberOfPackets];
+	std::vector<PacketData>  PacketList(NumberOfPackets);
 
-	for (int i = 0; i < NumberOfPackets; i++)
-	{
-		PacketList[i] = newPacketData();
-	}
-
+	struct PacketData *ahoj;
 	while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
 	{
 		int EthTypeSize = 0;
@@ -621,12 +585,9 @@ int main (int argc, char *argv[])
 				EthTypeSize = 14;
 				IpSize = ipv4ptr->ip_hl*4;
 
-				PacketList[PacketNumber - 1]->eptr = (struct ETHHeader*)malloc(sizeof(struct ETHHeader));
-				printf("pred: %s\n", ether_ntoa((const struct ether_addr *)&eptr->ether_shost));
-				//*(PacketList[PacketNumber - 1]->eptr) = *eptr;
-				memcpy(PacketList[PacketNumber - 1]->eptr, (struct ETHHeader *) packet, EthTypeSize);
-				printf("po: %s\n", ether_ntoa((const struct ether_addr *)&PacketList[0]->eptr->ether_shost));
-				PacketList[PacketNumber - 1]->Layer1 = 0;
+				PacketList[PacketNumber - 1].eptr = *eptr;
+				PacketList[PacketNumber - 1].Layer1 = 0;
+				
 				break;
 			}
 			case 0x86DD: //ETHERTYPE_IP IPV6
@@ -634,10 +595,8 @@ int main (int argc, char *argv[])
 				EthTypeSize = 14;
 				IpSize = 40;
 
-				PacketList[PacketNumber - 1]->eptr = malloc(sizeof(struct ETHHeader));
-				memcpy(PacketList[PacketNumber - 1]->eptr, (struct ETHHeader *) packet, EthTypeSize);
-				//*(PacketList[PacketNumber - 1]->eptr) = *eptr;
-				PacketList[PacketNumber - 1]->Layer1 = 0;
+				PacketList[PacketNumber - 1].eptr = *eptr;
+				PacketList[PacketNumber - 1].Layer1 = 0;
 
 				break;
 			}
@@ -646,9 +605,8 @@ int main (int argc, char *argv[])
 				EthTypeSize = 18;
 				qptr = (struct QHeader *) packet;
 
-				PacketList[PacketNumber - 1]->qptr = malloc(sizeof(struct QHeader));
-				memcpy(PacketList[PacketNumber - 1]->qptr, (struct QHeader *) packet, EthTypeSize);
-				PacketList[PacketNumber - 1]->Layer1 = 1;
+				PacketList[PacketNumber - 1].qptr = *qptr;
+				PacketList[PacketNumber - 1].Layer1 = 1;
 
 				switch (ntohs(qptr->Q_ether_type))
 				{
@@ -675,9 +633,8 @@ int main (int argc, char *argv[])
 				EthTypeSize = 22;
 				adptr = (struct ADHeader *) packet;
 
-				PacketList[PacketNumber - 1]->adptr = malloc(sizeof(struct ADHeader));
-				memcpy(PacketList[PacketNumber - 1]->adptr, (struct ADHeader *) packet, EthTypeSize);
-				PacketList[PacketNumber - 1]->Layer1 = 2;
+				PacketList[PacketNumber - 1].adptr = *adptr;
+				PacketList[PacketNumber - 1].Layer1 = 2;
 
 				switch (ntohs(adptr->AD_ether_type))
 				{
@@ -703,16 +660,12 @@ int main (int argc, char *argv[])
 
 		if (ntohs(eptr->ether_type) == 0x0800 || (ntohs(eptr->ether_type) == 0x8100 && ntohs(qptr->Q_ether_type) == 0x0800) || (ntohs(eptr->ether_type) == 0x88a8 && ntohs(adptr->AD_ether_type) == 0x0800))
 		{
+			
 			ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
-/*
-			struct in_addr ahoj;
-			struct in_addr neahoj;
-			neahoj.s_addr = ipv4ptr->ip_src;
-			ahoj.s_addr = ipv4ptr->ip_dst;
-			printf("%s %s\n", inet_ntoa(neahoj), inet_ntoa(ahoj));*/
-			//PacketList[PacketNumber - 1]->ipv4ptr = malloc(sizeof(struct IPv4Header));
-			memcpy(PacketList[PacketNumber - 1]->ipv4ptr, ipv4ptr, IpSize);
-			PacketList[PacketNumber - 1]->Layer2 = 0;
+
+			PacketList[PacketNumber - 1].ipv4ptr = *ipv4ptr;
+			PacketList[PacketNumber - 1].Layer2 = 0;
+
 			switch(ipv4ptr->ip_p)
 			{
 				case 1:  //ICMP protocol
@@ -723,18 +676,17 @@ int main (int argc, char *argv[])
 				{
 					tcpptr = (struct TCPHeader *) (packet+EthTypeSize+IpSize);
 
-					memcpy(PacketList[PacketNumber - 1]->tcpptr, tcpptr, (header.len - EthTypeSize - IpSize));							
-					PacketList[PacketNumber - 1]->Layer3 = 1;
-					//printf("%d\n", ntohs(tcpptr->th_sport));
-					
+					PacketList[PacketNumber - 1].tcpptr = *tcpptr;
+					PacketList[PacketNumber - 1].Layer3 = 1;
+
 					break;
 				}
 				case 17: //UDP protocol
 				{
-					udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize);
+					udpptr = (struct UDPHeader*) (packet+EthTypeSize+IpSize);
 
-					memcpy(PacketList[PacketNumber - 1]->udpptr, udpptr, (header.len - EthTypeSize - IpSize));							
-					PacketList[PacketNumber - 1]->Layer3 = 2;  
+					PacketList[PacketNumber - 1].udpptr = *udpptr;
+					PacketList[PacketNumber - 1].Layer3 = 2;  
 
 					break;
 				}
@@ -751,8 +703,10 @@ int main (int argc, char *argv[])
 		if (ntohs(eptr->ether_type) == 0x86DD || (ntohs(eptr->ether_type) == 0x8100 && ntohs(qptr->Q_ether_type) == 0x86DD) || (ntohs(eptr->ether_type) == 0x88a8 && ntohs(adptr->AD_ether_type) == 0x86DD))
 		{
 			ipv6ptr = (struct IPv6Header*) (packet+EthTypeSize);
-			memcpy(PacketList[PacketNumber - 1]->ipv6ptr, ipv6ptr, IpSize);
-			PacketList[PacketNumber - 1]->Layer2 = 1;
+
+			PacketList[PacketNumber - 1].ipv6ptr = *ipv6ptr;
+			PacketList[PacketNumber - 1].Layer2 = 1;
+
 			switch (ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt)
 			{
 				case 1:  //ICMP protocol
@@ -763,8 +717,8 @@ int main (int argc, char *argv[])
 				{
 					tcpptr = (struct TCPHeader *) (packet+EthTypeSize+IpSize);
 
-					memcpy(PacketList[PacketNumber - 1]->tcpptr, tcpptr, (header.len - EthTypeSize - IpSize));							
-					PacketList[PacketNumber - 1]->Layer3 = 1;
+					PacketList[PacketNumber - 1].tcpptr = *tcpptr;
+					PacketList[PacketNumber - 1].Layer3 = 1;
 
 					break;
 				}
@@ -772,8 +726,8 @@ int main (int argc, char *argv[])
 				{
 					udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize);
 
-					memcpy(PacketList[PacketNumber - 1]->udpptr, udpptr, (header.len - EthTypeSize - IpSize));							
-					PacketList[PacketNumber - 1]->Layer3 = 2;  
+					PacketList[PacketNumber - 1].udpptr = *udpptr;
+					PacketList[PacketNumber - 1].Layer3 = 2;  
 
 					break;
 				}
@@ -785,26 +739,22 @@ int main (int argc, char *argv[])
 				{
 					break;
 				}
-				printf("%s\n", ether_ntoa((const struct ether_addr *)&PacketList[0]->eptr->ether_shost));
 			}
-			printf("%s\n", ether_ntoa((const struct ether_addr *)&PacketList[0]->eptr->ether_shost));
 		}
 
-		PacketList[PacketNumber - 1]->ts = header.ts;
-		PacketList[PacketNumber - 1]->len = header.len;
-		PacketList[PacketNumber - 1]->PacketNumber = PacketNumber;	
-		printf("%s\n", ether_ntoa((const struct ether_addr *)&PacketList[0]->eptr->ether_shost));
+		PacketList[PacketNumber - 1].ts = header.ts;
+		PacketList[PacketNumber - 1].len = header.len;
+		PacketList[PacketNumber - 1].PacketNumber = PacketNumber;
 	}
-	printf("%s\n", ether_ntoa((const struct ether_addr *)&PacketList[0]->eptr->ether_shost));
 
 	//razeni
 	switch (svalue)
 	{
-		case -2:  //no-sort
+		case -2:
 		{
 			for (int i = 0; i < NumberOfPackets; i++)
 			{
-				printPacket(PacketList[i]);
+				printPacket(PacketList.at(i));
 			}
 			break;
 		}
@@ -818,8 +768,8 @@ int main (int argc, char *argv[])
 			for (int i = 0; i < NumberOfPackets; i++)
 			{
 				Temp = GetMax(PacketList, NumberOfPackets);
-				printPacket(PacketList[Temp]);
-				PacketList[Temp]->len = 0;
+				printPacket(PacketList.at(Temp));
+				PacketList[Temp].len = 0;
 				//uvolneni zdroju
 			}
 			break;
@@ -829,7 +779,7 @@ int main (int argc, char *argv[])
 			break;
 		}
 	}
-	
+
 	pcap_close(handle);
 
 	return 0;
