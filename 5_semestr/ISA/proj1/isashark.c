@@ -330,8 +330,8 @@ void printPacket(struct PacketData PacketList)
 		}
 		case 2:  //IEEE 802.1ad
 		{
-			strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&PacketList.eptr.ether_shost));
-			strcpy(MacDst, ether_ntoa((const struct ether_addr *)&PacketList.eptr.ether_dhost));
+			strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&PacketList.adptr.AD_shost));
+			strcpy(MacDst, ether_ntoa((const struct ether_addr *)&PacketList.adptr.AD_dhost));
 			CorrectMacAdress(MacSrc);
 			CorrectMacAdress(MacDst);
 
