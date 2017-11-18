@@ -1747,6 +1747,8 @@ int main (int argc, char *argv[])
 		}
 	}
 
+	//printf("0\n");
+	//printf("\"%s\"\n", fvalue);
 	//printf("%s\n", filename);
 	//printf ("hflag = %d, avalue = %s, svalue = %s, lvalue = %d, fvalue = %s\n", hflag, avalue, svalue, lvalue, fvalue);
 
@@ -1765,7 +1767,7 @@ int main (int argc, char *argv[])
 	const struct TCPHeader *tcpptr;    // pointer to the beginning of TCP header
 	const struct UDPHeader *udpptr;    // pointer to the beginning of UDP header
 
-	int PacketNumber = 0;
+	int PacketNumber = 0; 
 
 	if ((handle = pcap_open_offline(filename,errbuf)) == NULL)
 		ErrorFound(9);
@@ -1774,7 +1776,13 @@ int main (int argc, char *argv[])
 	
 	std::vector<PacketData>  PacketList(NumberOfPackets);
 
-	struct PacketData *ahoj;
+	struct bpf_program fp; // the compiled filter
+	if (pcap_compile(handle,&fp,"src host 2001:db8::1",0,0) == -1) // compile the filter
+	printf("1\n"); //err(1,"pcap_compile() failed");
+	if (pcap_setfilter(handle,&fp) == -1) // set the filter to the packet capture handle
+	printf("2\n");	//err(1,"pcap_setfilter() failed");
+
+
 	while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
 	{
 		int EthTypeSize = 0;
@@ -1789,7 +1797,6 @@ int main (int argc, char *argv[])
 				EthTypeSize = 14;
 				ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
 				IpSize = ipv4ptr->ip_hl*4; 
-				//IpSize = 20;
 
 				PacketList[PacketNumber - 1].eptr = *eptr;
 				PacketList[PacketNumber - 1].Layer1 = 0;
@@ -1820,7 +1827,7 @@ int main (int argc, char *argv[])
 					{
 						ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
 						IpSize = ipv4ptr->ip_hl*4;
-						//IpSize = 20;
+
 						break;
 					}
 					case 0x86DD:  //IPv6
@@ -1850,7 +1857,7 @@ int main (int argc, char *argv[])
 					{
 						ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
 						IpSize = ipv4ptr->ip_hl*4;
-						//IpSize = 20;
+
 						break;
 					}
 					case 0x86DD:  //IPv6
@@ -1870,9 +1877,6 @@ int main (int argc, char *argv[])
 
 		if (ntohs(eptr->ether_type) == 0x0800 || (ntohs(eptr->ether_type) == 0x8100 && ntohs(qptr->Q_ether_type) == 0x0800) || (ntohs(eptr->ether_type) == 0x88a8 && ntohs(adptr->AD_ether_type) == 0x0800))
 		{
-			
-			
-
 			PacketList[PacketNumber - 1].ipv4ptr = *ipv4ptr;
 			PacketList[PacketNumber - 1].Layer2 = 0;
 

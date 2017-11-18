@@ -1,6 +1,6 @@
 todo:
 
-- filtr
+- filtr - vytvoření nového packetcount pro tisk + zpracování argumentů
 - fragmentace
 - ICMP
 
