@@ -292,8 +292,9 @@ struct AggrData {
 
 	struct in6_addr Aggr_ip6_src;
 	struct in6_addr Aggr_ip6_dst;
-	u_short	uh_sport;
-    u_short	uh_dport;
+
+	u_short	Aggr_sport;
+    u_short	Aggr_dport;
 
 	int NumberOfPackets;
 	bpf_u_int32 len;
@@ -333,10 +334,10 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						}
 						if (IsIn == false)
 						{
-							memcpy(AggrPacketList.at(e).Aggr_shost, PacketList.at(i).eptr.ether_shost, ETHER_ADDR_LEN);
+							memcpy(AggrPacketList.at(ItemsCount).Aggr_shost, PacketList.at(i).eptr.ether_shost, ETHER_ADDR_LEN);
 
-							AggrPacketList.at(e).NumberOfPackets = 1; 
-							AggrPacketList.at(e).len = PacketList.at(i).len;
+							AggrPacketList.at(ItemsCount).NumberOfPackets = 1; 
+							AggrPacketList.at(ItemsCount).len = PacketList.at(i).len;
 
 							ItemsCount++;
 						}
@@ -365,10 +366,10 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						}
 						if (IsIn == false)
 						{
-							memcpy(AggrPacketList.at(e).Aggr_shost, PacketList.at(i).qptr.Q_shost, ETHER_ADDR_LEN);
+							memcpy(AggrPacketList.at(ItemsCount).Aggr_shost, PacketList.at(i).qptr.Q_shost, ETHER_ADDR_LEN);
 
-							AggrPacketList.at(e).NumberOfPackets = 1; 
-							AggrPacketList.at(e).len = PacketList.at(i).len;
+							AggrPacketList.at(ItemsCount).NumberOfPackets = 1; 
+							AggrPacketList.at(ItemsCount).len = PacketList.at(i).len;
 
 							ItemsCount++;
 						}
@@ -397,10 +398,10 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						}
 						if (IsIn == false)
 						{
-							memcpy(AggrPacketList.at(e).Aggr_shost, PacketList.at(i).adptr.AD_shost, ETHER_ADDR_LEN);
+							memcpy(AggrPacketList.at(ItemsCount).Aggr_shost, PacketList.at(i).adptr.AD_shost, ETHER_ADDR_LEN);
 
-							AggrPacketList.at(e).NumberOfPackets = 1; 
-							AggrPacketList.at(e).len = PacketList.at(i).len;
+							AggrPacketList.at(ItemsCount).NumberOfPackets = 1; 
+							AggrPacketList.at(ItemsCount).len = PacketList.at(i).len;
 
 							ItemsCount++;
 						}
@@ -414,7 +415,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 				}
 			}
-			for (int i = 0; i < ItemsCount; ++i)
+			for (int i = 0; i < ItemsCount; i++)
 			{
 				printf("%s %d %d\n", 
 					ether_ntoa((const struct ether_addr *)&AggrPacketList.at(i).Aggr_shost), 
@@ -450,10 +451,10 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						}
 						if (IsIn == false)
 						{
-							memcpy(AggrPacketList.at(e).Aggr_dhost, PacketList.at(i).eptr.ether_dhost, ETHER_ADDR_LEN);
+							memcpy(AggrPacketList.at(ItemsCount).Aggr_dhost, PacketList.at(i).eptr.ether_dhost, ETHER_ADDR_LEN);
 
-							AggrPacketList.at(e).NumberOfPackets = 1; 
-							AggrPacketList.at(e).len = PacketList.at(i).len;
+							AggrPacketList.at(ItemsCount).NumberOfPackets = 1; 
+							AggrPacketList.at(ItemsCount).len = PacketList.at(i).len;
 
 							ItemsCount++;
 						}
@@ -482,10 +483,10 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						}
 						if (IsIn == false)
 						{
-							memcpy(AggrPacketList.at(e).Aggr_dhost, PacketList.at(i).qptr.Q_dhost, ETHER_ADDR_LEN);
+							memcpy(AggrPacketList.at(ItemsCount).Aggr_dhost, PacketList.at(i).qptr.Q_dhost, ETHER_ADDR_LEN);
 
-							AggrPacketList.at(e).NumberOfPackets = 1; 
-							AggrPacketList.at(e).len = PacketList.at(i).len;
+							AggrPacketList.at(ItemsCount).NumberOfPackets = 1; 
+							AggrPacketList.at(ItemsCount).len = PacketList.at(i).len;
 
 							ItemsCount++;
 						}
@@ -514,10 +515,10 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						}
 						if (IsIn == false)
 						{
-							memcpy(AggrPacketList.at(e).Aggr_dhost, PacketList.at(i).adptr.AD_dhost, ETHER_ADDR_LEN);
+							memcpy(AggrPacketList.at(ItemsCount).Aggr_dhost, PacketList.at(i).adptr.AD_dhost, ETHER_ADDR_LEN);
 
-							AggrPacketList.at(e).NumberOfPackets = 1; 
-							AggrPacketList.at(e).len = PacketList.at(i).len;
+							AggrPacketList.at(ItemsCount).NumberOfPackets = 1; 
+							AggrPacketList.at(ItemsCount).len = PacketList.at(i).len;
 
 							ItemsCount++;
 						}
@@ -531,7 +532,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 				}
 			}
-			for (int i = 0; i < ItemsCount; ++i)
+			for (int i = 0; i < ItemsCount; i++)
 			{
 				printf("%s %d %d\n", 
 					ether_ntoa((const struct ether_addr *)&AggrPacketList.at(i).Aggr_dhost), 
@@ -572,11 +573,11 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						
 						if (IsIn == false)
 						{
-							AggrPacketList.at(e).Aggr_ip_src = PacketList.at(i).ipv4ptr.ip_src;	//, 4);
+							AggrPacketList.at(ItemsCount).Aggr_ip_src = PacketList.at(i).ipv4ptr.ip_src;
 
-							AggrPacketList.at(e).IpType = 0;
-							AggrPacketList.at(e).NumberOfPackets = 1; 
-							AggrPacketList.at(e).len = PacketList.at(i).len;
+							AggrPacketList.at(ItemsCount).IpType = 0;
+							AggrPacketList.at(ItemsCount).NumberOfPackets = 1; 
+							AggrPacketList.at(ItemsCount).len = PacketList.at(i).len;
 
 							ItemsCount++;
 						}
@@ -612,11 +613,11 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						
 						if (IsIn == false)
 						{
-							AggrPacketList.at(e).Aggr_ip6_src = PacketList.at(i).ipv6ptr.ip6_src;	//, 4);
+							AggrPacketList.at(ItemsCount).Aggr_ip6_src = PacketList.at(i).ipv6ptr.ip6_src;
 
-							AggrPacketList.at(e).IpType = 1;
-							AggrPacketList.at(e).NumberOfPackets = 1; 
-							AggrPacketList.at(e).len = PacketList.at(i).len;
+							AggrPacketList.at(ItemsCount).IpType = 1;
+							AggrPacketList.at(ItemsCount).NumberOfPackets = 1; 
+							AggrPacketList.at(ItemsCount).len = PacketList.at(i).len;
 
 							ItemsCount++;
 						}
@@ -630,7 +631,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 				}
 			}
-			for (int i = 0; i < ItemsCount; ++i)
+			for (int i = 0; i < ItemsCount; i++)
 			{
 				if (AggrPacketList.at(i).IpType == 0)
 				{
@@ -683,11 +684,11 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						
 						if (IsIn == false)
 						{
-							AggrPacketList.at(e).Aggr_ip_dst = PacketList.at(i).ipv4ptr.ip_dst;	//, 4);
+							AggrPacketList.at(e).Aggr_ip_dst = PacketList.at(i).ipv4ptr.ip_dst;
 
-							AggrPacketList.at(e).IpType = 0;
-							AggrPacketList.at(e).NumberOfPackets = 1; 
-							AggrPacketList.at(e).len = PacketList.at(i).len;
+							AggrPacketList.at(ItemsCount).IpType = 0;
+							AggrPacketList.at(ItemsCount).NumberOfPackets = 1; 
+							AggrPacketList.at(ItemsCount).len = PacketList.at(i).len;
 
 							ItemsCount++;
 						}
@@ -723,11 +724,11 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						
 						if (IsIn == false)
 						{
-							AggrPacketList.at(e).Aggr_ip6_dst = PacketList.at(i).ipv6ptr.ip6_dst;	//, 4);
+							AggrPacketList.at(ItemsCount).Aggr_ip6_dst = PacketList.at(i).ipv6ptr.ip6_dst;
 
-							AggrPacketList.at(e).IpType = 1;
-							AggrPacketList.at(e).NumberOfPackets = 1; 
-							AggrPacketList.at(e).len = PacketList.at(i).len;
+							AggrPacketList.at(ItemsCount).IpType = 1;
+							AggrPacketList.at(ItemsCount).NumberOfPackets = 1; 
+							AggrPacketList.at(ItemsCount).len = PacketList.at(i).len;
 
 							ItemsCount++;
 						}
@@ -741,7 +742,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 				}
 			}
-			for (int i = 0; i < ItemsCount; ++i)
+			for (int i = 0; i < ItemsCount; i++)
 			{
 				if (AggrPacketList.at(i).IpType == 0)
 				{
@@ -764,10 +765,184 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 		}
 		case 4:
 		{
+			for (int i = 0; i < NumberOfPackets; i++)
+			{
+				switch (PacketList.at(i).Layer3)
+				{
+					case 1:
+					{
+						int e = 0;
+
+						for (e = 0; e < ItemsCount; e++)
+						{
+							if (ntohs(AggrPacketList.at(e).Aggr_sport) == ntohs(PacketList.at(i).tcpptr.th_sport))
+							{	
+								IsIn = true;
+
+								AggrPacketList.at(e).NumberOfPackets++; 
+								AggrPacketList.at(e).len += PacketList.at(i).len;
+										
+								break;
+							}
+							else
+							{
+								IsIn = false;
+							}
+						}
+
+						if (IsIn == false)
+						{
+							AggrPacketList.at(ItemsCount).Aggr_sport = PacketList.at(i).tcpptr.th_sport;
+
+							AggrPacketList.at(ItemsCount).NumberOfPackets = 1; 
+							AggrPacketList.at(ItemsCount).len = PacketList.at(i).len;
+
+							ItemsCount++;
+						}
+						
+						IsIn = false;
+						break;
+					}
+					case 2:
+					{
+						int e = 0;
+
+						for (e = 0; e < ItemsCount; e++)
+						{
+							if (ntohs(AggrPacketList.at(e).Aggr_sport) == ntohs(PacketList.at(i).udpptr.uh_sport))
+							{	
+								IsIn = true;
+
+								AggrPacketList.at(e).NumberOfPackets++; 
+								AggrPacketList.at(e).len += PacketList.at(i).len;
+
+								break;
+							}
+							else
+							{
+								IsIn = false;
+							}
+						}
+
+						if (IsIn == false)
+						{
+							AggrPacketList.at(ItemsCount).Aggr_sport = PacketList.at(i).udpptr.uh_sport;
+
+							AggrPacketList.at(ItemsCount).NumberOfPackets = 1; 
+							AggrPacketList.at(ItemsCount).len = PacketList.at(i).len;
+
+							ItemsCount++;
+						}
+						
+						IsIn = false;
+						break;
+					}
+					default:
+					{
+						break;
+					}
+				}
+			}
+
+			for (int i = 0; i < ItemsCount; i++)
+			{
+				printf("%d %d %d\n", 
+					ntohs(AggrPacketList.at(i).Aggr_sport), 
+					AggrPacketList.at(i).NumberOfPackets, 
+					AggrPacketList.at(i).len);
+			}
+
 			break;
 		}
 		case 5:
 		{
+			for (int i = 0; i < NumberOfPackets; i++)
+			{
+				switch (PacketList.at(i).Layer3)
+				{
+					case 1:
+					{
+						int e = 0;
+
+						for (e = 0; e < ItemsCount; e++)
+						{
+							if (ntohs(AggrPacketList.at(e).Aggr_dport) == ntohs(PacketList.at(i).tcpptr.th_dport))
+							{	
+								IsIn = true;
+
+								AggrPacketList.at(e).NumberOfPackets++; 
+								AggrPacketList.at(e).len += PacketList.at(i).len;
+										
+								break;
+							}
+							else
+							{
+								IsIn = false;
+							}
+						}
+
+						if (IsIn == false)
+						{
+							AggrPacketList.at(ItemsCount).Aggr_dport = PacketList.at(i).tcpptr.th_dport;
+
+							AggrPacketList.at(ItemsCount).NumberOfPackets = 1; 
+							AggrPacketList.at(ItemsCount).len = PacketList.at(i).len;
+
+							ItemsCount++;
+						}
+						
+						IsIn = false;
+						break;
+					}
+					case 2:
+					{
+						int e = 0;
+
+						for (e = 0; e < ItemsCount; e++)
+						{
+							if (ntohs(AggrPacketList.at(e).Aggr_dport) == ntohs(PacketList.at(i).udpptr.uh_dport))
+							{	
+								IsIn = true;
+
+								AggrPacketList.at(e).NumberOfPackets++; 
+								AggrPacketList.at(e).len += PacketList.at(i).len;
+
+								break;
+							}
+							else
+							{
+								IsIn = false;
+							}
+						}
+
+						if (IsIn == false)
+						{
+							AggrPacketList.at(ItemsCount).Aggr_dport = PacketList.at(i).udpptr.uh_dport;
+
+							AggrPacketList.at(ItemsCount).NumberOfPackets = 1; 
+							AggrPacketList.at(ItemsCount).len = PacketList.at(i).len;
+
+							ItemsCount++;
+						}
+						
+						IsIn = false;
+						break;
+					}
+					default:
+					{
+						break;
+					}
+				}
+			}
+
+			for (int i = 0; i < ItemsCount; i++)
+			{
+				printf("%d %d %d\n", 
+					ntohs(AggrPacketList.at(i).Aggr_dport), 
+					AggrPacketList.at(i).NumberOfPackets, 
+					AggrPacketList.at(i).len);
+			}
+
 			break;
 		}
 		default:

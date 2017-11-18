@@ -13,6 +13,7 @@ todo
 - parametry
 - defaulty
 - prázdný soubor
+- přepočítat agregace
 
 
 
