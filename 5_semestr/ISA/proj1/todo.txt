@@ -1,21 +1,22 @@
-
-
-
-
 todo
 - extension header IP header
 - fragmentace
-- filtr, agregace
+- filtr, 
 - ICMP
 - dopsat return value kontroly
 - dokumentace
 - readme
-- parametry
+- komentáře k programu
+- správnost parametrů programu
 - defaulty
 - prázdný soubor
 - přepočítat agregace
+- agregace se sortem
+- více souborů
+- zkontrolovat break
 
 
 
 snad hotovo
 - tpid hlavičky
+- agregace

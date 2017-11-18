@@ -300,6 +300,48 @@ struct AggrData {
 	bpf_u_int32 len;
 };
 
+int GetMaxAggrLen(std::vector<AggrData> PacketList, int NumberOfPackets)
+{
+	int Max = 0;
+	int Order = 0;
+	int i;
+	for (i = 0; i < NumberOfPackets; i++)
+	{
+		if (i == 0)
+		{
+			Max = PacketList.at(i).len;
+			Order = i;
+		}
+		if (PacketList.at(i).len >= Max)
+		{
+			Max = PacketList.at(i).len;
+			Order = i;
+		}
+	}
+	return Order;
+}
+
+int GetMaxAggrPac(std::vector<AggrData> PacketList, int NumberOfPackets)
+{
+	int Max = 0;
+	int Order = 0;
+	int i;
+	for (i = 0; i < NumberOfPackets; i++)
+	{
+		if (i == 0)
+		{
+			Max = PacketList.at(i).NumberOfPackets;
+			Order = i;
+		}
+		if (PacketList.at(i).NumberOfPackets >= Max)
+		{
+			Max = PacketList.at(i).NumberOfPackets;
+			Order = i;
+		}
+	}
+	return Order;
+}
+
 void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, int avalue, int svalue)
 {
 	int ItemsCount = 0;
@@ -415,13 +457,63 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 				}
 			}
-			for (int i = 0; i < ItemsCount; i++)
+
+			switch(svalue)
 			{
-				printf("%s %d %d\n", 
-					ether_ntoa((const struct ether_addr *)&AggrPacketList.at(i).Aggr_shost), 
-					AggrPacketList.at(i).NumberOfPackets, 
-					AggrPacketList.at(i).len);
+				case -2:
+				{
+					for (int i = 0; i < ItemsCount; i++)
+					{
+						char MacSrc[256];
+						strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&AggrPacketList.at(i).Aggr_shost));
+						CorrectMacAdress(MacSrc);
+						printf("%s %d %d\n", 
+							MacSrc, 
+							AggrPacketList.at(i).NumberOfPackets, 
+							AggrPacketList.at(i).len);
+					}
+					break;
+				}
+				case 0:
+				{
+					int Temp;
+					for (int i = 0; i < ItemsCount; i++)
+					{
+						Temp = GetMaxAggrPac(AggrPacketList, ItemsCount);
+						char MacSrc[256];
+						strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&AggrPacketList.at(Temp).Aggr_shost));
+						CorrectMacAdress(MacSrc);
+						printf("%s %d %d\n", 
+							MacSrc, 
+							AggrPacketList.at(Temp).NumberOfPackets, 
+							AggrPacketList.at(Temp).len);
+						AggrPacketList[Temp].NumberOfPackets = 0;
+					}
+					break;
+				}
+				case 1:
+				{
+					int Temp;
+					for (int i = 0; i < ItemsCount; i++)
+					{
+						Temp = GetMaxAggrLen(AggrPacketList, ItemsCount);
+						char MacSrc[256];
+						strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&AggrPacketList.at(Temp).Aggr_shost));
+						CorrectMacAdress(MacSrc);
+						printf("%s %d %d\n", 
+							MacSrc, 
+							AggrPacketList.at(Temp).NumberOfPackets, 
+							AggrPacketList.at(Temp).len);
+						AggrPacketList[Temp].len = 0;
+					}
+					break;
+				}
+				default:
+				{
+					break;
+				}
 			}
+
 			break;
 		}
 		case 1:
@@ -532,15 +624,64 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 				}
 			}
-			for (int i = 0; i < ItemsCount; i++)
+
+			switch(svalue)
 			{
-				printf("%s %d %d\n", 
-					ether_ntoa((const struct ether_addr *)&AggrPacketList.at(i).Aggr_dhost), 
-					AggrPacketList.at(i).NumberOfPackets, 
-					AggrPacketList.at(i).len);
+				case -2:
+				{
+					for (int i = 0; i < ItemsCount; i++)
+					{
+						char MacDst[256];
+						strcpy(MacDst, ether_ntoa((const struct ether_addr *)&AggrPacketList.at(i).Aggr_dhost));
+						CorrectMacAdress(MacDst);
+						printf("%s %d %d\n", 
+							MacDst, 
+							AggrPacketList.at(i).NumberOfPackets, 
+							AggrPacketList.at(i).len);
+					}
+					break;
+				}
+				case 0:
+				{
+					int Temp;
+					for (int i = 0; i < ItemsCount; i++)
+					{
+						Temp = GetMaxAggrPac(AggrPacketList, ItemsCount);
+						char MacDst[256];
+						strcpy(MacDst, ether_ntoa((const struct ether_addr *)&AggrPacketList.at(Temp).Aggr_dhost));
+						CorrectMacAdress(MacDst);
+						printf("%s %d %d\n", 
+							MacDst, 
+							AggrPacketList.at(Temp).NumberOfPackets, 
+							AggrPacketList.at(Temp).len);
+						AggrPacketList[Temp].NumberOfPackets = 0;
+					}
+					break;
+				}
+				case 1:
+				{
+					int Temp;
+					for (int i = 0; i < ItemsCount; i++)
+					{
+						Temp = GetMaxAggrLen(AggrPacketList, ItemsCount);
+						char MacDst[256];
+						strcpy(MacDst, ether_ntoa((const struct ether_addr *)&AggrPacketList.at(Temp).Aggr_dhost));
+						CorrectMacAdress(MacDst);
+						printf("%s %d %d\n", 
+							MacDst, 
+							AggrPacketList.at(Temp).NumberOfPackets, 
+							AggrPacketList.at(Temp).len);
+						AggrPacketList[Temp].len = 0;
+					}
+					break;
+				}
+				default:
+				{
+					break;
+				}
 			}
 			break;
-		}
+		} 
 		case 2:
 		{
 			for (int i = 0; i < NumberOfPackets; i++)
@@ -631,22 +772,88 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 				}
 			}
-			for (int i = 0; i < ItemsCount; i++)
+
+			switch(svalue)
 			{
-				if (AggrPacketList.at(i).IpType == 0)
+				case -2:
 				{
-					printf("%s %d %d\n", 
-						inet_ntoa(AggrPacketList.at(i).Aggr_ip_src), 
-						AggrPacketList.at(i).NumberOfPackets, 
-						AggrPacketList.at(i).len);
+					for (int i = 0; i < ItemsCount; i++)
+					{
+						if (AggrPacketList.at(i).IpType == 0)
+						{
+							printf("%s %d %d\n", 
+								inet_ntoa(AggrPacketList.at(i).Aggr_ip_src), 
+								AggrPacketList.at(i).NumberOfPackets, 
+								AggrPacketList.at(i).len);
+						}
+						else
+						{
+							char printAbleIPv6src[INET6_ADDRSTRLEN];
+							printf("%s %d %d\n", 
+								inet_ntop(AF_INET6, &(AggrPacketList.at(i).Aggr_ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN), 
+								AggrPacketList.at(i).NumberOfPackets, 
+								AggrPacketList.at(i).len);
+						}
+					}
+					break;
 				}
-				else
+				case 0:
 				{
-					char printAbleIPv6src[INET6_ADDRSTRLEN];
-					printf("%s %d %d\n", 
-						inet_ntop(AF_INET6, &(AggrPacketList.at(i).Aggr_ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN), 
-						AggrPacketList.at(i).NumberOfPackets, 
-						AggrPacketList.at(i).len);
+					int Temp;
+					for (int i = 0; i < ItemsCount; i++)
+					{
+						Temp = GetMaxAggrPac(AggrPacketList, ItemsCount);
+
+						if (AggrPacketList.at(Temp).IpType == 0)
+						{
+							printf("%s %d %d\n", 
+								inet_ntoa(AggrPacketList.at(Temp).Aggr_ip_src), 
+								AggrPacketList.at(Temp).NumberOfPackets, 
+								AggrPacketList.at(Temp).len);
+						}
+						else
+						{
+							char printAbleIPv6src[INET6_ADDRSTRLEN];
+							printf("%s %d %d\n", 
+								inet_ntop(AF_INET6, &(AggrPacketList.at(Temp).Aggr_ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN), 
+								AggrPacketList.at(Temp).NumberOfPackets, 
+								AggrPacketList.at(Temp).len);
+						}
+
+						AggrPacketList[Temp].NumberOfPackets = 0;
+					}
+					break;
+				}
+				case 1:
+				{
+					int Temp;
+					for (int i = 0; i < ItemsCount; i++)
+					{
+						Temp = GetMaxAggrLen(AggrPacketList, ItemsCount);
+
+						if (AggrPacketList.at(Temp).IpType == 0)
+						{
+							printf("%s %d %d\n", 
+								inet_ntoa(AggrPacketList.at(Temp).Aggr_ip_src), 
+								AggrPacketList.at(Temp).NumberOfPackets, 
+								AggrPacketList.at(Temp).len);
+						}
+						else
+						{
+							char printAbleIPv6src[INET6_ADDRSTRLEN];
+							printf("%s %d %d\n", 
+								inet_ntop(AF_INET6, &(AggrPacketList.at(Temp).Aggr_ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN), 
+								AggrPacketList.at(Temp).NumberOfPackets, 
+								AggrPacketList.at(Temp).len);
+						}
+
+						AggrPacketList[Temp].len = 0;
+					}
+					break;
+				}
+				default:
+				{
+					break;
 				}
 			}
 
@@ -742,22 +949,88 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 				}
 			}
-			for (int i = 0; i < ItemsCount; i++)
+
+			switch(svalue)
 			{
-				if (AggrPacketList.at(i).IpType == 0)
+				case -2:
 				{
-					printf("%s %d %d\n", 
-						inet_ntoa(AggrPacketList.at(i).Aggr_ip_dst), 
-						AggrPacketList.at(i).NumberOfPackets, 
-						AggrPacketList.at(i).len);
+					for (int i = 0; i < ItemsCount; i++)
+					{
+						if (AggrPacketList.at(i).IpType == 0)
+						{
+							printf("%s %d %d\n", 
+								inet_ntoa(AggrPacketList.at(i).Aggr_ip_dst), 
+								AggrPacketList.at(i).NumberOfPackets, 
+								AggrPacketList.at(i).len);
+						}
+						else
+						{
+							char printAbleIPv6dst[INET6_ADDRSTRLEN];
+							printf("%s %d %d\n", 
+								inet_ntop(AF_INET6, &(AggrPacketList.at(i).Aggr_ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN), 
+								AggrPacketList.at(i).NumberOfPackets, 
+								AggrPacketList.at(i).len);
+						}
+					}
+					break;
 				}
-				else
+				case 0:
 				{
-					char printAbleIPv6dst[INET6_ADDRSTRLEN];
-					printf("%s %d %d\n", 
-						inet_ntop(AF_INET6, &(AggrPacketList.at(i).Aggr_ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN), 
-						AggrPacketList.at(i).NumberOfPackets, 
-						AggrPacketList.at(i).len);
+					int Temp;
+					for (int i = 0; i < ItemsCount; i++)
+					{
+						Temp = GetMaxAggrPac(AggrPacketList, ItemsCount);
+
+						if (AggrPacketList.at(Temp).IpType == 0)
+						{
+							printf("%s %d %d\n", 
+								inet_ntoa(AggrPacketList.at(Temp).Aggr_ip_dst), 
+								AggrPacketList.at(Temp).NumberOfPackets, 
+								AggrPacketList.at(Temp).len);
+						}
+						else
+						{
+							char printAbleIPv6dst[INET6_ADDRSTRLEN];
+							printf("%s %d %d\n", 
+								inet_ntop(AF_INET6, &(AggrPacketList.at(Temp).Aggr_ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN), 
+								AggrPacketList.at(Temp).NumberOfPackets, 
+								AggrPacketList.at(Temp).len);
+						}
+
+						AggrPacketList[Temp].NumberOfPackets = 0;
+					}
+					break;
+				}
+				case 1:
+				{
+					int Temp;
+					for (int i = 0; i < ItemsCount; i++)
+					{
+						Temp = GetMaxAggrLen(AggrPacketList, ItemsCount);
+
+						if (AggrPacketList.at(Temp).IpType == 0)
+						{
+							printf("%s %d %d\n", 
+								inet_ntoa(AggrPacketList.at(Temp).Aggr_ip_dst), 
+								AggrPacketList.at(Temp).NumberOfPackets, 
+								AggrPacketList.at(Temp).len);
+						}
+						else
+						{
+							char printAbleIPv6dst[INET6_ADDRSTRLEN];
+							printf("%s %d %d\n", 
+								inet_ntop(AF_INET6, &(AggrPacketList.at(Temp).Aggr_ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN), 
+								AggrPacketList.at(Temp).NumberOfPackets, 
+								AggrPacketList.at(Temp).len);
+						}
+
+						AggrPacketList[Temp].len = 0;
+					}
+					break;
+				}
+				default:
+				{
+					break;
 				}
 			}
 
@@ -1131,6 +1404,8 @@ int GetMax(std::vector<PacketData> PacketList, int NumberOfPackets)
 	}
 	return Order;
 }
+
+
 
 int main (int argc, char *argv[])
 {
