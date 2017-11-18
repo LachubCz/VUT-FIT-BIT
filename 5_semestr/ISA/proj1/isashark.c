@@ -342,7 +342,7 @@ int GetMaxAggrPac(std::vector<AggrData> PacketList, int NumberOfPackets)
 	return Order;
 }
 
-void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, int avalue, int svalue, int lvalue)
+void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, int avalue, int svalue, unsigned int lvalue)
 {
 	int ItemsCount = 0;
 	bool IsIn = false;
@@ -1644,12 +1644,12 @@ int main (int argc, char *argv[])
 	bool hflag = false;
 	int c;
 	int index;
-	int lvalue = -2;
+	unsigned int lvalue = 4294967295;
 	int avalue = -2;
 	int svalue = -2;
 	char fvalue[256] = "";
 	char filename[256] = "";
-	int printed = 0;
+	unsigned int printed = 0;
 	
 	opterr = 0;
 

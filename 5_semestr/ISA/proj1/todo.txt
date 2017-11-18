@@ -1,22 +1,31 @@
-todo
+todo:
 - extension header IP header
 - fragmentace
-- filtr, 
+- filtr
 - ICMP
 - dopsat return value kontroly
+- prázdný soubor
+- defaulty
+- více souborů
+
+
+
+kontrola:
+- zkontrolovat break ve switchich
+- přepočítat agregace
+- správnost parametrů programu
+
+
+
+dokumentace
 - dokumentace
 - readme
 - komentáře k programu
-- správnost parametrů programu
-- defaulty
-- prázdný soubor
-- přepočítat agregace
-- agregace se sortem
-- více souborů
-- zkontrolovat break
 
 
 
-snad hotovo
+snad hotovo:
 - tpid hlavičky
 - agregace
+- limit
+- agregace se sortem
