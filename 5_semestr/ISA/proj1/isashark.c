@@ -1787,8 +1787,9 @@ int main (int argc, char *argv[])
 			case 0x0800: //ETHERTYPE_IP IPV4
 			{
 				EthTypeSize = 14;
-				//IpSize = ipv4ptr->ip_hl*4;
-				IpSize = 20;
+				ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
+				IpSize = ipv4ptr->ip_hl*4; 
+				//IpSize = 20;
 
 				PacketList[PacketNumber - 1].eptr = *eptr;
 				PacketList[PacketNumber - 1].Layer1 = 0;
@@ -1817,8 +1818,9 @@ int main (int argc, char *argv[])
 				{
 					case 0x0800:  //IPv4
 					{
-						//IpSize = ipv4ptr->ip_hl*4;
-						IpSize = 20;
+						ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
+						IpSize = ipv4ptr->ip_hl*4;
+						//IpSize = 20;
 						break;
 					}
 					case 0x86DD:  //IPv6
@@ -1846,8 +1848,9 @@ int main (int argc, char *argv[])
 				{
 					case 0x0800:  //IPv4
 					{
-						//IpSize = ipv4ptr->ip_hl*4;
-						IpSize = 20;
+						ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
+						IpSize = ipv4ptr->ip_hl*4;
+						//IpSize = 20;
 						break;
 					}
 					case 0x86DD:  //IPv6
@@ -1868,7 +1871,7 @@ int main (int argc, char *argv[])
 		if (ntohs(eptr->ether_type) == 0x0800 || (ntohs(eptr->ether_type) == 0x8100 && ntohs(qptr->Q_ether_type) == 0x0800) || (ntohs(eptr->ether_type) == 0x88a8 && ntohs(adptr->AD_ether_type) == 0x0800))
 		{
 			
-			ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
+			
 
 			PacketList[PacketNumber - 1].ipv4ptr = *ipv4ptr;
 			PacketList[PacketNumber - 1].Layer2 = 0;
@@ -1898,10 +1901,6 @@ int main (int argc, char *argv[])
 
 					break;
 				}
-				case 58:  //ICMPv6
-				{
-					break;
-				}
 				default:  //Nor TCP nor UDP nor ICMPv4 nor ICMPv6
 				{
 					PacketList[PacketNumber - 1].Layer3 = 3;
@@ -1917,7 +1916,7 @@ int main (int argc, char *argv[])
 			PacketList[PacketNumber - 1].Layer2 = 1;
 
 			u_int8_t  ip6_un1_nxt = ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt;
-			
+
 			bool NextHeaders = true;
 			int extraLenght = 0;
 
@@ -1965,13 +1964,6 @@ int main (int argc, char *argv[])
 					{
 						switch(ip6_un1_nxt)
 						{
-							case 1:  //ICMP protocol
-							{
-								PacketList[PacketNumber - 1].Layer3 = 0;
-
-								NextHeaders = false;
-								break;
-							}
 							case 6:  //TCP protocol
 							{
 								tcpptr = (struct TCPHeader *) (packet+EthTypeSize+IpSize+extraLenght);

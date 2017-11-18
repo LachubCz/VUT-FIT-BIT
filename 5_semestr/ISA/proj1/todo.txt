@@ -1,8 +1,11 @@
 todo:
-- extension header IP header
-- fragmentace
+
 - filtr
+- fragmentace
 - ICMP
+
+
+dodělávky:
 - dopsat return value kontroly
 - prázdný soubor
 - defaulty
@@ -10,11 +13,11 @@ todo:
 - přeskakování neznámých paketů pomocí vrácení čísla o jedno
 
 
-
 kontrola:
 - zkontrolovat break ve switchich
 - přepočítat agregace
 - správnost parametrů programu
+- zkontrolovat správné IPv6 extensions https://www.microsoftpressstore.com/articles/article.aspx?p=2225063&seqNum=4
 
 
 
@@ -30,3 +33,4 @@ snad hotovo:
 - agregace
 - limit
 - agregace se sortem
+- extension header IPv4 header
