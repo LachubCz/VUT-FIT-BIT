@@ -1,3 +1,7 @@
+/**
+ * Projekt ISA 2017/18 - Analyzator paketu
+ * xbucha02, Petr Buchal
+**/
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -11,138 +15,199 @@
 
 #include <vector>
 #include <string>
-#include <stack>
 #include <iostream>
 using namespace std;
 
+/*###############################################*/
+/*###################Struktury###################*/
+/*###############################################*/
+
+//ICMPv4 Hlavicka
+struct ICMPv4Header {
+	u_int8_t icmp4_type;  //ICMPv4 Type
+	u_int8_t icmp4_code;  //ICMPv4 Code
+	u_int16_t icmp4_sum;  //ICMPv4 Checksum
+};
+
+//ICMPv6 Hlavicka
 struct ICMPv6Header {
-	u_int8_t	icmp6_type;	/* type field */
-	u_int8_t	icmp6_code;	/* code field */
-	u_int16_t	icmp6_cksum;	/* checksum field */
+	u_int8_t icmp6_type;  //ICMPv6 Type
+	u_int8_t icmp6_code;  //ICMPv6 Code
+	u_int16_t icmp6_cksum;  //ICMPv6 Checksum
 };
 
-struct ICMPv4Header{
-	u_int8_t icmp4_type;	   			/* ICMP type */
-	u_int8_t icmp4_code;	   			/* ICMP code */
-	u_int16_t icmp4_sum;   			/* ICMP Checksum */
-};
-
-struct TCPHeader {
-	u_short th_sport;	/* source port */
-	u_short th_dport;	/* destination port */
-	u_int th_seq;		/* sequence number */
-	u_int th_ack;		/* acknowledgement number */
-	u_char th_offx2;	/* data offset, rsvd */
-	u_char th_flags;
-#define TH_FIN 0x01
-#define TH_SYN 0x02
-#define TH_RST 0x04
-#define TH_PUSH 0x08
-#define TH_ACK 0x10
-#define TH_URG 0x20
-#define TH_ECE 0x40
-#define TH_CWR 0x80
-	u_short th_win;		/* window */
-	u_short th_sum;		/* checksum */
-	u_short th_urp;		/* urgent pointer */
-};
-
+//UDP Hlavicka
 struct UDPHeader {
-	u_short	uh_sport;		/* source port */
-	u_short	uh_dport;		/* destination port */
-	short	uh_ulen;		/* udp length */
-	u_short	uh_sum;			/* udp checksum */
+	u_short	uh_sport;  //UDP Source port
+	u_short	uh_dport;  //UDP Destination port
+	short	uh_ulen;  //UDP Length
+	u_short	uh_sum;  //UDP Checksum
 };
 
+//TCP Hlavicka
+struct TCPHeader {
+	u_short th_sport;  //TCP Source port
+	u_short th_dport;  //TCP Destination port
+	u_int th_seq;  //TCP Sequence number
+	u_int th_ack;  //TCP Acknowledgement number
+	u_char th_off;  //TCP Data offset
+	u_char th_flags;  //TCP Flags
+	u_short th_win;  //TCP Window
+	u_short th_sum;  //TCP Checksum
+	u_short th_urp;  //TCP Urgent pointer
+	//Flag masks
+	#define TH_FIN 0x01
+	#define TH_SYN 0x02
+	#define TH_RST 0x04
+	#define TH_PUSH 0x08
+	#define TH_ACK 0x10
+	#define TH_URG 0x20
+	#define TH_ECE 0x40
+	#define TH_CWR 0x80
+};
+
+//IPv4 Hlavicka
+struct IPv4Header {
+	#if BYTE_ORDER == LITTLE_ENDIAN
+		u_char  ip_hl:4,  //IPv4 Header length
+		ip_v:4;  //IPv4 Version
+	#endif
+	#if BYTE_ORDER == BIG_ENDIAN
+		u_char  ip_v:4,  //IPv4 Version
+		ip_hl:4;  //IPv4 Header length
+	#endif
+	u_char ip_tos;  //IPv4 Type of service
+	u_short ip_len;  //IPv4 Total length
+	u_short ip_id;  //IPv4 Indentifier
+	u_short ip_off;  //IPv4 Fragment offset
+	u_char ip_ttl;  //IPv4 Time to live
+	u_char ip_p;  //IPv4 Protocol
+	u_short ip_sum;  //IPv4 Header checksum
+	struct in_addr ip_src;  //IPv4 Source address
+	struct in_addr ip_dst;  //IPv4 Destination address
+	//Offset masks
+	#define	IP_RF 0x8000  //IPv4 Mask for reserved bit
+	#define	IP_DF 0x4000  //IPv4 Mask for dont fragment bit
+	#define	IP_MF 0x2000  //IPv4 Mask for more fragments bit
+	#define	IP_OFFMASK 0x1fff  //IPv4 Mask for offset
+};
+
+//IPv6 Rozsirujici hlavicka
 struct IPv6ExtHeader{
-	uint8_t  ip6e_nxt;		/* next header.  */
-	uint8_t  ip6e_len;
+	uint8_t  ip6e_nxt;  //IPv6 (extended) Next header
+	uint8_t  ip6e_len;  //IPv6 (extended) Length
 };
 
+//IPv6 Hlavicka
 struct IPv6Header {
 	union {
 		struct ip6_hdrctl {
-			u_int32_t ip6_un1_flow;	/* 20 bits of flow-ID */
-			u_int16_t ip6_un1_plen;	/* payload length */
-			u_int8_t  ip6_un1_nxt;	/* next header */
-			u_int8_t  ip6_un1_hlim;	/* hop limit */
+			u_int32_t ip6_un1_flow;	 //IPv6 Flow label
+			u_int16_t ip6_un1_plen;	 //IPv6 Payload length
+			u_int8_t  ip6_un1_nxt;	 //IPv6 Next header
+			u_int8_t  ip6_un1_hlim;	 //IPv6 Hop limit
 		} ip6_un1;
-		u_int8_t ip6_un2_vfc;	/* 4 bits version, top 4 bits class */
+		u_int8_t ip6_un2_vfc;  //IPv6 Version
 	} ip6_ctlun;
-	struct in6_addr ip6_src;	/* source address */
-	struct in6_addr ip6_dst;	/* destination address */
+	struct in6_addr ip6_src;  //IPv6 Source address
+	struct in6_addr ip6_dst;  //IPv6 Destination address
 };
 
-struct IPv4Header {
-	#if BYTE_ORDER == LITTLE_ENDIAN
-		u_char  ip_hl:4,				/* header length */
-		ip_v:4;				 /* version */
-	#endif
-	#if BYTE_ORDER == BIG_ENDIAN
-		u_char  ip_v:4,				 /* version */
-		ip_hl:4;				/* header length */
-	#endif
-	u_char ip_tos;			/* type of service */
-	u_short ip_len;			/* total length */
-	u_short ip_id;			/* identification */
-	u_short ip_off;			/* fragment offset field */
-	#define	IP_RF 0x8000			/* reserved fragment flag */
-	#define	IP_DF 0x4000			/* dont fragment flag */
-	#define	IP_MF 0x2000			/* more fragments flag */
-	#define	IP_OFFMASK 0x1fff		/* mask for fragmenting bits */
-	/*(flags_fragmentOffset & 0x4000) != 0*/
-	u_char ip_ttl;			/* time to live */
-	u_char ip_p;			/* protocol */
-	u_short ip_sum;			/* checksum */
-	struct in_addr ip_src; /* source address*/
-	struct in_addr ip_dst; /* source and dest address */
-};
-
+//IEEE 802.1ad Hlavicka
 struct ADHeader {
-	uint8_t AD_dhost[ETHER_ADDR_LEN];
-	uint8_t AD_shost[ETHER_ADDR_LEN];
-	uint16_t AD_tpid;
-	uint16_t AD_tci;
-	uint16_t AD_tpid2;
-	uint16_t AD_tci2;
-	uint16_t AD_ether_type;
+	uint8_t AD_dhost[ETHER_ADDR_LEN];  //IEEE 802.1ad Destination MAC address
+	uint8_t AD_shost[ETHER_ADDR_LEN];  //IEEE 802.1ad Source MAC address
+	uint16_t AD_tpid;  //IEEE 802.1ad TPID=0x88a8
+	uint16_t AD_tci;  //IEEE 802.1ad PCI/DEI/VID
+	uint16_t AD_tpid2;  //IEEE 802.1ad TPID=0x8100
+	uint16_t AD_tci2;  //IEEE 802.1ad PCI/DEI/VID
+	uint16_t AD_ether_type;  //IEEE 802.1ad EtherType
 };
 
+//IEEE 802.1Q Hlavicka
 struct QHeader {
-	uint8_t Q_dhost[ETHER_ADDR_LEN];
-	uint8_t Q_shost[ETHER_ADDR_LEN];
-	uint16_t Q_tpid1;
-	uint16_t Q_tpid2;
-	uint16_t Q_ether_type;
+	uint8_t Q_dhost[ETHER_ADDR_LEN];  //IEEE 802.1Q Destination MAC address
+	uint8_t Q_shost[ETHER_ADDR_LEN];  //IEEE 802.1Q Source MAC address
+	uint16_t Q_tpid1;  //IEEE 802.1Q TPID=0x8100
+	uint16_t Q_tpid2;  //IEEE 802.1Q PCI/DEI/VID
+	uint16_t Q_ether_type;  //IEEE 802.1Q EtherType
 };
 
+//Ethernet Hlavicka
 struct ETHHeader {
-	uint8_t ether_dhost[ETHER_ADDR_LEN];
-	uint8_t ether_shost[ETHER_ADDR_LEN];
-	uint16_t ether_type;
+	uint8_t ether_dhost[ETHER_ADDR_LEN];  //Ethernet Destination MAC address
+	uint8_t ether_shost[ETHER_ADDR_LEN];  //Ethernet Source MAC address
+	uint16_t ether_type;  //Ethernet EtherType
 };
 
+//Struktura pro ukladani zpracovanych paketu
 struct PacketData {
-	int Layer1;
-	struct ETHHeader eptr;
-	struct ADHeader adptr;
-	struct QHeader qptr;
-	int Layer2;
-	struct IPv4Header ipv4ptr;
-	struct IPv6Header ipv6ptr;
-	int Layer3;
-	struct TCPHeader tcpptr;
-	struct UDPHeader udpptr;
-	struct ICMPv4Header icmpv4ptr;
-	struct ICMPv6Header icmpv6ptr;
-	int PacketNumber;
-	struct timeval ts;
-	bpf_u_int32 len;
+	int Layer1;  //Druh L2 vrstvy
+	struct ETHHeader eptr;  //Ethernet hlavicka
+	struct QHeader qptr;  //IEEE 802.1Q Hlavicka
+	struct ADHeader adptr;  //IEEE 802.1ad Hlavicka
+	int Layer2;  //Druh L3 vrstvy
+	struct IPv4Header ipv4ptr;  //IPv6 Hlavicka
+	struct IPv6Header ipv6ptr;  //IPv4 Hlavicka
+	int Layer3;  //Druh L2 vrstvy
+	struct TCPHeader tcpptr;  //TCP Hlavicka
+	struct UDPHeader udpptr;  //UDP Hlavicka
+	struct ICMPv4Header icmpv4ptr;  //ICMPv4 Hlavicka
+	struct ICMPv6Header icmpv6ptr;  //ICMPv6 Hlavicka
+	int PacketNumber;  //Cislo zpracovaneho paketu
+	struct timeval ts;  //Casova znacka v mikrosekundach
+	bpf_u_int32 len;  //Delka paketu v bajtech
 };
+
+//Struktura pro ulozeni agregovanych zpracovanych paketu
+struct AggrData {
+	uint8_t Aggr_shost[ETHER_ADDR_LEN];  //Agregovana zdrojova MAC adresa
+	uint8_t Aggr_dhost[ETHER_ADDR_LEN];  //Agregovana cilova MAC adresa
+   	struct in_addr Aggr_ip_src;  //Agregovana zdrojova IPv4 adresa
+	struct in_addr Aggr_ip_dst;  //Agregovana cilova IPv4 adresa
+	int IpType;  //Druh IP adresy
+	struct in6_addr Aggr_ip6_src;  //Agregovana zdrojova IPv6 adresa
+	struct in6_addr Aggr_ip6_dst;  //Agregovana cilova IPv6 adresa
+	u_short	Aggr_sport;  //Agregovany zdrojovy port
+	u_short	Aggr_dport;  //Agregovany cilovy port
+	int NumberOfPackets;  //Pocet agregovanych paketu
+	bpf_u_int32 len;  //Delka agregovanych paketu
+};
+
+//
+struct Hole{
+	u_int32_t first;
+	u_int32_t last;
+};
+
+//
+struct PacketToReassemble{
+	struct in_addr ip_src; 
+	struct in_addr ip_dst;  
+	u_short ip_id;
+	std::vector<Hole> Holes;
+};
+
+/*###############################################*/
+/*#####################Funkce####################*/
+/*###############################################*/
 
 void PrintHelp()
 {
-	printf("This line is every help you will ever get.\n");
+	printf("Usage:\n");
+	printf("isashark [-h] [-a aggr-key] [-s sort-key] [-l limit] [-f filter-expression] file ...\n");
+	printf("  -h  Vypise napovedu a ukonci program.\n");
+	printf("  -a aggr-key  Zapnuti agregace podle klice aggr-key, coz muze byt srcmac znacici\n");
+	printf("zdrojovou MAC adresu, dstmac znacici cilovou MAC adresu, srcip znacici zdrojovou IP adresu,\n");
+	printf("dstip znacici cilovou IP adresu, srcport znacici cislo zdrojoveho transportniho portu nebo\n");
+	printf("dstport znacici cislo ciloveho transportniho portu.\n");
+	printf("  -s sort-key  Zapnuti razeni podle klice sort-key, coz muze byt packets (pocet paketu)\n");
+	printf("nebo bytes (pocet bajtu).\n");
+	printf("  -l limit  Nezaporne cele cislo v desitkove soustave udavajici limit poctu vypsanych polozek.\n");
+	printf("  -f filter-expression  Program zpracuje pouze pakety, ktere vyhovuji filtru danemu retezcem\n");
+	printf("filter-expression.\n");
+	printf("  file  Cesta k souboru ve formatu pcap (citelny knihovnou libpcap). Mozne je zadat jeden\n");
+	printf("a vice souboru.\n");
 	exit(0);
 }
 
@@ -307,24 +372,6 @@ int GetNumberOfPackets(char *filename, char *fvalue)
 	pcap_close(handle);
 	return counter;
 }
-
-struct AggrData {
-	uint8_t Aggr_shost[ETHER_ADDR_LEN];
-	uint8_t Aggr_dhost[ETHER_ADDR_LEN];
-   	struct in_addr Aggr_ip_src;
-	struct in_addr Aggr_ip_dst;
-
-	int IpType;
-
-	struct in6_addr Aggr_ip6_src;
-	struct in6_addr Aggr_ip6_dst;
-
-	u_short	Aggr_sport;
-	u_short	Aggr_dport;
-
-	int NumberOfPackets;
-	bpf_u_int32 len;
-};
 
 int GetMaxAggrLen(std::vector<AggrData> PacketList, int NumberOfPackets)
 {
@@ -1515,7 +1562,7 @@ void printPacket(struct PacketData PacketList)
 			CorrectMacAdress(MacSrc);
 			CorrectMacAdress(MacDst);
 
-			printf("%d: %ld%06ld %d | Ethernet: %s %s %d | ",
+			printf("%d: %ld%06ld %d | Ethernet: %s %s %u | ",
 				PacketList.PacketNumber,
 				PacketList.ts.tv_sec,
 				PacketList.ts.tv_usec,
@@ -1532,7 +1579,7 @@ void printPacket(struct PacketData PacketList)
 			CorrectMacAdress(MacSrc);
 			CorrectMacAdress(MacDst);
 
-			printf("%d: %ld%06ld %d | Ethernet: %s %s %d %d | ",
+			printf("%d: %ld%06ld %d | Ethernet: %s %s %u %u | ",
 				PacketList.PacketNumber,
 				PacketList.ts.tv_sec,
 				PacketList.ts.tv_usec,
@@ -1555,14 +1602,14 @@ void printPacket(struct PacketData PacketList)
 		{
 			printf("IPv4: %s ",
 				inet_ntoa(PacketList.ipv4ptr.ip_src));
-			printf("%s %d | ",
+			printf("%s %u | ",
 				inet_ntoa(PacketList.ipv4ptr.ip_dst),
 				PacketList.ipv4ptr.ip_ttl);
 			break;
 		}
 		case 1:  //IPv6
 		{
-			printf("IPv6: %s %s %d | ",
+			printf("IPv6: %s %s %u | ",
 				inet_ntop(AF_INET6, &(PacketList.ipv6ptr.ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN),
 				inet_ntop(AF_INET6, &(PacketList.ipv6ptr.ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN),
 				PacketList.ipv6ptr.ip6_ctlun.ip6_un1.ip6_un1_hlim);
@@ -1731,11 +1778,11 @@ void printPacket(struct PacketData PacketList)
 		}
 		case 1:  //TCP
 		{
-			printf("TCP: %d %d %u %u ",
+			printf("TCP: %u %u %u %u ",
 				ntohs(PacketList.tcpptr.th_sport),
 				ntohs(PacketList.tcpptr.th_dport),
-				PacketList.tcpptr.th_seq & 0xff,
-				PacketList.tcpptr.th_ack & 0xff);
+				ntohl(PacketList.tcpptr.th_seq),
+				ntohl(PacketList.tcpptr.th_ack));
 			if (PacketList.tcpptr.th_flags & TH_CWR)
 				printf("C");
 			else
@@ -1773,7 +1820,7 @@ void printPacket(struct PacketData PacketList)
 		}
 		case 2:  //UDP
 		{
-			printf("UDP: %d %d\n", 
+			printf("UDP: %u %u\n", 
 				ntohs(PacketList.udpptr.uh_sport),
 				ntohs(PacketList.udpptr.uh_dport));
 			break;
@@ -1934,29 +1981,17 @@ int GetMax(std::vector<PacketData> PacketList, int NumberOfPackets)
 	return Order;
 }
 
-	struct Hole{
-		u_int32_t first;
-		u_int32_t last;
-	};
-
-	struct PacketToReassemble{
-		struct in_addr ip_src; 
-		struct in_addr ip_dst;  
-		u_short ip_id;
-		std::vector<Hole> Holes;
-	};
-
-	int GetNCPacketNumber(std::vector<PacketToReassemble> NCPackets, struct in_addr ip_src, struct in_addr ip_dst, u_short ip_id)
+int GetNCPacketNumber(std::vector<PacketToReassemble> NCPackets, struct in_addr ip_src, struct in_addr ip_dst, u_short ip_id)
+{
+	for (int i = 0; i < NCPackets.size(); ++i)
 	{
-		for (int i = 0; i < NCPackets.size(); ++i)
+		if (NCPackets.at(i).ip_src.s_addr == ip_src.s_addr && NCPackets.at(i).ip_dst.s_addr == ip_dst.s_addr && NCPackets.at(i).ip_id == ip_id)
 		{
-			if (NCPackets.at(i).ip_src.s_addr == ip_src.s_addr && NCPackets.at(i).ip_dst.s_addr == ip_dst.s_addr && NCPackets.at(i).ip_id == ip_id)
-			{
-				return i;
-			}
+			return i;
 		}
-		return -1;
 	}
+	return -1;
+}
 
 int main (int argc, char *argv[])
 {
@@ -2043,29 +2078,29 @@ int main (int argc, char *argv[])
 	int NumberOfFiles = argc-optind;
 	char filenames[NumberOfFiles][256];
 
+	//printf ("hflag = %d, avalue = %d, svalue = %d, lvalue = %d, fvalue = %s\n\n", hflag, avalue, svalue, lvalue, fvalue);
+	
 	for (index = optind; index < argc; index++)
 	{
 		strcpy(filenames[argc - index - 1], argv[index]);
 	}
 
-	if (hflag == true && avalue == -2 && svalue == -2 && strcmp(fvalue, "") == 0 && lvalue == -2)
+	if (hflag == true && avalue == -2 && svalue == -2 && strcmp(fvalue, "") == 0 && lvalue == 4294967295)
 	{
 		PrintHelp();
 	}
 	else
 	{
-		if (hflag == true && (avalue != -2 || svalue != -2 || strcmp(fvalue, "") != 0 || lvalue != -2))
+		if (hflag == true && (avalue != -2 || svalue != -2 || strcmp(fvalue, "") != 0 || lvalue != 4294967295))
 		{
 			ErrorFound(8);
 		}
 	}
 
-	
 	/*for (int i = 0; i < NumberOfFiles; i++)
 	{
 		printf("%s\n", filenames[i]);
 	}*/
-	//printf ("\nfilename = %s, hflag = %d, avalue = %d, svalue = %d, lvalue = %d, fvalue = %s\n\n", filename, hflag, avalue, svalue, lvalue, fvalue);
 
 	pcap_t *handle; //ukazatel na soubor s pakety
 	const u_char *packet;
@@ -2392,7 +2427,7 @@ int main (int argc, char *argv[])
 				}
 			}
 			PacketList[PacketNumber - 1].ts = header.ts;
-			PacketList[PacketNumber - 1].len = header.len;
+			PacketList[PacketNumber - 1].len = header.caplen;
 			PacketList[PacketNumber - 1].PacketNumber = PacketNumber;
 		}
 	}
