@@ -267,17 +267,30 @@ int CorrectMacAdress(char *str)
 	return 0;
 }
 
-int GetNumberOfPackets(char *filename)
+int GetNumberOfPackets(char *filename, char *fvalue)
 {
 	int counter = 0;
 	pcap_t *handle; //ukazatel na soubor s pakety
 	const u_char *packet;
 	char errbuf[256];
 	struct pcap_pkthdr header;
+	struct bpf_program fp; // the compiled filter
 
 	if ((handle = pcap_open_offline(filename,errbuf)) == NULL)
 		ErrorFound(9);
-	
+
+	if (strcmp("", fvalue) != 0)
+	{
+		if (pcap_compile(handle,&fp, fvalue, 0, 0) == -1) // compile the filter
+		{
+			printf("chyba\n" );
+		}
+		if (pcap_setfilter(handle, &fp) == -1)
+		{
+			printf("chyba\n" );
+		}
+	}
+
 	while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
 	{
 		counter++;
@@ -1727,10 +1740,8 @@ int main (int argc, char *argv[])
 			break;
 	}
 
-
 	for (index = optind; index < argc; index++)
 	{
-		//printf ("Non-option argument %s\n", argv[index]);
 		strcpy(filename, argv[index]);
 		//ErrorFound(7);
 	}
@@ -1747,15 +1758,14 @@ int main (int argc, char *argv[])
 		}
 	}
 
-	//printf("0\n");
-	//printf("\"%s\"\n", fvalue);
 	//printf("%s\n", filename);
-	//printf ("hflag = %d, avalue = %s, svalue = %s, lvalue = %d, fvalue = %s\n", hflag, avalue, svalue, lvalue, fvalue);
+	//printf ("\nfilename = %s, hflag = %d, avalue = %d, svalue = %d, lvalue = %d, fvalue = %s\n\n", filename, hflag, avalue, svalue, lvalue, fvalue);
 
 	pcap_t *handle; //ukazatel na soubor s pakety
 	const u_char *packet;
 	char errbuf[256];
 	struct pcap_pkthdr header;
+	struct bpf_program fp; // the compiled filter
 
 	//nepopsane struktury
   	struct ETHHeader *eptr;
@@ -1772,16 +1782,21 @@ int main (int argc, char *argv[])
 	if ((handle = pcap_open_offline(filename,errbuf)) == NULL)
 		ErrorFound(9);
 	
-	int NumberOfPackets = GetNumberOfPackets(filename);
+	int NumberOfPackets = GetNumberOfPackets(filename, fvalue);
 	
 	std::vector<PacketData>  PacketList(NumberOfPackets);
 
-	struct bpf_program fp; // the compiled filter
-	if (pcap_compile(handle,&fp,"src host 2001:db8::1",0,0) == -1) // compile the filter
-	printf("1\n"); //err(1,"pcap_compile() failed");
-	if (pcap_setfilter(handle,&fp) == -1) // set the filter to the packet capture handle
-	printf("2\n");	//err(1,"pcap_setfilter() failed");
-
+	if (strcmp("", fvalue) != 0)
+	{
+		if (pcap_compile(handle,&fp,fvalue,0,0) == -1) // compile the filter
+		{
+			printf("chyba\n" );
+		}
+		if (pcap_setfilter(handle,&fp) == -1)
+		{
+			printf("chyba\n" );
+		}
+	}
 
 	while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
 	{
