@@ -18,6 +18,7 @@ kontrola:
 - přepočítat agregace
 - správnost parametrů programu
 - zkontrolovat správné IPv6 extensions https://www.microsoftpressstore.com/articles/article.aspx?p=2225063&seqNum=4
+kontrola převodu čísel htons atd
 
 
 

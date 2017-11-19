@@ -1655,7 +1655,29 @@ int GetMax(std::vector<PacketData> PacketList, int NumberOfPackets)
 	return Order;
 }
 
+	struct Hole{
+		u_int32_t first;
+		u_int32_t last;
+	};
 
+	struct PacketToReassemble{
+		struct in_addr ip_src; 
+		struct in_addr ip_dst;  
+		u_short ip_id;
+		std::vector<Hole> Holes;
+	};
+
+	int GetNCPacketNumber(std::vector<PacketToReassemble> NCPackets, struct in_addr ip_src, struct in_addr ip_dst, u_short ip_id)
+	{
+		for (int i = 0; i < NCPackets.size(); ++i)
+		{
+			if (NCPackets.at(i).ip_src.s_addr == ip_src.s_addr && NCPackets.at(i).ip_dst.s_addr == ip_dst.s_addr && NCPackets.at(i).ip_id == ip_id)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
 
 int main (int argc, char *argv[])
 {
@@ -1776,6 +1798,7 @@ int main (int argc, char *argv[])
 	struct IPv6ExtHeader *ext;
 	const struct TCPHeader *tcpptr;    // pointer to the beginning of TCP header
 	const struct UDPHeader *udpptr;    // pointer to the beginning of UDP header
+	std::vector<PacketToReassemble> NCPackets;
 
 	int PacketNumber = 0; 
 
@@ -1892,40 +1915,89 @@ int main (int argc, char *argv[])
 
 		if (ntohs(eptr->ether_type) == 0x0800 || (ntohs(eptr->ether_type) == 0x8100 && ntohs(qptr->Q_ether_type) == 0x0800) || (ntohs(eptr->ether_type) == 0x88a8 && ntohs(adptr->AD_ether_type) == 0x0800))
 		{
-			PacketList[PacketNumber - 1].ipv4ptr = *ipv4ptr;
-			PacketList[PacketNumber - 1].Layer2 = 0;
+			/*
+		struct IPv4Header {
+			#if BYTE_ORDER == LITTLE_ENDIAN
+				u_char  ip_hl:4,				/* header length 
+				ip_v:4;				 /* version 
+			#endif
+			#if BYTE_ORDER == BIG_ENDIAN
+				u_char  ip_v:4,				 /* version 
+				ip_hl:4;				/* header length 
+			#endif
+			u_char ip_tos;			/* type of service 
+			u_short ip_len;			/* total length 
+			u_short ip_id;			/* identification 
+			u_short ip_off;			/* fragment offset field 
+			#define	IP_RF 0x8000			/* reserved fragment flag 
+			#define	IP_DF 0x4000			/* dont fragment flag 
+			#define	IP_MF 0x2000			/* more fragments flag 
+			#define	IP_OFFMASK 0x1fff		/* mask for fragmenting bits 
+			/*(flags_fragmentOffset & 0x4000) != 0
+			u_char ip_ttl;			/* time to live 
+			u_char ip_p;			/* protocol 
+			u_short ip_sum;			/* checksum 
+			struct in_addr ip_src; /* source address
+			struct in_addr ip_dst; /* source and dest address 
+		};*/
+			//printf("%d: %u %u\n", PacketNumber, (ntohs(ipv4ptr->ip_off) & IP_OFFMASK) * 8, ntohs(ipv4ptr->ip_off) & IP_MF);
 
-			switch(ipv4ptr->ip_p)
+
+
+			if ((ntohs(ipv4ptr->ip_off) & IP_MF) != 0)
 			{
-				case 1:  //ICMP protocol
+				if (PacketNumber < 3)
 				{
-					PacketList[PacketNumber - 1].Layer3 = 0;
-					break;
+					if (GetNCPacketNumber(NCPackets, ipv4ptr->ip_src, ipv4ptr->ip_dst, ipv4ptr->ip_id) == -1)
+					{
+						printf("jsem hir\n");
+						struct PacketToReassemble pkt;
+						pkt.ip_src = ipv4ptr->ip_src;
+						pkt.ip_dst = ipv4ptr->ip_dst;
+						pkt.ip_id = ipv4ptr->ip_id;
+						NCPackets.push_back(pkt);
+					}
+					printf("%d\n", NCPackets.size());
+					
 				}
-				case 6:  //TCP protocol
+			}
+			else
+			{
+				PacketList[PacketNumber - 1].ipv4ptr = *ipv4ptr;
+				PacketList[PacketNumber - 1].Layer2 = 0;
+				switch(ipv4ptr->ip_p)
 				{
-					tcpptr = (struct TCPHeader *) (packet+EthTypeSize+IpSize);
+					case 1:  //ICMP protocol
+					{
+						PacketList[PacketNumber - 1].Layer3 = 0;
+						break;
+					}
+					case 6:  //TCP protocol
+					{
+						tcpptr = (struct TCPHeader *) (packet+EthTypeSize+IpSize);
 
-					PacketList[PacketNumber - 1].tcpptr = *tcpptr;
-					PacketList[PacketNumber - 1].Layer3 = 1;
+						PacketList[PacketNumber - 1].tcpptr = *tcpptr;
+						PacketList[PacketNumber - 1].Layer3 = 1;
 
-					break;
+						break;
+					}
+					case 17: //UDP protocol
+					{
+						udpptr = (struct UDPHeader*) (packet+EthTypeSize+IpSize);
+
+						PacketList[PacketNumber - 1].udpptr = *udpptr;
+						PacketList[PacketNumber - 1].Layer3 = 2;  
+
+						break;
+					}
+					default:  //Nor TCP nor UDP nor ICMPv4 nor ICMPv6
+					{
+						PacketList[PacketNumber - 1].Layer3 = 3;
+						break;
+					}
 				}
-				case 17: //UDP protocol
-				{
-					udpptr = (struct UDPHeader*) (packet+EthTypeSize+IpSize);
-
-					PacketList[PacketNumber - 1].udpptr = *udpptr;
-					PacketList[PacketNumber - 1].Layer3 = 2;  
-
-					break;
-				}
-				default:  //Nor TCP nor UDP nor ICMPv4 nor ICMPv6
-				{
-					PacketList[PacketNumber - 1].Layer3 = 3;
-					break;
-				}
-			}		}
+			}		
+		}
 
 		if (ntohs(eptr->ether_type) == 0x86DD || (ntohs(eptr->ether_type) == 0x8100 && ntohs(qptr->Q_ether_type) == 0x86DD) || (ntohs(eptr->ether_type) == 0x88a8 && ntohs(adptr->AD_ether_type) == 0x86DD))
 		{
