@@ -25,8 +25,6 @@ struct ICMPv4Header{
 	u_int8_t icmp4_type;	   			/* ICMP type */
 	u_int8_t icmp4_code;	   			/* ICMP code */
 	u_int16_t icmp4_sum;   			/* ICMP Checksum */
-	//u_int16_t id; 				/* ICMP id */
-	//u_int16_t seq;				/* ICMP sequence number */
 };
 
 struct TCPHeader {
@@ -1957,7 +1955,6 @@ int main (int argc, char *argv[])
 	int avalue = -2;
 	int svalue = -2;
 	char fvalue[256] = "";
-	char filename[256] = "";
 	unsigned int printed = 0;
 	
 	opterr = 0;
@@ -2031,10 +2028,12 @@ int main (int argc, char *argv[])
 			break;
 	}
 
+	int NumberOfFiles = argc-optind;
+	char filenames[NumberOfFiles][256];
+
 	for (index = optind; index < argc; index++)
 	{
-		strcpy(filename, argv[index]);
-		//ErrorFound(7);
+		strcpy(filenames[argc - index - 1], argv[index]);
 	}
 
 	if (hflag == true && avalue == -2 && svalue == -2 && strcmp(fvalue, "") == 0 && lvalue == -2)
@@ -2049,7 +2048,11 @@ int main (int argc, char *argv[])
 		}
 	}
 
-	//printf("%s\n", filename);
+	
+	/*for (int i = 0; i < NumberOfFiles; i++)
+	{
+		printf("%s\n", filenames[i]);
+	}*/
 	//printf ("\nfilename = %s, hflag = %d, avalue = %d, svalue = %d, lvalue = %d, fvalue = %s\n\n", filename, hflag, avalue, svalue, lvalue, fvalue);
 
 	pcap_t *handle; //ukazatel na soubor s pakety
@@ -2073,315 +2076,324 @@ int main (int argc, char *argv[])
 
 	int PacketNumber = 0; 
 
-	if ((handle = pcap_open_offline(filename,errbuf)) == NULL)
-		ErrorFound(9);
-	
-	int NumberOfPackets = GetNumberOfPackets(filename, fvalue);
-	
+	int NumberOfPackets = 0;
+
+	for (int i = 0; i < NumberOfFiles; i++)
+	{
+		NumberOfPackets += GetNumberOfPackets(filenames[i], fvalue);
+	}
+	 
 	std::vector<PacketData>  PacketList(NumberOfPackets);
 
-	if (strcmp("", fvalue) != 0)
+	for (int k = 0; k < NumberOfFiles; k++)
 	{
-		if (pcap_compile(handle,&fp,fvalue,0,0) == -1) // compile the filter
+		if ((handle = pcap_open_offline(filenames[k],errbuf)) == NULL)
+			ErrorFound(9);
+		
+		if (strcmp("", fvalue) != 0)
 		{
-			printf("chyba\n" );
-		}
-		if (pcap_setfilter(handle,&fp) == -1)
-		{
-			printf("chyba\n" );
-		}
-	}
-
-	while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
-	{
-		int EthTypeSize = 0;
-		int IpSize = 0;
-		PacketNumber++;
-		eptr = (struct ETHHeader *) packet;
-
-		switch (ntohs(eptr->ether_type))
-		{
-			case 0x0800: //ETHERTYPE_IP IPV4
+			if (pcap_compile(handle,&fp,fvalue,0,0) == -1) // compile the filter
 			{
-				EthTypeSize = 14;
-				ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
-				IpSize = ipv4ptr->ip_hl*4; 
-
-				PacketList[PacketNumber - 1].eptr = *eptr;
-				PacketList[PacketNumber - 1].Layer1 = 0;
-				
-				break;
+				printf("chyba\n" );
 			}
-			case 0x86DD: //ETHERTYPE_IP IPV6
+			if (pcap_setfilter(handle,&fp) == -1)
 			{
-				EthTypeSize = 14;
-				IpSize = 40;
-
-				PacketList[PacketNumber - 1].eptr = *eptr;
-				PacketList[PacketNumber - 1].Layer1 = 0;
-
-				break;
-			}
-			case 0x8100: //IEEE 802.1Q
-			{
-				EthTypeSize = 18;
-				qptr = (struct QHeader *) packet;
-
-				PacketList[PacketNumber - 1].qptr = *qptr;
-				PacketList[PacketNumber - 1].Layer1 = 1;
-
-				switch (ntohs(qptr->Q_ether_type))
-				{
-					case 0x0800:  //IPv4
-					{
-						ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
-						IpSize = ipv4ptr->ip_hl*4;
-
-						break;
-					}
-					case 0x86DD:  //IPv6
-					{
-						IpSize = 40;
-						break;
-					}
-					default:  //not IPv6 nor IPv4 OSETRIT
-					{
-						break;
-					}
-				}
-
-				break;
-			}
-			case 0x88a8: //IEEE 802.1ad
-			{
-				EthTypeSize = 22;
-				adptr = (struct ADHeader *) packet;
-
-				PacketList[PacketNumber - 1].adptr = *adptr;
-				PacketList[PacketNumber - 1].Layer1 = 2;
-
-				switch (ntohs(adptr->AD_ether_type))
-				{
-					case 0x0800:  //IPv4
-					{
-						ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
-						IpSize = ipv4ptr->ip_hl*4;
-
-						break;
-					}
-					case 0x86DD:  //IPv6
-					{
-						IpSize = 40;
-						break;
-					}
-					default:  //not IPv6 nor IPv4 OSETRIT
-					{
-						break;
-					}
-				}
-
-				break;	
+				printf("chyba\n" );
 			}
 		}
 
-		if (ntohs(eptr->ether_type) == 0x0800 || (ntohs(eptr->ether_type) == 0x8100 && ntohs(qptr->Q_ether_type) == 0x0800) || (ntohs(eptr->ether_type) == 0x88a8 && ntohs(adptr->AD_ether_type) == 0x0800))
+		while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
 		{
-			/*
-		struct IPv4Header {
-			#if BYTE_ORDER == LITTLE_ENDIAN
-				u_char  ip_hl:4,				/* header length 
-				ip_v:4;				 /* version 
-			#endif
-			#if BYTE_ORDER == BIG_ENDIAN
-				u_char  ip_v:4,				 /* version 
-				ip_hl:4;				/* header length 
-			#endif
-			u_char ip_tos;			/* type of service 
-			u_short ip_len;			/* total length 
-			u_short ip_id;			/* identification 
-			u_short ip_off;			/* fragment offset field 
-			#define	IP_RF 0x8000			/* reserved fragment flag 
-			#define	IP_DF 0x4000			/* dont fragment flag 
-			#define	IP_MF 0x2000			/* more fragments flag 
-			#define	IP_OFFMASK 0x1fff		/* mask for fragmenting bits 
-			/*(flags_fragmentOffset & 0x4000) != 0
-			u_char ip_ttl;			/* time to live 
-			u_char ip_p;			/* protocol 
-			u_short ip_sum;			/* checksum 
-			struct in_addr ip_src; /* source address
-			struct in_addr ip_dst; /* source and dest address 
-		};*/
-			//printf("%d: %u %u\n", PacketNumber, (ntohs(ipv4ptr->ip_off) & IP_OFFMASK) * 8, ntohs(ipv4ptr->ip_off) & IP_MF);
+			int EthTypeSize = 0;
+			int IpSize = 0;
+			PacketNumber++;
+			eptr = (struct ETHHeader *) packet;
 
-
-
-			if ((ntohs(ipv4ptr->ip_off) & IP_MF) != 0)
+			switch (ntohs(eptr->ether_type))
 			{
-				if (true)//(PacketNumber < 3)
+				case 0x0800: //ETHERTYPE_IP IPV4
 				{
-					if (GetNCPacketNumber(NCPackets, ipv4ptr->ip_src, ipv4ptr->ip_dst, ipv4ptr->ip_id) == -1)
-					{
-						printf("jsem hir\n");
-						struct PacketToReassemble pkt;
-						pkt.ip_src = ipv4ptr->ip_src;
-						pkt.ip_dst = ipv4ptr->ip_dst;
-						pkt.ip_id = ipv4ptr->ip_id;
-						NCPackets.push_back(pkt);
-					}
-					printf("%d\n", NCPackets.size());
+					EthTypeSize = 14;
+					ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
+					IpSize = ipv4ptr->ip_hl*4; 
+
+					PacketList[PacketNumber - 1].eptr = *eptr;
+					PacketList[PacketNumber - 1].Layer1 = 0;
+					
+					break;
 				}
-			}
-			else
-			{
-				PacketList[PacketNumber - 1].ipv4ptr = *ipv4ptr;
-				PacketList[PacketNumber - 1].Layer2 = 0;
-				switch(ipv4ptr->ip_p)
+				case 0x86DD: //ETHERTYPE_IP IPV6
 				{
-					case 1:  //ICMP protocol
-					{
-						icmpv4ptr = (struct ICMPv4Header *) (packet+EthTypeSize+IpSize);
+					EthTypeSize = 14;
+					IpSize = 40;
 
-						PacketList[PacketNumber - 1].icmpv4ptr = *icmpv4ptr;
-						PacketList[PacketNumber - 1].Layer3 = 0;
-						break;
-					}
-					case 6:  //TCP protocol
-					{
-						tcpptr = (struct TCPHeader *) (packet+EthTypeSize+IpSize);
+					PacketList[PacketNumber - 1].eptr = *eptr;
+					PacketList[PacketNumber - 1].Layer1 = 0;
 
-						PacketList[PacketNumber - 1].tcpptr = *tcpptr;
-						PacketList[PacketNumber - 1].Layer3 = 1;
-
-						break;
-					}
-					case 17: //UDP protocol
-					{
-						udpptr = (struct UDPHeader*) (packet+EthTypeSize+IpSize);
-
-						PacketList[PacketNumber - 1].udpptr = *udpptr;
-						PacketList[PacketNumber - 1].Layer3 = 2;  
-
-						break;
-					}
-					default:  //Nor TCP nor UDP nor ICMPv4 nor ICMPv6
-					{
-						PacketList[PacketNumber - 1].Layer3 = 3;
-						break;
-					}
+					break;
 				}
-			}		
-		}
-
-		if (ntohs(eptr->ether_type) == 0x86DD || (ntohs(eptr->ether_type) == 0x8100 && ntohs(qptr->Q_ether_type) == 0x86DD) || (ntohs(eptr->ether_type) == 0x88a8 && ntohs(adptr->AD_ether_type) == 0x86DD))
-		{
-			ipv6ptr = (struct IPv6Header*) (packet+EthTypeSize);
-
-			PacketList[PacketNumber - 1].ipv6ptr = *ipv6ptr;
-			PacketList[PacketNumber - 1].Layer2 = 1;
-
-			u_int8_t  ip6_un1_nxt = ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt;
-
-			bool NextHeaders = true;
-			int extraLenght = 0;
-
-			while (NextHeaders)
-			{
-				switch (ip6_un1_nxt)
+				case 0x8100: //IEEE 802.1Q
 				{
-					case 0:  //IPv6 Hop-by-Hop Option
+					EthTypeSize = 18;
+					qptr = (struct QHeader *) packet;
+
+					PacketList[PacketNumber - 1].qptr = *qptr;
+					PacketList[PacketNumber - 1].Layer1 = 1;
+
+					switch (ntohs(qptr->Q_ether_type))
 					{
-						ext = (struct IPv6ExtHeader*) (packet+EthTypeSize+IpSize+extraLenght);
-
-						ip6_un1_nxt = ext->ip6e_nxt;
-						extraLenght += ext->ip6e_len + 8;
-
-						break;
-					}
-					case 43:  //Routing Header for IPv6
-					{
-						ext = (struct IPv6ExtHeader*) (packet+EthTypeSize+IpSize+extraLenght);
-
-						ip6_un1_nxt = ext->ip6e_nxt;
-						extraLenght += ext->ip6e_len + 8;
-
-						break;
-					}
-					case 44:  //Fragment Header for IPv6
-					{
-						ext = (struct IPv6ExtHeader*) (packet+EthTypeSize+IpSize+extraLenght);
-
-						ip6_un1_nxt = ext->ip6e_nxt;
-						extraLenght += ext->ip6e_len + 8;
-
-						break;
-					}
-					case 60:  //Destination Options for IPv6
-					{
-						ext = (struct IPv6ExtHeader*) (packet+EthTypeSize+IpSize+extraLenght);
-
-						ip6_un1_nxt = ext->ip6e_nxt;
-						extraLenght += ext->ip6e_len + 8;
-
-						break;
-					}
-					default:
-					{
-						switch(ip6_un1_nxt)
+						case 0x0800:  //IPv4
 						{
-							case 6:  //TCP protocol
-							{
-								tcpptr = (struct TCPHeader *) (packet+EthTypeSize+IpSize+extraLenght);
+							ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
+							IpSize = ipv4ptr->ip_hl*4;
 
-								PacketList[PacketNumber - 1].tcpptr = *tcpptr;
-								PacketList[PacketNumber - 1].Layer3 = 1;
-								
-								NextHeaders = false;
-								break;
-							}
-							case 17: //UDP protocol
-							{
-								udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize+extraLenght);
-
-								PacketList[PacketNumber - 1].udpptr = *udpptr;
-								PacketList[PacketNumber - 1].Layer3 = 2;  
-
-								NextHeaders = false;
-								break;
-							}
-							case 58:  //ICMPv6
-							{
-								icmpv6ptr = (struct ICMPv6Header *) (packet+EthTypeSize+IpSize+extraLenght);
-
-								PacketList[PacketNumber - 1].icmpv6ptr = *icmpv6ptr;
-								PacketList[PacketNumber - 1].Layer3 = 3;
-								
-								NextHeaders = false;
-								break;
-							}
-							default:  //Nor TCP nor UDP nor ICMPv4 nor ICMPv6
-							{
-								NextHeaders = false;
-								break;
-							}
+							break;
 						}
-						break;
+						case 0x86DD:  //IPv6
+						{
+							IpSize = 40;
+							break;
+						}
+						default:  //not IPv6 nor IPv4 OSETRIT
+						{
+							break;
+						}
 					}
+
+					break;
+				}
+				case 0x88a8: //IEEE 802.1ad
+				{
+					EthTypeSize = 22;
+					adptr = (struct ADHeader *) packet;
+
+					PacketList[PacketNumber - 1].adptr = *adptr;
+					PacketList[PacketNumber - 1].Layer1 = 2;
+
+					switch (ntohs(adptr->AD_ether_type))
+					{
+						case 0x0800:  //IPv4
+						{
+							ipv4ptr = (struct IPv4Header*) (packet+EthTypeSize);
+							IpSize = ipv4ptr->ip_hl*4;
+
+							break;
+						}
+						case 0x86DD:  //IPv6
+						{
+							IpSize = 40;
+							break;
+						}
+						default:  //not IPv6 nor IPv4 OSETRIT
+						{
+							break;
+						}
+					}
+
+					break;	
 				}
 			}
 
+			if (ntohs(eptr->ether_type) == 0x0800 || (ntohs(eptr->ether_type) == 0x8100 && ntohs(qptr->Q_ether_type) == 0x0800) || (ntohs(eptr->ether_type) == 0x88a8 && ntohs(adptr->AD_ether_type) == 0x0800))
+			{
+				/*
+			struct IPv4Header {
+				#if BYTE_ORDER == LITTLE_ENDIAN
+					u_char  ip_hl:4,				/* header length 
+					ip_v:4;				 /* version 
+				#endif
+				#if BYTE_ORDER == BIG_ENDIAN
+					u_char  ip_v:4,				 /* version 
+					ip_hl:4;				/* header length 
+				#endif
+				u_char ip_tos;			/* type of service 
+				u_short ip_len;			/* total length 
+				u_short ip_id;			/* identification 
+				u_short ip_off;			/* fragment offset field 
+				#define	IP_RF 0x8000			/* reserved fragment flag 
+				#define	IP_DF 0x4000			/* dont fragment flag 
+				#define	IP_MF 0x2000			/* more fragments flag 
+				#define	IP_OFFMASK 0x1fff		/* mask for fragmenting bits 
+				/*(flags_fragmentOffset & 0x4000) != 0
+				u_char ip_ttl;			/* time to live 
+				u_char ip_p;			/* protocol 
+				u_short ip_sum;			/* checksum 
+				struct in_addr ip_src; /* source address
+				struct in_addr ip_dst; /* source and dest address 
+			};*/
+				//printf("%d: %u %u\n", PacketNumber, (ntohs(ipv4ptr->ip_off) & IP_OFFMASK) * 8, ntohs(ipv4ptr->ip_off) & IP_MF);
+
+
+
+				if ((ntohs(ipv4ptr->ip_off) & IP_MF) != 0)
+				{
+					if (true)//(PacketNumber < 3)
+					{
+						if (GetNCPacketNumber(NCPackets, ipv4ptr->ip_src, ipv4ptr->ip_dst, ipv4ptr->ip_id) == -1)
+						{
+							printf("jsem hir\n");
+							struct PacketToReassemble pkt;
+							pkt.ip_src = ipv4ptr->ip_src;
+							pkt.ip_dst = ipv4ptr->ip_dst;
+							pkt.ip_id = ipv4ptr->ip_id;
+							NCPackets.push_back(pkt);
+						}
+						printf("%d\n", NCPackets.size());
+					}
+				}
+				else
+				{
+					PacketList[PacketNumber - 1].ipv4ptr = *ipv4ptr;
+					PacketList[PacketNumber - 1].Layer2 = 0;
+					switch(ipv4ptr->ip_p)
+					{
+						case 1:  //ICMP protocol
+						{
+							icmpv4ptr = (struct ICMPv4Header *) (packet+EthTypeSize+IpSize);
+
+							PacketList[PacketNumber - 1].icmpv4ptr = *icmpv4ptr;
+							PacketList[PacketNumber - 1].Layer3 = 0;
+							break;
+						}
+						case 6:  //TCP protocol
+						{
+							tcpptr = (struct TCPHeader *) (packet+EthTypeSize+IpSize);
+
+							PacketList[PacketNumber - 1].tcpptr = *tcpptr;
+							PacketList[PacketNumber - 1].Layer3 = 1;
+
+							break;
+						}
+						case 17: //UDP protocol
+						{
+							udpptr = (struct UDPHeader*) (packet+EthTypeSize+IpSize);
+
+							PacketList[PacketNumber - 1].udpptr = *udpptr;
+							PacketList[PacketNumber - 1].Layer3 = 2;  
+
+							break;
+						}
+						default:  //Nor TCP nor UDP nor ICMPv4 nor ICMPv6
+						{
+							PacketList[PacketNumber - 1].Layer3 = 3;
+							break;
+						}
+					}
+				}		
+			}
+
+			if (ntohs(eptr->ether_type) == 0x86DD || (ntohs(eptr->ether_type) == 0x8100 && ntohs(qptr->Q_ether_type) == 0x86DD) || (ntohs(eptr->ether_type) == 0x88a8 && ntohs(adptr->AD_ether_type) == 0x86DD))
+			{
+				ipv6ptr = (struct IPv6Header*) (packet+EthTypeSize);
+
+				PacketList[PacketNumber - 1].ipv6ptr = *ipv6ptr;
+				PacketList[PacketNumber - 1].Layer2 = 1;
+
+				u_int8_t  ip6_un1_nxt = ipv6ptr->ip6_ctlun.ip6_un1.ip6_un1_nxt;
+
+				bool NextHeaders = true;
+				int extraLenght = 0;
+
+				while (NextHeaders)
+				{
+					switch (ip6_un1_nxt)
+					{
+						case 0:  //IPv6 Hop-by-Hop Option
+						{
+							ext = (struct IPv6ExtHeader*) (packet+EthTypeSize+IpSize+extraLenght);
+
+							ip6_un1_nxt = ext->ip6e_nxt;
+							extraLenght += ext->ip6e_len + 8;
+
+							break;
+						}
+						case 43:  //Routing Header for IPv6
+						{
+							ext = (struct IPv6ExtHeader*) (packet+EthTypeSize+IpSize+extraLenght);
+
+							ip6_un1_nxt = ext->ip6e_nxt;
+							extraLenght += ext->ip6e_len + 8;
+
+							break;
+						}
+						case 44:  //Fragment Header for IPv6
+						{
+							ext = (struct IPv6ExtHeader*) (packet+EthTypeSize+IpSize+extraLenght);
+
+							ip6_un1_nxt = ext->ip6e_nxt;
+							extraLenght += ext->ip6e_len + 8;
+
+							break;
+						}
+						case 60:  //Destination Options for IPv6
+						{
+							ext = (struct IPv6ExtHeader*) (packet+EthTypeSize+IpSize+extraLenght);
+
+							ip6_un1_nxt = ext->ip6e_nxt;
+							extraLenght += ext->ip6e_len + 8;
+
+							break;
+						}
+						default:
+						{
+							switch(ip6_un1_nxt)
+							{
+								case 6:  //TCP protocol
+								{
+									tcpptr = (struct TCPHeader *) (packet+EthTypeSize+IpSize+extraLenght);
+
+									PacketList[PacketNumber - 1].tcpptr = *tcpptr;
+									PacketList[PacketNumber - 1].Layer3 = 1;
+									
+									NextHeaders = false;
+									break;
+								}
+								case 17: //UDP protocol
+								{
+									udpptr = (struct UDPHeader *) (packet+EthTypeSize+IpSize+extraLenght);
+
+									PacketList[PacketNumber - 1].udpptr = *udpptr;
+									PacketList[PacketNumber - 1].Layer3 = 2;  
+
+									NextHeaders = false;
+									break;
+								}
+								case 58:  //ICMPv6
+								{
+									icmpv6ptr = (struct ICMPv6Header *) (packet+EthTypeSize+IpSize+extraLenght);
+
+									PacketList[PacketNumber - 1].icmpv6ptr = *icmpv6ptr;
+									PacketList[PacketNumber - 1].Layer3 = 3;
+									
+									NextHeaders = false;
+									break;
+								}
+								default:  //Nor TCP nor UDP nor ICMPv4 nor ICMPv6
+								{
+									NextHeaders = false;
+									break;
+								}
+							}
+							break;
+						}
+					}
+				}
+			}
+			PacketList[PacketNumber - 1].ts = header.ts;
+			PacketList[PacketNumber - 1].len = header.len;
+			PacketList[PacketNumber - 1].PacketNumber = PacketNumber;
 		}
-
-		PacketList[PacketNumber - 1].ts = header.ts;
-		PacketList[PacketNumber - 1].len = header.len;
-		PacketList[PacketNumber - 1].PacketNumber = PacketNumber;
 	}
-
 	if (avalue == -2)
 	{
 		//razeni
 		switch (svalue)
 		{
 			case -2:
+			{
+				;
+			}
+			case 0:  //packets
 			{
 				for (int i = 0; i < NumberOfPackets; i++)
 				{
@@ -2395,10 +2407,6 @@ int main (int argc, char *argv[])
 						break;
 					}
 				}
-				break;
-			}
-			case 0:  //packets
-			{
 				break;
 			}
 			case 1:  //bytes

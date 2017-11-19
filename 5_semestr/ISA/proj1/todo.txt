@@ -2,12 +2,10 @@ todo:
 - fragmentace
 
 
-
 dodělávky:
 - dopsat return value kontroly
 - prázdný soubor
 - defaulty
-- více souborů
 - přeskakování neznámých paketů pomocí vrácení čísla o jedno
 - osetrit icmp ostatni kody
 
@@ -18,8 +16,6 @@ kontrola:
 - správnost parametrů programu
 - zkontrolovat správné IPv6 extensions https://www.microsoftpressstore.com/articles/article.aspx?p=2225063&seqNum=4
 - kontrola převodu čísel htons atd
-
-
 
 
 dokumentace
@@ -38,3 +34,4 @@ snad hotovo:
 - ICMP
 - filtr - vytvoření nového packetcount pro tisk + zpracování argumentů
 - PCAP_ERRBUF_SIZE
+- více souborů
