@@ -237,7 +237,7 @@ void ErrorFound(int i)
 			fprintf (stderr, "Unknown option character.\n");
 			break;
 		case 7:
-			printf ("Non-option argument.\n");
+			printf ("Non valid argument.\n");
 			break;
 		case 8:
 			fprintf (stderr, "Non valid argument combination.\n");
@@ -254,6 +254,7 @@ int CharToInt (char *str)
 	int length = strlen(str);
 	int number = 0;
 	int i;
+
 	for (i=0; i<length; i++)
 	{
 		if (!isdigit(str[i]))
@@ -2037,7 +2038,10 @@ int main (int argc, char *argv[])
 			{
 				avalue = 5;
 			}
-			//strcpy(avalue, optarg);
+			if (avalue == -2)
+			{
+				ErrorFound(7);
+			}
 			break;
 		case 's':
 			if (strcmp(optarg, "packets") == 0)
@@ -2048,12 +2052,17 @@ int main (int argc, char *argv[])
 			{
 				svalue = 1;
 			}
-			//strcpy(svalue, optarg);
+			if (svalue == -2)
+			{
+				ErrorFound(7);
+			}
 			break;
 		case 'l':
 			lvalue = CharToInt(optarg);
-			if (lvalue < 0)
+			if (lvalue == 4294967295)
+			{
 				ErrorFound(0);
+			}
 			break;
 		case 'f':
 			strcpy(fvalue, optarg);
