@@ -38,23 +38,23 @@ struct ICMPv6Header {
 
 //UDP Hlavicka
 struct UDPHeader {
-	u_short	uh_sport;  //UDP Source port
-	u_short	uh_dport;  //UDP Destination port
-	short	uh_ulen;  //UDP Length
-	u_short	uh_sum;  //UDP Checksum
+	u_int16_t uh_sport;  //UDP Source port
+	u_int16_t uh_dport;  //UDP Destination port
+	short uh_ulen;  //UDP Length
+	u_int16_t uh_sum;  //UDP Checksum
 };
 
 //TCP Hlavicka
 struct TCPHeader {
-	u_short th_sport;  //TCP Source port
-	u_short th_dport;  //TCP Destination port
-	u_int th_seq;  //TCP Sequence number
-	u_int th_ack;  //TCP Acknowledgement number
-	u_char th_off;  //TCP Data offset
-	u_char th_flags;  //TCP Flags
-	u_short th_win;  //TCP Window
-	u_short th_sum;  //TCP Checksum
-	u_short th_urp;  //TCP Urgent pointer
+	u_int16_t th_sport;  //TCP Source port
+	u_int16_t th_dport;  //TCP Destination port
+	u_int32_t th_seq;  //TCP Sequence number
+	u_int32_t th_ack;  //TCP Acknowledgement number
+	u_int8_t th_off;  //TCP Data offset
+	u_int8_t th_flags;  //TCP Flags
+	u_int16_t th_win;  //TCP Window
+	u_int16_t th_sum;  //TCP Checksum
+	u_int16_t th_urp;  //TCP Urgent pointer
 	//Flag masks
 	#define TH_FIN 0x01
 	#define TH_SYN 0x02
@@ -69,20 +69,20 @@ struct TCPHeader {
 //IPv4 Hlavicka
 struct IPv4Header {
 	#if BYTE_ORDER == LITTLE_ENDIAN
-		u_char  ip_hl:4,  //IPv4 Header length
+		u_int8_t  ip_hl:4,  //IPv4 Header length
 		ip_v:4;  //IPv4 Version
 	#endif
 	#if BYTE_ORDER == BIG_ENDIAN
-		u_char  ip_v:4,  //IPv4 Version
+		u_int8_t  ip_v:4,  //IPv4 Version
 		ip_hl:4;  //IPv4 Header length
 	#endif
-	u_char ip_tos;  //IPv4 Type of service
-	u_short ip_len;  //IPv4 Total length
-	u_short ip_id;  //IPv4 Indentifier
-	u_short ip_off;  //IPv4 Fragment offset
-	u_char ip_ttl;  //IPv4 Time to live
-	u_char ip_p;  //IPv4 Protocol
-	u_short ip_sum;  //IPv4 Header checksum
+	u_int8_t ip_tos;  //IPv4 Type of service
+	u_int16_t ip_len;  //IPv4 Total length
+	u_int16_t ip_id;  //IPv4 Indentifier
+	u_int16_t ip_off;  //IPv4 Fragment offset
+	u_int8_t ip_ttl;  //IPv4 Time to live
+	u_int8_t ip_p;  //IPv4 Protocol
+	u_int16_t ip_sum;  //IPv4 Header checksum
 	struct in_addr ip_src;  //IPv4 Source address
 	struct in_addr ip_dst;  //IPv4 Destination address
 	//Offset masks
@@ -94,8 +94,8 @@ struct IPv4Header {
 
 //IPv6 Rozsirujici hlavicka
 struct IPv6ExtHeader{
-	uint8_t  ip6e_nxt;  //IPv6 (extended) Next header
-	uint8_t  ip6e_len;  //IPv6 (extended) Length
+	u_int8_t  ip6e_nxt;  //IPv6 (extended) Next header
+	u_int8_t  ip6e_len;  //IPv6 (extended) Length
 };
 
 //IPv6 Hlavicka
@@ -115,29 +115,29 @@ struct IPv6Header {
 
 //IEEE 802.1ad Hlavicka
 struct ADHeader {
-	uint8_t AD_dhost[ETHER_ADDR_LEN];  //IEEE 802.1ad Destination MAC address
-	uint8_t AD_shost[ETHER_ADDR_LEN];  //IEEE 802.1ad Source MAC address
-	uint16_t AD_tpid;  //IEEE 802.1ad TPID=0x88a8
-	uint16_t AD_tci;  //IEEE 802.1ad PCI/DEI/VID
-	uint16_t AD_tpid2;  //IEEE 802.1ad TPID=0x8100
-	uint16_t AD_tci2;  //IEEE 802.1ad PCI/DEI/VID
-	uint16_t AD_ether_type;  //IEEE 802.1ad EtherType
+	u_int8_t AD_dhost[ETHER_ADDR_LEN];  //IEEE 802.1ad Destination MAC address
+	u_int8_t AD_shost[ETHER_ADDR_LEN];  //IEEE 802.1ad Source MAC address
+	u_int16_t AD_tpid;  //IEEE 802.1ad TPID=0x88a8
+	u_int16_t AD_tci;  //IEEE 802.1ad PCI/DEI/VID
+	u_int16_t AD_tpid2;  //IEEE 802.1ad TPID=0x8100
+	u_int16_t AD_tci2;  //IEEE 802.1ad PCI/DEI/VID
+	u_int16_t AD_ether_type;  //IEEE 802.1ad EtherType
 };
 
 //IEEE 802.1Q Hlavicka
 struct QHeader {
-	uint8_t Q_dhost[ETHER_ADDR_LEN];  //IEEE 802.1Q Destination MAC address
-	uint8_t Q_shost[ETHER_ADDR_LEN];  //IEEE 802.1Q Source MAC address
-	uint16_t Q_tpid1;  //IEEE 802.1Q TPID=0x8100
-	uint16_t Q_tpid2;  //IEEE 802.1Q PCI/DEI/VID
-	uint16_t Q_ether_type;  //IEEE 802.1Q EtherType
+	u_int8_t Q_dhost[ETHER_ADDR_LEN];  //IEEE 802.1Q Destination MAC address
+	u_int8_t Q_shost[ETHER_ADDR_LEN];  //IEEE 802.1Q Source MAC address
+	u_int16_t Q_tpid1;  //IEEE 802.1Q TPID=0x8100
+	u_int16_t Q_tpid2;  //IEEE 802.1Q PCI/DEI/VID
+	u_int16_t Q_ether_type;  //IEEE 802.1Q EtherType
 };
 
 //Ethernet Hlavicka
 struct ETHHeader {
-	uint8_t ether_dhost[ETHER_ADDR_LEN];  //Ethernet Destination MAC address
-	uint8_t ether_shost[ETHER_ADDR_LEN];  //Ethernet Source MAC address
-	uint16_t ether_type;  //Ethernet EtherType
+	u_int8_t ether_dhost[ETHER_ADDR_LEN];  //Ethernet Destination MAC address
+	u_int8_t ether_shost[ETHER_ADDR_LEN];  //Ethernet Source MAC address
+	u_int16_t ether_type;  //Ethernet EtherType
 };
 
 //Struktura pro ukladani zpracovanych paketu
@@ -161,15 +161,15 @@ struct PacketData {
 
 //Struktura pro ulozeni agregovanych zpracovanych paketu
 struct AggrData {
-	uint8_t Aggr_shost[ETHER_ADDR_LEN];  //Agregovana zdrojova MAC adresa
-	uint8_t Aggr_dhost[ETHER_ADDR_LEN];  //Agregovana cilova MAC adresa
+	u_int8_t Aggr_shost[ETHER_ADDR_LEN];  //Agregovana zdrojova MAC adresa
+	u_int8_t Aggr_dhost[ETHER_ADDR_LEN];  //Agregovana cilova MAC adresa
    	struct in_addr Aggr_ip_src;  //Agregovana zdrojova IPv4 adresa
 	struct in_addr Aggr_ip_dst;  //Agregovana cilova IPv4 adresa
 	int IpType;  //Druh IP adresy
 	struct in6_addr Aggr_ip6_src;  //Agregovana zdrojova IPv6 adresa
 	struct in6_addr Aggr_ip6_dst;  //Agregovana cilova IPv6 adresa
-	u_short	Aggr_sport;  //Agregovany zdrojovy port
-	u_short	Aggr_dport;  //Agregovany cilovy port
+	u_int16_t	Aggr_sport;  //Agregovany zdrojovy port
+	u_int16_t	Aggr_dport;  //Agregovany cilovy port
 	int NumberOfPackets;  //Pocet agregovanych paketu
 	bpf_u_int32 len;  //Delka agregovanych paketu
 };
@@ -184,7 +184,7 @@ struct Hole{
 struct PacketToReassemble{
 	struct in_addr ip_src; 
 	struct in_addr ip_dst;  
-	u_short ip_id;
+	u_int16_t ip_id;
 	std::vector<Hole> Holes;
 };
 

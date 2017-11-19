@@ -1,29 +1,26 @@
-todo:
-- fragmentace
-
-
-dodělávky:
+ráno:
+- zkontrolovat break a default ve switchich
+- možná ošetřit tisk, default layer by nemělo být nula
 - dopsat return value kontroly
-- defaulty
-- přeskakování neznámých paketů pomocí vrácení čísla o jedno
-- tisk unsigned intu
+- dokumentace
+
+
+todo:
+- defaulty tag (přeskakování neznámých paketů pomocí vrácení čísla o jedno)  //OSETRIT  (u extension headeru je treba kontrolovat false u promene co indikuje extension header)
+- fragmentace tag //FRAGMENTACE
 
 
 kontrola:
-- zkontrolovat break ve switchich
-- přepočítat agregace
-- správnost parametrů programu
 - zkontrolovat správné IPv6 extensions https://www.microsoftpressstore.com/articles/article.aspx?p=2225063&seqNum=4
-- kontrola převodu čísel htons atd
-- možná ošetřit tisk, default layer by nemělo být nula
-- převést uchar na uint
+- chyby z fóra
 
 
 dokumentace
 - dokumentace
 - readme
 - komentáře k programu
-
+- uvest RFC
+- uvest zdroje hlavicek
 
 
 snad hotovo:
@@ -38,3 +35,9 @@ snad hotovo:
 - více souborů
 - prázdný soubor
 - osetrit icmp ostatni kody
+- -l kontrola nezaporneho cisla
+- správnost parametrů programu
+- kontrola převodu čísel htons atd
+- přepočítat agregace
+- tisk unsigned intu
+- převést uchar na uint
