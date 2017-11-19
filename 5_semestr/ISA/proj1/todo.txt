@@ -1,8 +1,6 @@
 todo:
-
-- filtr - vytvoření nového packetcount pro tisk + zpracování argumentů
 - fragmentace
-- ICMP
+
 
 
 dodělávky:
@@ -11,6 +9,7 @@ dodělávky:
 - defaulty
 - více souborů
 - přeskakování neznámých paketů pomocí vrácení čísla o jedno
+- osetrit icmp ostatni kody
 
 
 kontrola:
@@ -18,7 +17,8 @@ kontrola:
 - přepočítat agregace
 - správnost parametrů programu
 - zkontrolovat správné IPv6 extensions https://www.microsoftpressstore.com/articles/article.aspx?p=2225063&seqNum=4
-kontrola převodu čísel htons atd
+- kontrola převodu čísel htons atd
+
 
 
 
@@ -35,3 +35,6 @@ snad hotovo:
 - limit
 - agregace se sortem
 - extension header IPv4 header
+- ICMP
+- filtr - vytvoření nového packetcount pro tisk + zpracování argumentů
+- PCAP_ERRBUF_SIZE

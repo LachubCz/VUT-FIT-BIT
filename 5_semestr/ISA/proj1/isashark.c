@@ -15,18 +15,27 @@
 #include <iostream>
 using namespace std;
 
-#ifndef PCAP_ERRBUF_SIZE
-#define PCAP_ERRBUF_SIZE (256)
-#endif
+struct ICMPv6Header {
+	u_int8_t	icmp6_type;	/* type field */
+	u_int8_t	icmp6_code;	/* code field */
+	u_int16_t	icmp6_cksum;	/* checksum field */
+};
+
+struct ICMPv4Header{
+	u_int8_t icmp4_type;	   			/* ICMP type */
+	u_int8_t icmp4_code;	   			/* ICMP code */
+	u_int16_t icmp4_sum;   			/* ICMP Checksum */
+	//u_int16_t id; 				/* ICMP id */
+	//u_int16_t seq;				/* ICMP sequence number */
+};
 
 struct TCPHeader {
-    u_short th_sport;	/* source port */
-    u_short th_dport;	/* destination port */
-    u_int th_seq;		/* sequence number */
-    u_int th_ack;		/* acknowledgement number */
-    u_char th_offx2;	/* data offset, rsvd */
-#define TH_OFF(th)	(((th)->th_offx2 & 0xf0) >> 4)
-    u_char th_flags;
+	u_short th_sport;	/* source port */
+	u_short th_dport;	/* destination port */
+	u_int th_seq;		/* sequence number */
+	u_int th_ack;		/* acknowledgement number */
+	u_char th_offx2;	/* data offset, rsvd */
+	u_char th_flags;
 #define TH_FIN 0x01
 #define TH_SYN 0x02
 #define TH_RST 0x04
@@ -35,22 +44,21 @@ struct TCPHeader {
 #define TH_URG 0x20
 #define TH_ECE 0x40
 #define TH_CWR 0x80
-#define TH_FLAGS (TH_FIN|TH_SYN|TH_RST|TH_ACK|TH_URG|TH_ECE|TH_CWR)
-    u_short th_win;		/* window */
-    u_short th_sum;		/* checksum */
-    u_short th_urp;		/* urgent pointer */
+	u_short th_win;		/* window */
+	u_short th_sum;		/* checksum */
+	u_short th_urp;		/* urgent pointer */
 };
 
 struct UDPHeader {
-    u_short	uh_sport;		/* source port */
-    u_short	uh_dport;		/* destination port */
-    short	uh_ulen;		/* udp length */
-    u_short	uh_sum;			/* udp checksum */
+	u_short	uh_sport;		/* source port */
+	u_short	uh_dport;		/* destination port */
+	short	uh_ulen;		/* udp length */
+	u_short	uh_sum;			/* udp checksum */
 };
 
 struct IPv6ExtHeader{
-    uint8_t  ip6e_nxt;		/* next header.  */
-    uint8_t  ip6e_len;
+	uint8_t  ip6e_nxt;		/* next header.  */
+	uint8_t  ip6e_len;
 };
 
 struct IPv6Header {
@@ -111,9 +119,9 @@ struct QHeader {
 };
 
 struct ETHHeader {
-    uint8_t ether_dhost[ETHER_ADDR_LEN];
-    uint8_t ether_shost[ETHER_ADDR_LEN];
-    uint16_t ether_type;
+	uint8_t ether_dhost[ETHER_ADDR_LEN];
+	uint8_t ether_shost[ETHER_ADDR_LEN];
+	uint16_t ether_type;
 };
 
 struct PacketData {
@@ -127,6 +135,8 @@ struct PacketData {
 	int Layer3;
 	struct TCPHeader tcpptr;
 	struct UDPHeader udpptr;
+	struct ICMPv4Header icmpv4ptr;
+	struct ICMPv6Header icmpv6ptr;
 	int PacketNumber;
 	struct timeval ts;
 	bpf_u_int32 len;
@@ -312,7 +322,7 @@ struct AggrData {
 	struct in6_addr Aggr_ip6_dst;
 
 	u_short	Aggr_sport;
-    u_short	Aggr_dport;
+	u_short	Aggr_dport;
 
 	int NumberOfPackets;
 	bpf_u_int32 len;
@@ -1570,7 +1580,149 @@ void printPacket(struct PacketData PacketList)
 	{
 		case 0:  //ICMPv4
 		{
-			printf("ICMPv4: \n"); 
+			printf("ICMPv4: %u %u ",
+				PacketList.icmpv4ptr.icmp4_type,
+				PacketList.icmpv4ptr.icmp4_code);
+			switch(PacketList.icmpv4ptr.icmp4_type)
+			{
+				case 0:  //Echo Reply
+				{
+					printf("echo reply\n");
+					break;
+				}
+				case 3:  //Destination Unreachable
+				{
+					switch(PacketList.icmpv4ptr.icmp4_code)
+					{
+						case 0:  //net unreachable
+						{
+							printf("destination unreachable net unreachable\n");
+							break;
+						}
+						case 1:  //host unreachable
+						{
+							printf("destination unreachable host unreachable\n");
+							break;
+						}
+						case 2:  //protocol unreachable
+						{
+							printf("destination unreachable protocol unreachable\n");
+							break;
+						}
+						case 3:  //port unreachable
+						{
+							printf("destination unreachable port unreachable\n");
+							break;
+						}
+						case 4:  //fragmentation needed and DF set
+						{
+							printf("destination unreachable fragmentation needed and DF set\n");
+							break;
+						}
+						case 5:  //source route failed
+						{
+							printf("destination unreachable source route failed\n");
+							break;
+						}
+						default:
+						{
+							break;
+						}
+					}
+					break;
+				}
+				case 4:  //Source Quench (Deprecated)
+				{
+					printf("source quench\n");
+					break;
+				}
+				case 5:  //Redirect
+				{
+					switch(PacketList.icmpv4ptr.icmp4_code)
+					{
+						case 0:  //Redirect datagrams for the Network
+						{
+							printf("redirect redirect datagrams for the network\n");
+							break;
+						}
+						case 1:  //Redirect datagrams for the Host
+						{
+							printf("redirect redirect datagrams for the host\n");
+							break;
+						}
+						case 2:  //Redirect datagrams for the Type of Service and Network
+						{
+							printf("redirect redirect datagrams for the type of service and network\n");
+							break;
+						}
+						case 3:  //Redirect datagrams for the Type of Service and Host
+						{
+							printf("redirect redirect datagrams for the type of service and host\n");
+							break;
+						}
+						default:
+						{
+							break;
+						}
+					}
+					break;
+				}
+				case 8:  //Echo
+				{
+					printf("echo\n");
+					break;
+				}
+				case 11:  //Time Exceeded
+				{
+					switch(PacketList.icmpv4ptr.icmp4_code)
+					{
+						case 0:  //time to live exceeded in transit
+						{
+							printf("time exceeded time to live exceeded in transit\n");
+							break;
+						}
+						case 1:  //fragment reassembly time exceeded
+						{
+							printf("time exceeded fragment reassembly time exceeded\n");
+							break;
+						}
+						default:
+						{
+							break;
+						}
+					}
+					break;
+				}
+				case 12:  //Parameter Problem
+				{
+					printf("parameter problem pointer indicates the error\n");
+					break;
+				}
+				case 13:  //Timestamp
+				{
+					printf("timestamp\n");
+					break;
+				}
+				case 14:  //Timestamp Reply
+				{
+					printf("timestamp reply\n");
+					break;
+				}
+				case 15:  //Information Request (Deprecated)
+				{
+					printf("information request\n");
+					break;
+				}
+				case 16:  //Information Reply (Deprecated)
+				{
+					printf("information reply\n");
+					break;
+				}
+				default:
+				{
+					break;
+				}
+			} 
 			break;
 		}
 		case 1:  //TCP
@@ -1581,38 +1733,38 @@ void printPacket(struct PacketData PacketList)
 				PacketList.tcpptr.th_seq & 0xff,
 				PacketList.tcpptr.th_ack & 0xff);
 			if (PacketList.tcpptr.th_flags & TH_CWR)
-        		printf("C");
-    		else
-    			printf(".");
-    		if (PacketList.tcpptr.th_flags & TH_ECE)
-        		printf("E");
-    		else
-    			printf(".");
-    		if (PacketList.tcpptr.th_flags & TH_URG)
-        		printf("U");
-    		else
-    			printf(".");
-    		if (PacketList.tcpptr.th_flags & TH_ACK)
-        		printf("A");
-    		else
-    			printf(".");
-    		if (PacketList.tcpptr.th_flags & TH_PUSH)
-        		printf("P");
-    		else
-    			printf(".");
-    		if (PacketList.tcpptr.th_flags & TH_RST)
-        		printf("R");
-    		else
-    			printf(".");
-    		if (PacketList.tcpptr.th_flags & TH_SYN)
-        		printf("S");
-    		else
-    			printf(".");
-    		if (PacketList.tcpptr.th_flags & TH_FIN)
-        		printf("F");
-    		else
-    			printf(".");
-    		printf("\n");
+				printf("C");
+			else
+				printf(".");
+			if (PacketList.tcpptr.th_flags & TH_ECE)
+				printf("E");
+			else
+				printf(".");
+			if (PacketList.tcpptr.th_flags & TH_URG)
+				printf("U");
+			else
+				printf(".");
+			if (PacketList.tcpptr.th_flags & TH_ACK)
+				printf("A");
+			else
+				printf(".");
+			if (PacketList.tcpptr.th_flags & TH_PUSH)
+				printf("P");
+			else
+				printf(".");
+			if (PacketList.tcpptr.th_flags & TH_RST)
+				printf("R");
+			else
+				printf(".");
+			if (PacketList.tcpptr.th_flags & TH_SYN)
+				printf("S");
+			else
+				printf(".");
+			if (PacketList.tcpptr.th_flags & TH_FIN)
+				printf("F");
+			else
+				printf(".");
+			printf("\n");
 			break;
 		}
 		case 2:  //UDP
@@ -1624,7 +1776,124 @@ void printPacket(struct PacketData PacketList)
 		}
 		case 3:  //ICMPv6
 		{
-			printf("ICMPv6: \n"); 
+			printf("ICMPv6: %u %u ",
+				PacketList.icmpv6ptr.icmp6_type,
+				PacketList.icmpv6ptr.icmp6_code);
+			switch(PacketList.icmpv6ptr.icmp6_type)
+			{
+				case 1:  //Destination Unreachable
+				{
+					switch(PacketList.icmpv6ptr.icmp6_code)
+					{
+						case 0:  //No route to destination
+						{
+							printf("destination unreachable no route to destination\n");
+							break;
+						}
+						case 1:  //Communication with destination administratively prohibited
+						{
+							printf("destination unreachable communication with destination administratively prohibited\n");
+							break;
+						}
+						case 2:  //Beyond scope of source address
+						{
+							printf("destination unreachable beyond scope of source address\n");
+							break;
+						}
+						case 3:  //Address unreachable
+						{
+							printf("destination unreachable address unreachable\n");
+							break;
+						}
+						case 4:  //Port unreachable
+						{
+							printf("destination unreachable port unreachable\n");
+							break;
+						}
+						case 5:  //Source address failed ingress/egress policy
+						{
+							printf("destination unreachable source address failed ingress/egress policy\n");
+							break;
+						}
+						case 6:  //Reject route to destination
+						{
+							printf("destination unreachable reject route to destination\n");
+							break;
+						}
+						default:
+						{
+							break;
+						}
+					}
+					break;
+				}
+				case 2:  //Packet Too Big
+				{
+					printf("packet too big");
+					break;
+				}
+				case 3:  //Time Exceeded
+				{
+					switch(PacketList.icmpv6ptr.icmp6_code)
+					{
+						case 0:  //hop limit exceeded in transit
+						{
+							printf("time exceeded hop limit exceeded in transit\n");
+							break;
+						}
+						case 1:  //fragment reassembly time exceeded
+						{
+							printf("time exceeded fragment reassembly time exceeded\n");
+							break;
+						}
+						default:
+						{
+							break;
+						}
+					}
+					break;
+				}
+				case 4:  //Parameter Problem
+				{
+					switch(PacketList.icmpv6ptr.icmp6_code)
+					{
+						case 0:  //Erroneous header field encountered
+						{
+							printf("parameter problem erroneous header field encountered\n");
+							break;
+						}
+						case 1:  //Unrecognized Next Header type encountered
+						{
+							printf("parameter problem unrecognized next header type encountered\n");
+							break;
+						}
+						case 2:  //Unrecognized IPv6 option encountered
+						{
+							printf("parameter problem unrecognized ipv6 option encountered\n");
+							break;
+						}
+						default:
+						{
+							break;
+						}
+					}
+					break;
+				}
+				case 128:  //Echo Request
+				{
+					printf("echo request\n");
+					break;
+				}
+				case 129:  //Echo Reply
+				{
+					printf("echo reply\n");
+					break;
+				}
+				default:
+				{
+					break;
+				}
+			} 
 			break;
 		}
 		default: 
@@ -1796,8 +2065,10 @@ int main (int argc, char *argv[])
 	struct IPv4Header *ipv4ptr;  //struktura pro IPv4 hlavicku
 	struct IPv6Header *ipv6ptr;  //struktura pro IPv6 hlavicku
 	struct IPv6ExtHeader *ext;
-	const struct TCPHeader *tcpptr;    // pointer to the beginning of TCP header
-	const struct UDPHeader *udpptr;    // pointer to the beginning of UDP header
+	struct ICMPv4Header *icmpv4ptr;
+	struct ICMPv6Header *icmpv6ptr;
+	const struct TCPHeader *tcpptr;	// pointer to the beginning of TCP header
+	const struct UDPHeader *udpptr;	// pointer to the beginning of UDP header
 	std::vector<PacketToReassemble> NCPackets;
 
 	int PacketNumber = 0; 
@@ -1946,7 +2217,7 @@ int main (int argc, char *argv[])
 
 			if ((ntohs(ipv4ptr->ip_off) & IP_MF) != 0)
 			{
-				if (PacketNumber < 3)
+				if (true)//(PacketNumber < 3)
 				{
 					if (GetNCPacketNumber(NCPackets, ipv4ptr->ip_src, ipv4ptr->ip_dst, ipv4ptr->ip_id) == -1)
 					{
@@ -1958,7 +2229,6 @@ int main (int argc, char *argv[])
 						NCPackets.push_back(pkt);
 					}
 					printf("%d\n", NCPackets.size());
-					
 				}
 			}
 			else
@@ -1969,6 +2239,9 @@ int main (int argc, char *argv[])
 				{
 					case 1:  //ICMP protocol
 					{
+						icmpv4ptr = (struct ICMPv4Header *) (packet+EthTypeSize+IpSize);
+
+						PacketList[PacketNumber - 1].icmpv4ptr = *icmpv4ptr;
 						PacketList[PacketNumber - 1].Layer3 = 0;
 						break;
 					}
@@ -2077,6 +2350,9 @@ int main (int argc, char *argv[])
 							}
 							case 58:  //ICMPv6
 							{
+								icmpv6ptr = (struct ICMPv6Header *) (packet+EthTypeSize+IpSize+extraLenght);
+
+								PacketList[PacketNumber - 1].icmpv6ptr = *icmpv6ptr;
 								PacketList[PacketNumber - 1].Layer3 = 3;
 								
 								NextHeaders = false;
