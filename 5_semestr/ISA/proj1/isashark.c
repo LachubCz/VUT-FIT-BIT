@@ -214,7 +214,6 @@ void PrintHelp()
 	exit(0);
 }
 
-
 /**
  * funkce na tisk chybovych hlasek a ukonceni programu
  * @param i cislo chybove hlasky
@@ -245,7 +244,7 @@ void ErrorFound(int i)
 			fprintf (stderr, "Unknown option character.\n");
 			break;
 		case 7:
-			printf (stderr, "Non valid argument.\n");
+			fprintf (stderr, "Non valid argument.\n");
 			break;
 		case 8:
 			fprintf (stderr, "Non valid argument combination.\n");
@@ -939,30 +938,30 @@ int GetMaxAggrPac(std::vector<AggrData> PacketList, int NumberOfPackets)
 }
 
 /**
- * [printPacketAggr description]
- * @param PacketList      [description]
- * @param NumberOfPackets [description]
- * @param avalue          [description]
- * @param svalue          [description]
- * @param lvalue          [description]
+ * funkce provede agregaci a podle ostatnich argumentu vytiskne agregovane hodnoty
+ * @param PacketList      vektor zpracovanych polozek
+ * @param NumberOfPackets pocet paketu ve vektoru
+ * @param avalue          agregacni parametr
+ * @param svalue          radici parametr
+ * @param lvalue          limitni parametr
  */
 void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, int avalue, int svalue, unsigned int lvalue)
 {
-	int ItemsCount = 0;
-	bool IsIn = false;
-	int printed = 0;
-	std::vector<AggrData> AggrPacketList(NumberOfPackets);
-	switch(avalue)
+	int ItemsCount = 0;  //pocet zagregovanych polozek
+	bool IsIn = false;  //indikator zda-li se nachazi dana polozka ve vektoru agregovanych polozek
+	int printed = 0;  //pocet vytistenych polozek
+	std::vector<AggrData> AggrPacketList(NumberOfPackets);  //vektor zagregovanych polozek
+	switch(avalue)  //agregace podle scrmac, dstmac, srcip, dstip, srcport, dstport
 	{
-		case 0:
+		case 0:  //agregace podle scrmac
 		{
-			for (int i = 0; i < NumberOfPackets; i++)
+			for (int i = 0; i < NumberOfPackets; i++)  //prochazeni paketu
 			{
-				switch(PacketList.at(i).Layer1)
+				switch(PacketList.at(i).Layer1)  //rozhodovani podle druhu L2 vrstvy
 				{
-					case 0:
+					case 0:  //Ethernet
 					{
-						int e = 0;
+						int e = 0;  //kontrola zdali vektor agregovanychych polozek obsahuje hodnotu aktualni polozky
 						for (e = 0; e < ItemsCount; e++)
 						{
 							if (memcmp(AggrPacketList.at(e).Aggr_shost, PacketList.at(i).eptr.ether_shost, ETHER_ADDR_LEN) == 0)
@@ -979,7 +978,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 								IsIn = false;
 							}
 						}
-						if (IsIn == false)
+						if (IsIn == false)  //polozka ve vektoru agregovanych polozek neni, prida se tedy
 						{
 							memcpy(AggrPacketList.at(ItemsCount).Aggr_shost, PacketList.at(i).eptr.ether_shost, ETHER_ADDR_LEN);
 
@@ -992,9 +991,9 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						IsIn = false;
 						break;
 					}
-					case 1:
+					case 1:  //802.1Q
 					{
-						int e = 0;
+						int e = 0;  //kontrola zdali vektor agregovanychych polozek obsahuje hodnotu aktualni polozky
 						for (e = 0; e < ItemsCount; e++)
 						{
 							if (memcmp(AggrPacketList.at(e).Aggr_shost, PacketList.at(i).qptr.Q_shost, ETHER_ADDR_LEN) == 0)
@@ -1011,7 +1010,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 								IsIn = false;
 							}
 						}
-						if (IsIn == false)
+						if (IsIn == false)  //polozka ve vektoru agregovanych polozek neni, prida se tedy
 						{
 							memcpy(AggrPacketList.at(ItemsCount).Aggr_shost, PacketList.at(i).qptr.Q_shost, ETHER_ADDR_LEN);
 
@@ -1024,9 +1023,9 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						IsIn = false;
 						break;
 					}
-					case 2:
+					case 2:  //802.1ad
 					{
-						int e = 0;
+						int e = 0;  //kontrola zdali vektor agregovanychych polozek obsahuje hodnotu aktualni polozky
 						for (e = 0; e < ItemsCount; e++)
 						{
 							if (memcmp(AggrPacketList.at(e).Aggr_shost, PacketList.at(i).adptr.AD_shost, ETHER_ADDR_LEN) == 0)
@@ -1043,7 +1042,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 								IsIn = false;
 							}
 						}
-						if (IsIn == false)
+						if (IsIn == false)  //polozka ve vektoru agregovanych polozek neni, prida se tedy
 						{
 							memcpy(AggrPacketList.at(ItemsCount).Aggr_shost, PacketList.at(i).adptr.AD_shost, ETHER_ADDR_LEN);
 
@@ -1063,13 +1062,13 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 				}
 			}
 
-			switch(svalue)
+			switch(svalue)  //tisk podle typu razeni
 			{
-				case -2:
+				case -2:  //bez razeni
 				{
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							char MacSrc[256];
 							strcpy(MacSrc, ether_ntoa((const struct ether_addr *)&AggrPacketList.at(i).Aggr_shost));
@@ -1088,12 +1087,12 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 					break;
 				}
-				case 0:
+				case 0:  //podle poctu paketu
 				{
 					int Temp;
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							Temp = GetMaxAggrPac(AggrPacketList, ItemsCount);
 							char MacSrc[256];
@@ -1113,12 +1112,12 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 					break;
 				}
-				case 1:
+				case 1:  //podle poctu bajtu
 				{
 					int Temp;
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							Temp = GetMaxAggrLen(AggrPacketList, ItemsCount);
 							char MacSrc[256];
@@ -1146,15 +1145,15 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 
 			break;
 		}
-		case 1:
+		case 1:  //agregace podle dstmac
 		{
-			for (int i = 0; i < NumberOfPackets; i++)
+			for (int i = 0; i < NumberOfPackets; i++)  //prochazeni paketu
 			{
-				switch(PacketList.at(i).Layer1)
+				switch(PacketList.at(i).Layer1)  //rozhodovani podle druhu L2 vrstvy
 				{
-					case 0:
+					case 0:  //Ethernet
 					{
-						int e = 0;
+						int e = 0;  //kontrola zdali vektor agregovanychych polozek obsahuje hodnotu aktualni polozky
 						for (e = 0; e < ItemsCount; e++)
 						{
 							if (memcmp(AggrPacketList.at(e).Aggr_dhost, PacketList.at(i).eptr.ether_dhost, ETHER_ADDR_LEN) == 0)
@@ -1171,7 +1170,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 								IsIn = false;
 							}
 						}
-						if (IsIn == false)
+						if (IsIn == false)  //polozka ve vektoru agregovanych polozek neni, prida se tedy
 						{
 							memcpy(AggrPacketList.at(ItemsCount).Aggr_dhost, PacketList.at(i).eptr.ether_dhost, ETHER_ADDR_LEN);
 
@@ -1184,9 +1183,9 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						IsIn = false;
 						break;
 					}
-					case 1:
+					case 1:  //802.1Q
 					{
-						int e = 0;
+						int e = 0;  //kontrola zdali vektor agregovanychych polozek obsahuje hodnotu aktualni polozky
 						for (e = 0; e < ItemsCount; e++)
 						{
 							if (memcmp(AggrPacketList.at(e).Aggr_dhost, PacketList.at(i).qptr.Q_dhost, ETHER_ADDR_LEN) == 0)
@@ -1203,7 +1202,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 								IsIn = false;
 							}
 						}
-						if (IsIn == false)
+						if (IsIn == false)  //polozka ve vektoru agregovanych polozek neni, prida se tedy
 						{
 							memcpy(AggrPacketList.at(ItemsCount).Aggr_dhost, PacketList.at(i).qptr.Q_dhost, ETHER_ADDR_LEN);
 
@@ -1216,9 +1215,9 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						IsIn = false;
 						break;
 					}
-					case 2:
+					case 2:  //802.1ad
 					{
-						int e = 0;
+						int e = 0;  //kontrola zdali vektor agregovanychych polozek obsahuje hodnotu aktualni polozky
 						for (e = 0; e < ItemsCount; e++)
 						{
 							if (memcmp(AggrPacketList.at(e).Aggr_dhost, PacketList.at(i).adptr.AD_dhost, ETHER_ADDR_LEN) == 0)
@@ -1235,7 +1234,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 								IsIn = false;
 							}
 						}
-						if (IsIn == false)
+						if (IsIn == false)  //polozka ve vektoru agregovanych polozek neni, prida se tedy
 						{
 							memcpy(AggrPacketList.at(ItemsCount).Aggr_dhost, PacketList.at(i).adptr.AD_dhost, ETHER_ADDR_LEN);
 
@@ -1255,13 +1254,13 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 				}
 			}
 
-			switch(svalue)
+			switch(svalue)  //tisk podle typu razeni
 			{
-				case -2:
+				case -2:  //bez razeni
 				{
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							char MacDst[256];
 							strcpy(MacDst, ether_ntoa((const struct ether_addr *)&AggrPacketList.at(i).Aggr_dhost));
@@ -1279,12 +1278,12 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 					break;
 				}
-				case 0:
+				case 0:  //podle poctu paketu
 				{
 					int Temp;
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							Temp = GetMaxAggrPac(AggrPacketList, ItemsCount);
 							char MacDst[256];
@@ -1304,12 +1303,12 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 					break;
 				}
-				case 1:
+				case 1:  //podle poctu bajtu
 				{
 					int Temp;
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							Temp = GetMaxAggrLen(AggrPacketList, ItemsCount);
 							char MacDst[256];
@@ -1336,18 +1335,18 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 			}
 			break;
 		} 
-		case 2:
+		case 2:  //agregace podle scrip
 		{
-			for (int i = 0; i < NumberOfPackets; i++)
+			for (int i = 0; i < NumberOfPackets; i++)  //prochazeni paketu
 			{
-				switch (PacketList.at(i).Layer2)
+				switch (PacketList.at(i).Layer2)  //rozhodovani podle druhu L3 vrstvy
 				{
-					case 0:
+					case 0:  //IPv4
 					{
 						char IPv4Src[256];
 						strcpy(IPv4Src,inet_ntoa(PacketList.at(i).ipv4ptr.ip_src));
 
-						int e = 0;
+						int e = 0;  //kontrola zdali vektor agregovanychych polozek obsahuje hodnotu aktualni polozky
 						for (e = 0; e < ItemsCount; e++)
 						{
 							if (strcmp(inet_ntoa(AggrPacketList.at(e).Aggr_ip_src), IPv4Src) == 0)
@@ -1366,7 +1365,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 							
 						}
 						
-						if (IsIn == false)
+						if (IsIn == false)  //polozka ve vektoru agregovanych polozek neni, prida se tedy
 						{
 							AggrPacketList.at(ItemsCount).Aggr_ip_src = PacketList.at(i).ipv4ptr.ip_src;
 
@@ -1380,13 +1379,13 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						IsIn = false;
 						break;
 					}
-					case 1:
+					case 1:  //IPv6
 					{
 						char IPv6Src[256];
 						char printAbleIPv6src[INET6_ADDRSTRLEN];
 						strcpy(IPv6Src,inet_ntop(AF_INET6, &(PacketList.at(i).ipv6ptr.ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN));
 
-						int e = 0;
+						int e = 0;  //kontrola zdali vektor agregovanychych polozek obsahuje hodnotu aktualni polozky
 						for (e = 0; e < ItemsCount; e++)
 						{
 							if (strcmp(inet_ntop(AF_INET6, &(AggrPacketList.at(e).Aggr_ip6_src), printAbleIPv6src, INET6_ADDRSTRLEN), IPv6Src) == 0)
@@ -1406,7 +1405,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 							
 						}
 						
-						if (IsIn == false)
+						if (IsIn == false)  //polozka ve vektoru agregovanych polozek neni, prida se tedy
 						{
 							AggrPacketList.at(ItemsCount).Aggr_ip6_src = PacketList.at(i).ipv6ptr.ip6_src;
 
@@ -1427,22 +1426,22 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 				}
 			}
 
-			switch(svalue)
+			switch(svalue)  //tisk podle typu razeni
 			{
-				case -2:
+				case -2:  //bez razeni
 				{
-					for (int i = 0; i < ItemsCount; i++)
+					for (int i = 0; i < ItemsCount; i++)  //IPv4
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
-							if (AggrPacketList.at(i).IpType == 0)
+							if (AggrPacketList.at(i).IpType == 0)  //IPv4
 							{
 								printf("%s: %d %d\n", 
 									inet_ntoa(AggrPacketList.at(i).Aggr_ip_src), 
 									AggrPacketList.at(i).NumberOfPackets, 
 									AggrPacketList.at(i).len);
 							}
-							else
+							else  //IPv6
 							{
 								char printAbleIPv6src[INET6_ADDRSTRLEN];
 								printf("%s: %d %d\n", 
@@ -1459,23 +1458,23 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 					break;
 				}
-				case 0:
+				case 0:  //podle poctu paketu
 				{
 					int Temp;
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							Temp = GetMaxAggrPac(AggrPacketList, ItemsCount);
 
-							if (AggrPacketList.at(Temp).IpType == 0)
+							if (AggrPacketList.at(Temp).IpType == 0)  //IPv4
 							{
 								printf("%s: %d %d\n", 
 									inet_ntoa(AggrPacketList.at(Temp).Aggr_ip_src), 
 									AggrPacketList.at(Temp).NumberOfPackets, 
 									AggrPacketList.at(Temp).len);
 							}
-							else
+							else  //IPv6
 							{
 								char printAbleIPv6src[INET6_ADDRSTRLEN];
 								printf("%s: %d %d\n", 
@@ -1494,23 +1493,23 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 					break;
 				}
-				case 1:
+				case 1:  //podle poctu bajtu
 				{
 					int Temp;
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							Temp = GetMaxAggrLen(AggrPacketList, ItemsCount);
 
-							if (AggrPacketList.at(Temp).IpType == 0)
+							if (AggrPacketList.at(Temp).IpType == 0)  //IPv4
 							{
 								printf("%s: %d %d\n", 
 									inet_ntoa(AggrPacketList.at(Temp).Aggr_ip_src), 
 									AggrPacketList.at(Temp).NumberOfPackets, 
 									AggrPacketList.at(Temp).len);
 							}
-							else
+							else  //IPv6
 							{
 								char printAbleIPv6src[INET6_ADDRSTRLEN];
 								printf("%s: %d %d\n", 
@@ -1537,18 +1536,18 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 
 			break;
 		}
-		case 3:
+		case 3:  //agregace podle dstip
 		{
-			for (int i = 0; i < NumberOfPackets; i++)
+			for (int i = 0; i < NumberOfPackets; i++)  //prochazeni paketu
 			{
-				switch (PacketList.at(i).Layer2)
+				switch (PacketList.at(i).Layer2)  //rozhodovani podle druhu L3 vrstvy
 				{
-					case 0:
+					case 0:  //IPv4
 					{
 						char IPv4Dst[256];
 						strcpy(IPv4Dst,inet_ntoa(PacketList.at(i).ipv4ptr.ip_dst));
 
-						int e = 0;
+						int e = 0;  //kontrola zdali vektor agregovanychych polozek obsahuje hodnotu aktualni polozky
 						for (e = 0; e < ItemsCount; e++)
 						{
 							if (strcmp(inet_ntoa(AggrPacketList.at(e).Aggr_ip_dst), IPv4Dst) == 0)
@@ -1567,7 +1566,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 							
 						}
 						
-						if (IsIn == false)
+						if (IsIn == false)  //polozka ve vektoru agregovanych polozek neni, prida se tedy
 						{
 							AggrPacketList.at(e).Aggr_ip_dst = PacketList.at(i).ipv4ptr.ip_dst;
 
@@ -1581,13 +1580,13 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						IsIn = false;
 						break;
 					}
-					case 1:
+					case 1:  //IPv6
 					{
 						char IPv6Dst[256];
 						char printAbleIPv6dst[INET6_ADDRSTRLEN];
 
 						strcpy(IPv6Dst,inet_ntop(AF_INET6, &(PacketList.at(i).ipv6ptr.ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN));
-						int e = 0;
+						int e = 0;  //kontrola zdali vektor agregovanychych polozek obsahuje hodnotu aktualni polozky
 						for (e = 0; e < ItemsCount; e++)
 						{
 							if (strcmp(inet_ntop(AF_INET6, &(AggrPacketList.at(e).Aggr_ip6_dst), printAbleIPv6dst, INET6_ADDRSTRLEN), IPv6Dst) == 0)
@@ -1604,10 +1603,9 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 							{
 								IsIn = false;
 							}
-							
 						}
 						
-						if (IsIn == false)
+						if (IsIn == false)  //polozka ve vektoru agregovanych polozek neni, prida se tedy
 						{
 							AggrPacketList.at(ItemsCount).Aggr_ip6_dst = PacketList.at(i).ipv6ptr.ip6_dst;
 
@@ -1628,22 +1626,22 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 				}
 			}
 
-			switch(svalue)
+			switch(svalue)  //tisk podle typu razeni
 			{
-				case -2:
+				case -2:  //bez razeni
 				{
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
-							if (AggrPacketList.at(i).IpType == 0)
+							if (AggrPacketList.at(i).IpType == 0)  //IPv4
 							{
 								printf("%s: %d %d\n", 
 									inet_ntoa(AggrPacketList.at(i).Aggr_ip_dst), 
 									AggrPacketList.at(i).NumberOfPackets, 
 									AggrPacketList.at(i).len);
 							}
-							else
+							else  //IPv6
 							{
 								char printAbleIPv6dst[INET6_ADDRSTRLEN];
 								printf("%s: %d %d\n", 
@@ -1660,23 +1658,23 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 					break;
 				}
-				case 0:
+				case 0:  //podle poctu paketu
 				{
 					int Temp;
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							Temp = GetMaxAggrPac(AggrPacketList, ItemsCount);
 
-							if (AggrPacketList.at(Temp).IpType == 0)
+							if (AggrPacketList.at(Temp).IpType == 0)  //IPv4
 							{
 								printf("%s: %d %d\n", 
 									inet_ntoa(AggrPacketList.at(Temp).Aggr_ip_dst), 
 									AggrPacketList.at(Temp).NumberOfPackets, 
 									AggrPacketList.at(Temp).len);
 							}
-							else
+							else  //IPv6
 							{
 								char printAbleIPv6dst[INET6_ADDRSTRLEN];
 								printf("%s: %d %d\n", 
@@ -1695,23 +1693,23 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 					break;
 				}
-				case 1:
+				case 1:  //podle poctu bajtu
 				{
 					int Temp;
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							Temp = GetMaxAggrLen(AggrPacketList, ItemsCount);
 
-							if (AggrPacketList.at(Temp).IpType == 0)
+							if (AggrPacketList.at(Temp).IpType == 0)  //IPv4
 							{
 								printf("%s: %d %d\n", 
 									inet_ntoa(AggrPacketList.at(Temp).Aggr_ip_dst), 
 									AggrPacketList.at(Temp).NumberOfPackets, 
 									AggrPacketList.at(Temp).len);
 							}
-							else
+							else  //IPv6
 							{
 								char printAbleIPv6dst[INET6_ADDRSTRLEN];
 								printf("%s: %d %d\n", 
@@ -1738,16 +1736,15 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 
 			break;
 		}
-		case 4:
+		case 4:  //agregace podle srcport
 		{
-			for (int i = 0; i < NumberOfPackets; i++)
+			for (int i = 0; i < NumberOfPackets; i++)  //prochazeni paketu
 			{
-				switch (PacketList.at(i).Layer3)
+				switch (PacketList.at(i).Layer3)  //rozhodovani podle druhu L4 vrstvy
 				{
-					case 1:
+					case 1:  //TCP
 					{
-						int e = 0;
-
+						int e = 0;  //kontrola zdali vektor agregovanychych polozek obsahuje hodnotu aktualni polozky
 						for (e = 0; e < ItemsCount; e++)
 						{
 							if (ntohs(AggrPacketList.at(e).Aggr_sport) == ntohs(PacketList.at(i).tcpptr.th_sport))
@@ -1765,7 +1762,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 							}
 						}
 
-						if (IsIn == false)
+						if (IsIn == false)  //polozka ve vektoru agregovanych polozek neni, prida se tedy
 						{
 							AggrPacketList.at(ItemsCount).Aggr_sport = PacketList.at(i).tcpptr.th_sport;
 
@@ -1778,10 +1775,9 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						IsIn = false;
 						break;
 					}
-					case 2:
+					case 2:  //UDP
 					{
-						int e = 0;
-
+						int e = 0;  //kontrola zdali vektor agregovanychych polozek obsahuje hodnotu aktualni polozky
 						for (e = 0; e < ItemsCount; e++)
 						{
 							if (ntohs(AggrPacketList.at(e).Aggr_sport) == ntohs(PacketList.at(i).udpptr.uh_sport))
@@ -1799,7 +1795,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 							}
 						}
 
-						if (IsIn == false)
+						if (IsIn == false)  //polozka ve vektoru agregovanych polozek neni, prida se tedy
 						{
 							AggrPacketList.at(ItemsCount).Aggr_sport = PacketList.at(i).udpptr.uh_sport;
 
@@ -1819,13 +1815,13 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 				}
 			}
 
-			switch(svalue)
+			switch(svalue)  //tisk podle typu razeni
 			{
-				case -2:
+				case -2:  //bez razeni
 				{
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							printf("%d: %d %d\n", 
 								ntohs(AggrPacketList.at(i).Aggr_sport), 
@@ -1840,12 +1836,12 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 					break;
 				}
-				case 0:
+				case 0:  //podle poctu paketu
 				{
 					int Temp;
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							Temp = GetMaxAggrPac(AggrPacketList, ItemsCount);
 
@@ -1864,12 +1860,12 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 					break;
 				}
-				case 1:
+				case 1:  //podle poctu bajtu
 				{
 					int Temp;
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							Temp = GetMaxAggrLen(AggrPacketList, ItemsCount);
 
@@ -1896,16 +1892,15 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 
 			break;
 		}
-		case 5:
+		case 5:  //agregace podle dstport
 		{
-			for (int i = 0; i < NumberOfPackets; i++)
+			for (int i = 0; i < NumberOfPackets; i++)  //prochazeni paketu
 			{
-				switch (PacketList.at(i).Layer3)
+				switch (PacketList.at(i).Layer3)  //rozhodovani podle druhu L4 vrstvy
 				{
-					case 1:
+					case 1:  //TCP
 					{
-						int e = 0;
-
+						int e = 0;  //kontrola zdali vektor agregovanychych polozek obsahuje hodnotu aktualni polozky
 						for (e = 0; e < ItemsCount; e++)
 						{
 							if (ntohs(AggrPacketList.at(e).Aggr_dport) == ntohs(PacketList.at(i).tcpptr.th_dport))
@@ -1923,7 +1918,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 							}
 						}
 
-						if (IsIn == false)
+						if (IsIn == false)  //polozka ve vektoru agregovanych polozek neni, prida se tedy
 						{
 							AggrPacketList.at(ItemsCount).Aggr_dport = PacketList.at(i).tcpptr.th_dport;
 
@@ -1936,10 +1931,9 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 						IsIn = false;
 						break;
 					}
-					case 2:
+					case 2:  //UDP
 					{
-						int e = 0;
-
+						int e = 0;  //kontrola zdali vektor agregovanychych polozek obsahuje hodnotu aktualni polozky
 						for (e = 0; e < ItemsCount; e++)
 						{
 							if (ntohs(AggrPacketList.at(e).Aggr_dport) == ntohs(PacketList.at(i).udpptr.uh_dport))
@@ -1957,7 +1951,7 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 							}
 						}
 
-						if (IsIn == false)
+						if (IsIn == false)  //polozka ve vektoru agregovanych polozek neni, prida se tedy
 						{
 							AggrPacketList.at(ItemsCount).Aggr_dport = PacketList.at(i).udpptr.uh_dport;
 
@@ -1977,13 +1971,13 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 				}
 			}
 
-			switch(svalue)
+			switch(svalue)  //tisk podle typu razeni
 			{
-				case -2:
+				case -2:  //bez razeni
 				{
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							printf("%d: %d %d\n", 
 								ntohs(AggrPacketList.at(i).Aggr_dport), 
@@ -1998,12 +1992,12 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 					break;
 				}
-				case 0:
+				case 0:  //podle poctu paketu
 				{
 					int Temp;
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							Temp = GetMaxAggrPac(AggrPacketList, ItemsCount);
 
@@ -2022,12 +2016,12 @@ void printPacketAggr(std::vector<PacketData> PacketList, int NumberOfPackets, in
 					}
 					break;
 				}
-				case 1:
+				case 1:  //podle poctu bajtu
 				{
 					int Temp;
 					for (int i = 0; i < ItemsCount; i++)
 					{
-						if (printed < lvalue)
+						if (printed < lvalue)  //tisk maximalne lvalue polozek
 						{
 							Temp = GetMaxAggrLen(AggrPacketList, ItemsCount);
 
