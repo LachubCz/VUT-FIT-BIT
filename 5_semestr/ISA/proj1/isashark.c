@@ -1578,14 +1578,14 @@ void printPacket(struct PacketData PacketList)
 	{
 		case 0:  //ICMPv4
 		{
-			printf("ICMPv4: %u %u ",
+			printf("ICMPv4: %u %u",
 				PacketList.icmpv4ptr.icmp4_type,
 				PacketList.icmpv4ptr.icmp4_code);
 			switch(PacketList.icmpv4ptr.icmp4_type)
 			{
 				case 0:  //Echo Reply
 				{
-					printf("echo reply\n");
+					printf(" echo reply\n");
 					break;
 				}
 				case 3:  //Destination Unreachable
@@ -1594,36 +1594,37 @@ void printPacket(struct PacketData PacketList)
 					{
 						case 0:  //net unreachable
 						{
-							printf("destination unreachable net unreachable\n");
+							printf(" destination unreachable net unreachable\n");
 							break;
 						}
 						case 1:  //host unreachable
 						{
-							printf("destination unreachable host unreachable\n");
+							printf(" destination unreachable host unreachable\n");
 							break;
 						}
 						case 2:  //protocol unreachable
 						{
-							printf("destination unreachable protocol unreachable\n");
+							printf(" destination unreachable protocol unreachable\n");
 							break;
 						}
 						case 3:  //port unreachable
 						{
-							printf("destination unreachable port unreachable\n");
+							printf(" destination unreachable port unreachable\n");
 							break;
 						}
 						case 4:  //fragmentation needed and DF set
 						{
-							printf("destination unreachable fragmentation needed and DF set\n");
+							printf(" destination unreachable fragmentation needed and DF set\n");
 							break;
 						}
 						case 5:  //source route failed
 						{
-							printf("destination unreachable source route failed\n");
+							printf(" destination unreachable source route failed\n");
 							break;
 						}
 						default:
 						{
+							printf("\n");
 							break;
 						}
 					}
@@ -1631,7 +1632,7 @@ void printPacket(struct PacketData PacketList)
 				}
 				case 4:  //Source Quench (Deprecated)
 				{
-					printf("source quench\n");
+					printf(" source quench\n");
 					break;
 				}
 				case 5:  //Redirect
@@ -1640,26 +1641,27 @@ void printPacket(struct PacketData PacketList)
 					{
 						case 0:  //Redirect datagrams for the Network
 						{
-							printf("redirect redirect datagrams for the network\n");
+							printf(" redirect redirect datagrams for the network\n");
 							break;
 						}
 						case 1:  //Redirect datagrams for the Host
 						{
-							printf("redirect redirect datagrams for the host\n");
+							printf(" redirect redirect datagrams for the host\n");
 							break;
 						}
 						case 2:  //Redirect datagrams for the Type of Service and Network
 						{
-							printf("redirect redirect datagrams for the type of service and network\n");
+							printf(" redirect redirect datagrams for the type of service and network\n");
 							break;
 						}
 						case 3:  //Redirect datagrams for the Type of Service and Host
 						{
-							printf("redirect redirect datagrams for the type of service and host\n");
+							printf(" redirect redirect datagrams for the type of service and host\n");
 							break;
 						}
 						default:
 						{
+							printf("\n");
 							break;
 						}
 					}
@@ -1667,7 +1669,7 @@ void printPacket(struct PacketData PacketList)
 				}
 				case 8:  //Echo
 				{
-					printf("echo\n");
+					printf(" echo\n");
 					break;
 				}
 				case 11:  //Time Exceeded
@@ -1676,16 +1678,17 @@ void printPacket(struct PacketData PacketList)
 					{
 						case 0:  //time to live exceeded in transit
 						{
-							printf("time exceeded time to live exceeded in transit\n");
+							printf(" time exceeded time to live exceeded in transit\n");
 							break;
 						}
 						case 1:  //fragment reassembly time exceeded
 						{
-							printf("time exceeded fragment reassembly time exceeded\n");
+							printf(" time exceeded fragment reassembly time exceeded\n");
 							break;
 						}
 						default:
 						{
+							printf("\n");
 							break;
 						}
 					}
@@ -1693,31 +1696,34 @@ void printPacket(struct PacketData PacketList)
 				}
 				case 12:  //Parameter Problem
 				{
-					printf("parameter problem pointer indicates the error\n");
+					printf(" parameter problem pointer indicates the error\n");
 					break;
 				}
 				case 13:  //Timestamp
 				{
-					printf("timestamp\n");
+					printf(" timestamp\n");
 					break;
 				}
 				case 14:  //Timestamp Reply
 				{
-					printf("timestamp reply\n");
+					printf(" timestamp reply\n");
 					break;
 				}
 				case 15:  //Information Request (Deprecated)
 				{
-					printf("information request\n");
+					printf(" information request\n");
 					break;
 				}
 				case 16:  //Information Reply (Deprecated)
 				{
-					printf("information reply\n");
+					printf(" information reply\n");
 					break;
 				}
 				default:
 				{
+					printf("ICMPv4: %u %u\n",
+						PacketList.icmpv4ptr.icmp4_type,
+						PacketList.icmpv4ptr.icmp4_code);
 					break;
 				}
 			} 
@@ -1774,7 +1780,7 @@ void printPacket(struct PacketData PacketList)
 		}
 		case 3:  //ICMPv6
 		{
-			printf("ICMPv6: %u %u ",
+			printf("ICMPv6: %u %u",
 				PacketList.icmpv6ptr.icmp6_type,
 				PacketList.icmpv6ptr.icmp6_code);
 			switch(PacketList.icmpv6ptr.icmp6_type)
@@ -1785,41 +1791,42 @@ void printPacket(struct PacketData PacketList)
 					{
 						case 0:  //No route to destination
 						{
-							printf("destination unreachable no route to destination\n");
+							printf(" destination unreachable no route to destination\n");
 							break;
 						}
 						case 1:  //Communication with destination administratively prohibited
 						{
-							printf("destination unreachable communication with destination administratively prohibited\n");
+							printf(" destination unreachable communication with destination administratively prohibited\n");
 							break;
 						}
 						case 2:  //Beyond scope of source address
 						{
-							printf("destination unreachable beyond scope of source address\n");
+							printf(" destination unreachable beyond scope of source address\n");
 							break;
 						}
 						case 3:  //Address unreachable
 						{
-							printf("destination unreachable address unreachable\n");
+							printf(" destination unreachable address unreachable\n");
 							break;
 						}
 						case 4:  //Port unreachable
 						{
-							printf("destination unreachable port unreachable\n");
+							printf(" destination unreachable port unreachable\n");
 							break;
 						}
 						case 5:  //Source address failed ingress/egress policy
 						{
-							printf("destination unreachable source address failed ingress/egress policy\n");
+							printf(" destination unreachable source address failed ingress/egress policy\n");
 							break;
 						}
 						case 6:  //Reject route to destination
 						{
-							printf("destination unreachable reject route to destination\n");
+							printf(" destination unreachable reject route to destination\n");
 							break;
 						}
 						default:
 						{
+							printf("\n");
 							break;
 						}
 					}
@@ -1827,7 +1834,7 @@ void printPacket(struct PacketData PacketList)
 				}
 				case 2:  //Packet Too Big
 				{
-					printf("packet too big");
+					printf(" packet too big");
 					break;
 				}
 				case 3:  //Time Exceeded
@@ -1836,16 +1843,17 @@ void printPacket(struct PacketData PacketList)
 					{
 						case 0:  //hop limit exceeded in transit
 						{
-							printf("time exceeded hop limit exceeded in transit\n");
+							printf(" time exceeded hop limit exceeded in transit\n");
 							break;
 						}
 						case 1:  //fragment reassembly time exceeded
 						{
-							printf("time exceeded fragment reassembly time exceeded\n");
+							printf(" time exceeded fragment reassembly time exceeded\n");
 							break;
 						}
 						default:
 						{
+							printf("\n");
 							break;
 						}
 					}
@@ -1857,21 +1865,22 @@ void printPacket(struct PacketData PacketList)
 					{
 						case 0:  //Erroneous header field encountered
 						{
-							printf("parameter problem erroneous header field encountered\n");
+							printf(" parameter problem erroneous header field encountered\n");
 							break;
 						}
 						case 1:  //Unrecognized Next Header type encountered
 						{
-							printf("parameter problem unrecognized next header type encountered\n");
+							printf(" parameter problem unrecognized next header type encountered\n");
 							break;
 						}
 						case 2:  //Unrecognized IPv6 option encountered
 						{
-							printf("parameter problem unrecognized ipv6 option encountered\n");
+							printf(" parameter problem unrecognized ipv6 option encountered\n");
 							break;
 						}
 						default:
 						{
+							printf("\n");
 							break;
 						}
 					}
@@ -1879,16 +1888,19 @@ void printPacket(struct PacketData PacketList)
 				}
 				case 128:  //Echo Request
 				{
-					printf("echo request\n");
+					printf(" echo request\n");
 					break;
 				}
 				case 129:  //Echo Reply
 				{
-					printf("echo reply\n");
+					printf(" echo reply\n");
 					break;
 				}
 				default:
 				{
+					printf("ICMPv6: %u %u\n",
+						PacketList.icmpv6ptr.icmp6_type,
+						PacketList.icmpv6ptr.icmp6_code);
 					break;
 				}
 			} 

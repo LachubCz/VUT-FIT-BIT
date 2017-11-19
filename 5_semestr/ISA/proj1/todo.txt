@@ -4,10 +4,9 @@ todo:
 
 dodělávky:
 - dopsat return value kontroly
-- prázdný soubor
 - defaulty
 - přeskakování neznámých paketů pomocí vrácení čísla o jedno
-- osetrit icmp ostatni kody
+- tisk unsigned intu
 
 
 kontrola:
@@ -35,3 +34,5 @@ snad hotovo:
 - filtr - vytvoření nového packetcount pro tisk + zpracování argumentů
 - PCAP_ERRBUF_SIZE
 - více souborů
+- prázdný soubor
+- osetrit icmp ostatni kody
