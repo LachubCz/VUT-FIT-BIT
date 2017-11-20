@@ -60,4 +60,6 @@ manual.pdf
 
 readme.md
 
+****
+
 ###### Vytvořil: Petr Buchal (xbucha02)
