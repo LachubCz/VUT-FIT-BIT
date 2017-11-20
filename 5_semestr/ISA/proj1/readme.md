@@ -3,7 +3,9 @@ Analyzátor paketů
 Popis programu
 -----------
 Konzolová aplikace pro offline analýzu síťového provozu, umožňující agregaci, řazení a filtraci.
+
 **Podporované protokoly:**
+
 Vrstva síťového rozhraní:
 * Ethernet
 * IEEE 802.1Q včetně IEEE 802.1ad
@@ -46,13 +48,17 @@ Detaily implementace jsou popsány v souboru manual.pdf.
 Makefile
 --------
 `make`        - přeloží zdrojový kód programu
+
 `make reassemble`    - smaže přeložený zdrojový kód a přeloží ho znovu
 
 Seznam odevzdaných souborů:
 ---------------------------
 isashark.c
+
 Makefile
+
 manual.pdf
+
 readme.md
 
 ###### Vytvořil: Petr Buchal (xbucha02)
