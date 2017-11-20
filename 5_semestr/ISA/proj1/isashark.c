@@ -174,20 +174,6 @@ struct AggrData {
 	bpf_u_int32 len;  //Delka agregovanych paketu
 };
 
-//FRAGMENTACE
-struct Hole{
-	u_int32_t first;
-	u_int32_t last;
-};
-
-//FRAGMENTACE
-struct PacketToReassemble{
-	struct in_addr ip_src; 
-	struct in_addr ip_dst;  
-	u_int16_t ip_id;
-	std::vector<Hole> Holes;
-};
-
 /*###############################################*/
 /*#####################Funkce####################*/
 /*###############################################*/
@@ -416,19 +402,6 @@ int CorrectMacAdress(char *str)
 
 	strcpy(str,ReconstructedMacAdress);  //zkopirovani adresy na misto ukazatele
 	return 0;
-}
-
-//FRAGMENTACE
-int GetNCPacketNumber(std::vector<PacketToReassemble> NCPackets, struct in_addr ip_src, struct in_addr ip_dst, u_short ip_id)
-{
-	for (int i = 0; i < NCPackets.size(); ++i)
-	{
-		if (NCPackets.at(i).ip_src.s_addr == ip_src.s_addr && NCPackets.at(i).ip_dst.s_addr == ip_dst.s_addr && NCPackets.at(i).ip_id == ip_id)
-		{
-			return i;
-		}
-	}
-	return -1;
 }
 
 /**
@@ -2248,8 +2221,6 @@ int main (int argc, char *argv[])
 	int PacketNumberActual = PacketNumber;  //poradi v paketu
 	bool WrongProtocol = false;  //indikator nepodporovaneho protokolu
 
-	std::vector<PacketToReassemble> NCPackets;  //vektor pro ukladani fragmentovanych IPv4 paketu
-
 	int NumberOfPackets = 0;  //celkovy pocet packetu ve vsech souborech
 
 	//ziskani celkoveho poctu packetu ze vsech souboru
@@ -2385,22 +2356,10 @@ int main (int argc, char *argv[])
 			//rozebrani IPv4 protokolu
 			if (ntohs(eptr->ether_type) == 0x0800 || (ntohs(eptr->ether_type) == 0x8100 && ntohs(qptr->Q_ether_type) == 0x0800) || (ntohs(eptr->ether_type) == 0x88a8 && ntohs(adptr->AD_ether_type) == 0x0800))
 			{
-				if ((ntohs(ipv4ptr->ip_off) & IP_MF) != 0)  //FRAGMENTACE
+				if ((ntohs(ipv4ptr->ip_off) & IP_MF) != 0 || (ntohs(ipv4ptr->ip_off) & IP_OFFMASK) != 0)  //protokol je nejakym zpusobem fragmentovan, zahazuje se
 				{	
-				;/*
-					if (true)//(PacketNumber < 3)
-					{
-						if (GetNCPacketNumber(NCPackets, ipv4ptr->ip_src, ipv4ptr->ip_dst, ipv4ptr->ip_id) == -1)
-						{
-							printf("jsem hir\n");
-							struct PacketToReassemble pkt;
-							pkt.ip_src = ipv4ptr->ip_src;
-							pkt.ip_dst = ipv4ptr->ip_dst;
-							pkt.ip_id = ipv4ptr->ip_id;
-							NCPackets.push_back(pkt);
-						}
-						printf("%d\n", NCPackets.size());
-					}*/WrongProtocol = true;
+					fprintf (stderr, "Fragmented packet.\n");
+					WrongProtocol = true;
 				}
 				else
 				{

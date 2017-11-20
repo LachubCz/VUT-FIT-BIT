@@ -2,7 +2,7 @@ Analyzátor paketů
 ====================
 Popis programu
 -----------
-Konzolová aplikace pro offline analýzu síťového provozu, umožňující agregaci, řazení a filtraci.
+Konzolová aplikace pro offline analýzu síťového provozu, umožňující agregaci, řazení a filtraci. Program nepodporuje slučování fragmentovaných paketů v protokolu IPv4.
 
 **Podporované protokoly:**
 
