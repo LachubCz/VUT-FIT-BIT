@@ -1,7 +1,8 @@
 ráno:
 - zkontrolovat break a default ve switchich
+- jeden argument zadán vícekrát
 - možná ošetřit tisk, default layer by nemělo být nula
-- dopsat return value kontroly
+- dopsat return value kontroly memcpy např
 - dokumentace
 
 
