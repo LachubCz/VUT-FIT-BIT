@@ -255,6 +255,12 @@ void ErrorFound(int i)
 		case 10:
 			fprintf (stderr, "Non valid pcap filter.\n");
 			break;
+		case 11:
+			fprintf (stderr, "No file was entered.\n");
+			break;
+		case 12:
+			fprintf (stderr, "Argument was entered multiple times.\n");
+			break;
 		default:
 			fprintf (stderr, "Error.\n");
 			break;
@@ -2076,9 +2082,17 @@ int main (int argc, char *argv[])
 	switch (c)
 	{
 		case 'h':
+			if (hflag != false)  //kontrola zdali argument jiz nebyl zadan
+			{
+				ErrorFound(12);
+			}
 			hflag = true;
 			break;
 		case 'a':  //provadi se kontrola, zdali argument obsahuje pozadovane klicove slova, pokud ne, konci chybou
+			if (avalue != -2)  //kontrola zdali argument jiz nebyl zadan
+			{
+				ErrorFound(12);
+			}
 			if (strcmp(optarg, "srcmac") == 0)
 			{
 				avalue = 0;
@@ -2109,6 +2123,10 @@ int main (int argc, char *argv[])
 			}
 			break;
 		case 's':  //provadi se kontrola, zdali argument obsahuje pozadovane klicove slova, pokud ne, konci chybou
+			if (svalue != -2)  //kontrola zdali argument jiz nebyl zadan
+			{
+				ErrorFound(12);
+			}
 			if (strcmp(optarg, "packets") == 0)
 			{
 				svalue = 0;
@@ -2123,6 +2141,10 @@ int main (int argc, char *argv[])
 			}
 			break;
 		case 'l':
+			if (lvalue != 4294967295)  //kontrola zdali argument jiz nebyl zadan
+			{
+				ErrorFound(12);
+			}
 			lvalue = CharToInt(optarg);  //prevod stringu na int
 			if (lvalue == 4294967295)  //kontrola na zaporne cislo
 			{
@@ -2130,6 +2152,10 @@ int main (int argc, char *argv[])
 			}
 			break;
 		case 'f':
+			if (strcmp(fvalue, "") != 0)  //kontrola zdali argument jiz nebyl zadan
+			{
+				ErrorFound(12);
+			}
 			strcpy(fvalue, optarg);  //ziskani hodnoty filteru
 			break;
 		case '?':
@@ -2149,15 +2175,7 @@ int main (int argc, char *argv[])
 			break;
 	}
 
-	int NumberOfFiles = argc-optind;  //jakykoli vyraz mimo argumenty se pocita jako nazev souboru
-	char filenames[NumberOfFiles][256];  //pole obsahujici nazvy souboru
-
 	//printf ("hflag = %d, avalue = %d, svalue = %d, lvalue = %d, fvalue = %s\n\n", hflag, avalue, svalue, lvalue, fvalue);
-	
-	for (index = optind; index < argc; index++)
-	{
-		strcpy(filenames[argc - index - 1], argv[index]);  //ulozeni jmen souboru do pole
-	}
 
 	//pokud byl zadan argument -h, vypise se napoveda, pokud byl zadan zaroven s jinym, vypise se chybova hlaska, program konci
 	if (hflag == true && avalue == -2 && svalue == -2 && strcmp(fvalue, "") == 0 && lvalue == 4294967295)  
@@ -2170,6 +2188,20 @@ int main (int argc, char *argv[])
 		{
 			ErrorFound(8);
 		}
+	}
+
+	int NumberOfFiles = argc-optind;  //jakykoli vyraz mimo argumenty se pocita jako nazev souboru
+
+	if (NumberOfFiles == 0)  //kontrola zda-li byl zadan vstupni soubor
+	{
+		ErrorFound(11);
+	}
+
+	char filenames[NumberOfFiles][256];  //pole obsahujici nazvy souboru
+	
+	for (index = optind; index < argc; index++)
+	{
+		strcpy(filenames[argc - index - 1], argv[index]);  //ulozeni jmen souboru do pole
 	}
 
 	/*for (int i = 0; i < NumberOfFiles; i++)
