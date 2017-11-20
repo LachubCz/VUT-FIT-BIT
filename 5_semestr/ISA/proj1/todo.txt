@@ -1,5 +1,4 @@
 todo:
-- defaulty tag (přeskakování neznámých paketů pomocí vrácení čísla o jedno)  //OSETRIT  (u extension headeru je treba kontrolovat false u promene co indikuje extension header)
 - fragmentace tag //FRAGMENTACE
 
 
@@ -40,3 +39,4 @@ snad hotovo:
 - možná ošetřit tisk, default layer by nemělo být nula
 - dopsat return value kontroly memcpy např
 - zkontrolovat break a default ve switchich
+- defaulty tag (přeskakování neznámých paketů pomocí vrácení čísla o jedno)  //OSETRIT  (u extension headeru je treba kontrolovat false u promene co indikuje extension header)

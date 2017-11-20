@@ -886,6 +886,11 @@ void printPacket(struct PacketData PacketList)
 			} 
 			break;
 		}
+		case 4: 
+		{
+			printf("no next header\n");
+			break;
+		}
 		default: 
 		{
 			break;
@@ -2238,7 +2243,10 @@ int main (int argc, char *argv[])
 	struct ICMPv6Header *icmpv6ptr;  //ukazatel na ICMPv6 hlavicku
 	const struct TCPHeader *tcpptr;	 //ukazatel na TCP hlavicku
 	const struct UDPHeader *udpptr;	 //ukazatel na UDP hlavicku
-	int PacketNumber = 0;  //cislo zpracovaneho packetu
+	int PacketNumber = 0;  //cislo zpracovaneho packetu ve vektoru
+	int PacketNumberVerified = PacketNumber;  //pocet paketu s podporovanymi protokoly
+	int PacketNumberActual = PacketNumber;  //poradi v paketu
+	bool WrongProtocol = false;
 
 	std::vector<PacketToReassemble> NCPackets;  //vektor pro ukladani fragmentovanych IPv4 paketu
 
@@ -2274,9 +2282,11 @@ int main (int argc, char *argv[])
 
 		while ((packet = pcap_next(handle,&header)) != NULL)  //v header jsou hodnoty hlavicky paketu, v packetu je ukazatel na zacatek
 		{
+			bool WrongProtocol = false;
 			int EthTypeSize = 0;  //delka ethernetove hlavicky
 			int IpSize = 0;  //delka IP hlavicky
-			PacketNumber++;  //aktualni cislo packetu
+			PacketNumber++;  //aktualni cislo packetu ve vektoru
+			PacketNumberActual++;  //aktualni cislo prochazeneho paketu
 			eptr = (struct ETHHeader *) packet;  //ukazetel na ethernetovou hlavicku
 
 			switch (ntohs(eptr->ether_type))  //podle ethertypu se vybere bud IPv4 nebo IPv6, nebo se dal zkouma standart 802.1
@@ -2326,6 +2336,7 @@ int main (int argc, char *argv[])
 						}
 						default:  //OSETRIT
 						{
+							WrongProtocol = true;
 							break;
 						}
 					}
@@ -2355,6 +2366,7 @@ int main (int argc, char *argv[])
 						}
 						default:  //OSETRIT
 						{
+							WrongProtocol = true;
 							break;
 						}
 					}
@@ -2362,6 +2374,7 @@ int main (int argc, char *argv[])
 				}
 				default:  //OSETRIT
 				{
+					WrongProtocol = true;
 					break;
 				}
 			}
@@ -2370,7 +2383,8 @@ int main (int argc, char *argv[])
 			if (ntohs(eptr->ether_type) == 0x0800 || (ntohs(eptr->ether_type) == 0x8100 && ntohs(qptr->Q_ether_type) == 0x0800) || (ntohs(eptr->ether_type) == 0x88a8 && ntohs(adptr->AD_ether_type) == 0x0800))
 			{
 				if ((ntohs(ipv4ptr->ip_off) & IP_MF) != 0)  //FRAGMENTACE
-				{
+				{	
+				;/*
 					if (true)//(PacketNumber < 3)
 					{
 						if (GetNCPacketNumber(NCPackets, ipv4ptr->ip_src, ipv4ptr->ip_dst, ipv4ptr->ip_id) == -1)
@@ -2383,7 +2397,7 @@ int main (int argc, char *argv[])
 							NCPackets.push_back(pkt);
 						}
 						printf("%d\n", NCPackets.size());
-					}
+					}*/WrongProtocol = true;
 				}
 				else
 				{
@@ -2419,6 +2433,7 @@ int main (int argc, char *argv[])
 						}
 						default:  //OSETRIT
 						{
+							WrongProtocol = true;
 							break;
 						}
 					}
@@ -2469,6 +2484,15 @@ int main (int argc, char *argv[])
 
 							break;
 						}
+						case 59:  //No next header
+						{
+							ext = (struct IPv6ExtHeader*) (packet+EthTypeSize+IpSize+extraLenght);
+
+							PacketList[PacketNumber - 1].Layer3 = 4;
+							NextHeaders = false;
+
+							break;
+						}
 						case 60:  //Destination Options for IPv6 hlavicka
 						{
 							ext = (struct IPv6ExtHeader*) (packet+EthTypeSize+IpSize+extraLenght);
@@ -2514,6 +2538,7 @@ int main (int argc, char *argv[])
 								}
 								default:  //OSETRIT
 								{
+									WrongProtocol = true;
 									//NextHeaders = false;
 									break;
 								}
@@ -2526,7 +2551,16 @@ int main (int argc, char *argv[])
 			//prirazeni informaci pro prvni cast vypisu
 			PacketList[PacketNumber - 1].ts = header.ts;  //epoch time
 			PacketList[PacketNumber - 1].len = header.caplen;  //delka paketu
-			PacketList[PacketNumber - 1].PacketNumber = PacketNumber;  //cislo paketu
+			PacketList[PacketNumber - 1].PacketNumber = PacketNumberActual;  //cislo paketu
+
+			if (WrongProtocol == true)
+			{
+				PacketNumber--;
+			}
+			else
+			{
+				PacketNumberVerified++;
+			}
 		}
 
 		pcap_close(handle);  //zavreni souboru
@@ -2543,7 +2577,7 @@ int main (int argc, char *argv[])
 			}
 			case 0:  //podle packets
 			{
-				for (int i = 0; i < NumberOfPackets; i++)
+				for (int i = 0; i < PacketNumberVerified; i++)
 				{
 					if (printed < lvalue)  //kontrola zdali nebyl vytisten maximalni pocet tisknutych paketu
 					{
@@ -2560,11 +2594,11 @@ int main (int argc, char *argv[])
 			case 1:  //podle bytes
 			{
 				int Temp;  //cislo aktualne nejvetsiho packetu
-				for (int i = 0; i < NumberOfPackets; i++)
+				for (int i = 0; i < PacketNumberVerified; i++)
 				{
 					if (printed < lvalue)  //kontrola zdali nebyl vytisten maximalni pocet tisknutych paketu
 					{
-						Temp = GetMax(PacketList, NumberOfPackets);  //nejvetsi delka v bytech
+						Temp = GetMax(PacketList, PacketNumberVerified);  //nejvetsi delka v bytech
 						printPacket(PacketList.at(Temp));  //tisk paketu
 						PacketList[Temp].len = 0;  //po vytisteni se vynuluje delka a tudiz se paket nevytiskne znovu
 						printed++;  //pocet jiz vytistenych paketu
@@ -2584,7 +2618,7 @@ int main (int argc, char *argv[])
 	}
 	else  //pokud byla zadana agregace
 	{
-		printPacketAggr(PacketList, NumberOfPackets, avalue, svalue, lvalue);
+		printPacketAggr(PacketList, PacketNumberVerified, avalue, svalue, lvalue);
 	}
 
 	return 0;
