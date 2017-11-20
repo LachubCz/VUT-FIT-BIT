@@ -32,12 +32,6 @@ Použití
     -f filter-expression    |    Program zpracuje pouze pakety, které vyhovují filtru danému řetězcem filter-expression. 
     file    |    Cesta k souboru ve formátu pcap (čitelný knihovnou libpcap). Možné je zadat jeden a více souborů.
 
-Makefile
---------
-`make`        - přeloží zdrojový kód programu
-
-`make reassemble`    - smaže přeložený zdrojový kód a přeloží ho znovu
-
 Příklady použití
 -----------------
     ./isashark --h
@@ -45,6 +39,12 @@ Příklady použití
     ./isashark -s bytes filename1.pcap filename2.pcap
     ./isashark -l 3 -s packets -a dstport filename.pcap
     ./isashark -f "src host 2001:db8::1" filename.pcap
+
+Makefile
+--------
+`make`        - přeloží zdrojový kód programu
+
+`make reassemble`    - smaže přeložený zdrojový kód a přeloží ho znovu
 
 Implementace
 -------------------------------------
