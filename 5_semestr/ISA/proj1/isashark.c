@@ -2246,7 +2246,7 @@ int main (int argc, char *argv[])
 	int PacketNumber = 0;  //cislo zpracovaneho packetu ve vektoru
 	int PacketNumberVerified = PacketNumber;  //pocet paketu s podporovanymi protokoly
 	int PacketNumberActual = PacketNumber;  //poradi v paketu
-	bool WrongProtocol = false;
+	bool WrongProtocol = false;  //indikator nepodporovaneho protokolu
 
 	std::vector<PacketToReassemble> NCPackets;  //vektor pro ukladani fragmentovanych IPv4 paketu
 
@@ -2334,9 +2334,10 @@ int main (int argc, char *argv[])
 							IpSize = 40;
 							break;
 						}
-						default:  //OSETRIT
+						default:  //neznamy protokol
 						{
 							WrongProtocol = true;
+							fprintf (stderr, "Unknown packet.\n");
 							break;
 						}
 					}
@@ -2364,17 +2365,19 @@ int main (int argc, char *argv[])
 							IpSize = 40;
 							break;
 						}
-						default:  //OSETRIT
+						default:  //neznamy protokol
 						{
 							WrongProtocol = true;
+							fprintf (stderr, "Unknown packet.\n");
 							break;
 						}
 					}
 					break;	
 				}
-				default:  //OSETRIT
+				default:  //neznamy protokol
 				{
 					WrongProtocol = true;
+					fprintf (stderr, "Unknown packet.\n");
 					break;
 				}
 			}
@@ -2431,9 +2434,10 @@ int main (int argc, char *argv[])
 
 							break;
 						}
-						default:  //OSETRIT
+						default:  //neznamy protokol
 						{
 							WrongProtocol = true;
+							fprintf (stderr, "Unknown packet.\n");
 							break;
 						}
 					}
@@ -2536,10 +2540,10 @@ int main (int argc, char *argv[])
 									NextHeaders = false;
 									break;
 								}
-								default:  //OSETRIT
+								default:  //neznamy protokol
 								{
 									WrongProtocol = true;
-									//NextHeaders = false;
+									fprintf (stderr, "Unknown packet.\n");
 									break;
 								}
 							}
