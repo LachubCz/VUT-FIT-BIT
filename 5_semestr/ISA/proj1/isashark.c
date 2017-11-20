@@ -142,14 +142,14 @@ struct ETHHeader {
 
 //Struktura pro ukladani zpracovanych paketu
 struct PacketData {
-	int Layer1;  //Druh L2 vrstvy
+	int Layer1 = -1;  //Druh L2 vrstvy
 	struct ETHHeader eptr;  //Ethernet hlavicka
 	struct QHeader qptr;  //IEEE 802.1Q Hlavicka
 	struct ADHeader adptr;  //IEEE 802.1ad Hlavicka
-	int Layer2;  //Druh L3 vrstvy
+	int Layer2 = -1;  //Druh L3 vrstvy
 	struct IPv4Header ipv4ptr;  //IPv6 Hlavicka
 	struct IPv6Header ipv6ptr;  //IPv4 Hlavicka
-	int Layer3;  //Druh L2 vrstvy
+	int Layer3 = -1;  //Druh L2 vrstvy
 	struct TCPHeader tcpptr;  //TCP Hlavicka
 	struct UDPHeader udpptr;  //UDP Hlavicka
 	struct ICMPv4Header icmpv4ptr;  //ICMPv4 Hlavicka
@@ -165,7 +165,7 @@ struct AggrData {
 	u_int8_t Aggr_dhost[ETHER_ADDR_LEN];  //Agregovana cilova MAC adresa
    	struct in_addr Aggr_ip_src;  //Agregovana zdrojova IPv4 adresa
 	struct in_addr Aggr_ip_dst;  //Agregovana cilova IPv4 adresa
-	int IpType;  //Druh IP adresy
+	int IpType = -1;  //Druh IP adresy
 	struct in6_addr Aggr_ip6_src;  //Agregovana zdrojova IPv6 adresa
 	struct in6_addr Aggr_ip6_dst;  //Agregovana cilova IPv6 adresa
 	u_int16_t	Aggr_sport;  //Agregovany zdrojovy port
@@ -260,6 +260,9 @@ void ErrorFound(int i)
 			break;
 		case 12:
 			fprintf (stderr, "Argument was entered multiple times.\n");
+			break;
+		case 13:
+			fprintf (stderr, "Argument was too long.\n");
 			break;
 		default:
 			fprintf (stderr, "Error.\n");
@@ -2071,7 +2074,7 @@ int main (int argc, char *argv[])
 	unsigned int lvalue = 4294967295;  //hodnota pro ulozeni argumentu -l
 	int avalue = -2;  //hodnota pro ulozeni argumentu -a
 	int svalue = -2;  //hodnota pro ulozeni argumentu -s
-	char fvalue[256] = "";  //hodnota pro ulozeni argumentu -f
+	char fvalue[2048] = "";  //hodnota pro ulozeni argumentu -f
 	unsigned int printed = 0;  //pocet vytistenych paketu (pomocna promenna, kdyz je zadan arg l)
 	
 	//zpracovani argumentu
@@ -2156,6 +2159,10 @@ int main (int argc, char *argv[])
 			{
 				ErrorFound(12);
 			}
+			if (strlen(optarg) > 2047)  //kontrola delky argumentu
+			{
+				ErrorFound(13);
+			}
 			strcpy(fvalue, optarg);  //ziskani hodnoty filteru
 			break;
 		case '?':
@@ -2197,10 +2204,14 @@ int main (int argc, char *argv[])
 		ErrorFound(11);
 	}
 
-	char filenames[NumberOfFiles][256];  //pole obsahujici nazvy souboru
+	char filenames[NumberOfFiles][512];  //pole obsahujici nazvy souboru
 	
 	for (index = optind; index < argc; index++)
 	{
+		if (strlen(argv[index]) > 511)  //kontrola delky argumentu
+		{
+			ErrorFound(13);
+		}
 		strcpy(filenames[argc - index - 1], argv[index]);  //ulozeni jmen souboru do pole
 	}
 
@@ -2211,7 +2222,7 @@ int main (int argc, char *argv[])
 
 	//Promenne pro praci s pcap knihovnou
 	pcap_t *handle;  //packet capture handler
-	char errbuf[256];  //error buffer
+	char errbuf[2048];  //error buffer
 	struct pcap_pkthdr header;  //hlavicka packetu
 	struct bpf_program fp;  //zkompilovany filter
 

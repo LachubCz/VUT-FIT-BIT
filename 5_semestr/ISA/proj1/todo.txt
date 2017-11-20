@@ -1,11 +1,3 @@
-ráno:
-- zkontrolovat break a default ve switchich
-- jeden argument zadán vícekrát
-- možná ošetřit tisk, default layer by nemělo být nula
-- dopsat return value kontroly memcpy např
-- dokumentace
-
-
 todo:
 - defaulty tag (přeskakování neznámých paketů pomocí vrácení čísla o jedno)  //OSETRIT  (u extension headeru je treba kontrolovat false u promene co indikuje extension header)
 - fragmentace tag //FRAGMENTACE
@@ -14,11 +6,11 @@ todo:
 kontrola:
 - zkontrolovat správné IPv6 extensions https://www.microsoftpressstore.com/articles/article.aspx?p=2225063&seqNum=4
 - chyby z fóra
+- vyzkoušet všechny agregace (z více souborů)
 
 
 dokumentace
 - dokumentace
-- readme
 - komentáře k programu
 - uvest RFC
 - uvest zdroje hlavicek
@@ -42,3 +34,9 @@ snad hotovo:
 - přepočítat agregace
 - tisk unsigned intu
 - převést uchar na uint
+- readme
+- test zdali bylo zadáno filename
+- jeden argument zadán vícekrát
+- možná ošetřit tisk, default layer by nemělo být nula
+- dopsat return value kontroly memcpy např
+- zkontrolovat break a default ve switchich
