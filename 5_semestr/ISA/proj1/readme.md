@@ -24,7 +24,6 @@ Použití
 -----
 ##### isashark [-h] [-a aggr-key] [-s sort-key] [-l limit] [-f filter-expression] file ..
 ###### Parametry: 
-___
 
     -h  |   Vypíše nápovědu a ukončí program.
     -a aggr-key   |   Zapnutí agregace podle klíče aggr-key, což může být srcmac značící zdrojovou MAC adresu, dstmac značící cílovou MAC adresu, srcip značící zdrojovou IP adresu, dstip značící cílovou IP adresu, srcport značící číslo zdrojového transportního portu nebo dstport značící číslo cílového transportního portu.
