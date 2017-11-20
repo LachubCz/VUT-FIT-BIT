@@ -2184,13 +2184,15 @@ int main (int argc, char *argv[])
 
 	char filenames[NumberOfFiles][512];  //pole obsahujici nazvy souboru
 	
+	int q = 0;
 	for (index = optind; index < argc; index++)
 	{
 		if (strlen(argv[index]) > 511)  //kontrola delky argumentu
 		{
 			ErrorFound(13);
 		}
-		strcpy(filenames[argc - index - 1], argv[index]);  //ulozeni jmen souboru do pole
+		strcpy(filenames[q], argv[index]);  //ulozeni jmen souboru do pole
+		q++;
 	}
 
 	/*for (int i = 0; i < NumberOfFiles; i++)
