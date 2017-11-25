@@ -6,129 +6,73 @@
  * xcervi21, Radim Cervinka
 **/
 #include <iostream>
-#include <queue>        // priority_queue
-#include <cstdlib>      // exit()
-using namespace std;
+#include "simlib.h"
 
-/////////////////////////////////////////////////////////////////////////////
-// simulátor
-/////////////////////////////////////////////////////////////////////////////
+Facility NLX("NLX 1500/500");
+Facility KOEPFER("Koepfer 200 CNC");
+Facility DC3("DC 3");
+Facility BHOCD("BH OCD 2040");
 
-void error(const char *msg) {
-    cerr << "ERROR: " << msg << endl;
-    exit(1);
+/*
+* Proces popisujici pruchod hridele vyrobnim procesem
+*/
+class Hridel: public Process {
+public:
+	void Behavior() {
+		Wait(1.8); // transport na NLX
+		Seize(NLX); // zaberu a pracuju na NLX
+		Wait(7);
+		Release(NLX);
+
+		Wait(0.7); // transport na Koepfer
+		Seize(KOEPFER); // zaberu a pracuju na Koepfer
+		Wait(3.2);
+		Release(KOEPFER);
+
+		Wait(0.8); // transport na DC3
+		Seize(DC3); // zaberu a pracuju na DC3
+		Wait(0.2);
+		Release(DC3);
+
+		Wait(3.2); // transport do skladu
+		Wait(); // doba cementace
+
+		Wait(2.5); // transport na OCD
+		Seize(BHOCD); // zaberu a pracuju na OCD
+		Wait(3.8);
+		Release(BHOCD);
+
+		Wait(2.8); // transport na DC3
+		Seize(DC3); // zaberu a pracuju na DC3
+		Wait(0.2);
+		Release(DC3);
+
+		Wait(0.9); // transport do skladu hotoveho
+	}
 }
 
-typedef void (*event_ptr_t) (); // ukazatel na funkci popisující událost
+/*
+* Pokus o vytvoreni procesu, ktery modeluje chovani a zabirani stroje NLX
+*/
+class NLX : public Process {
+public:
+	void Behavior() {
+		while (1) {
+			if (Random()<=0.5) {
+				Seize(NLX);
+				Wait(3.3);
+				Release(NLX);
+			}
+		}
+		
 
-// Aktivační záznam události (pro jednoduchost bez priorit)
-struct act_record {
-    event_ptr_t event_ptr;      // odkaz na událost
-    double atime;               // aktivační čas
-    // konstruktor naplní položky:
-    act_record(event_ptr_t e, double at): event_ptr(e), atime(at) {}
-};
-
-// Porovnání aktivačních záznamů z hlediska jejich pořadí v kalendáři.
-// Je nutné pro uspořádání kalendáře typu priority_queue<act_record>
-bool operator <(const act_record & a, const act_record & b)
-{
-    return a.atime > b.atime;  // POZOR HACK 
-    // porovnání je obráceně -- lze opravit, ale 
-    // musí se použít jiné než implicitní řazení u priority_queue
-    // (menší čas ==> vyšší priorita při řazení)
+	}
 }
-
-// Jednoduchý kalendář událostí 
-// - na začátku je vždy aktivační záznam s nejmenším časem
-priority_queue<act_record> calendar;
-
-// Modelový čas
-double Time;
-
-// Plánování události na zadaný čas
-void schedule(event_ptr_t event_ptr, double at)
-{
-    if (at < Time)
-        error("Plánování do minulosti");
-    act_record a(event_ptr, at);
-    calendar.push(a);           // zařazení do kalendáře
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// popis modelu
-/////////////////////////////////////////////////////////////////////////////
-
-queue<event_ptr_t>  fronta;
-bool                zarizeni_obsazeno = false;
-
-void event4()
-{
-    // popis činnosti
-    cout << "event 4 - konec obsluhy";
-    zarizeni_obsazeno = false;
-    if (!fronta.empty()) {
-	cout << " + aktivace prvního ve frontě";
-	schedule(fronta.front(), Time);	// aktivace první události z fronty
-	fronta.pop();		// vyjme z fronty
-    }
-    cout << endl;
-}
-
-void event3()
-{
-    // popis činnosti
-    cout << "event 3 - start obsluhy" << endl;
-    zarizeni_obsazeno = true;
-    schedule(event4, Time + 250);	// doba obsluhy
-}
-
-void event2()
-{
-    // popis činnosti
-    if (zarizeni_obsazeno) {
-	cout << "event 2 - zařazení do fronty" << endl;
-	fronta.push(event3);	// zařadíme do fronty
-    } else {
-	cout << "event 2" << endl;
-	schedule(event3, Time);	// aktivace obsluhy
-    }
-}
-
-void event1()
-{
-    // popis činnosti
-    cout << "event 1" << endl;
-    schedule(event2, Time);	// aktivace event2
-    schedule(event1, Time + 200);	// další výskyt
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// popis simulace
-/////////////////////////////////////////////////////////////////////////////
-
-const double TSTART = 0;
-const double TEND = 1000;
 
 int main()
 {
-    cout << "*** inicializace" << endl;
-    // while(!calendar.empty()) calendar.pop(); // inicializace kalendáře
-    Time = 0;
-    cout << "Time = " << Time << endl;
-    schedule(event1, Time);	// první aktivace
-    cout << "*** začátek simulace:  čas = " << Time << endl;
-    while (!calendar.empty()) {
-	act_record a = calendar.top();	// přečteme první záznam
-	calendar.pop();		// odstraníme první záznam
-        if (a.atime > TEND) {
-            Time = TEND;
-            break;              // končíme simulaci
-        }
-	Time = a.atime;		// posuneme čas
-	cout << "[Time = " << Time << "]: ";
-	a.event_ptr();		// provedeme událost
-    }
-    cout << "*** konec simulace:  čas = " << Time << endl;
-    cout << "aktuální délka fronty = " << fronta.size() << endl;
+	Init(0,10080); // 24 * 60 * 7 = 10080 = pocet minut v jednom tydni, 3 smenny provoz
+	// potreba nejake aktivace generatoru nebo tak neco(new Gener)->Activate();
+	Run(); 
+	Print("Dokoncil jsem simulaci, hurray!\n");
 }
