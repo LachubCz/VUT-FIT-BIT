@@ -16,9 +16,11 @@ Facility BHOCD("BH OCD 2040");
 /*
 * Proces popisujici pruchod hridele vyrobnim procesem
 */
-class Hridel: public Process {
+class Hridel: public Process
+{
 public:
-	void Behavior() {
+	void Behavior()
+	{
 		Wait(1.8); // transport na NLX
 		Seize(NLX); // zaberu a pracuju na NLX
 		Wait(7);
@@ -54,11 +56,15 @@ public:
 /*
 * Pokus o vytvoreni procesu, ktery modeluje chovani a zabirani stroje NLX
 */
-class NLX : public Process {
+class NLX : public Process
+{
 public:
-	void Behavior() {
-		while (1) {
-			if (Random()<=0.5) {
+	void Behavior()
+	{
+		while (1)
+		{
+			if (Random()<=0.5)
+			{
 				Seize(NLX);
 				Wait(3.3);
 				Release(NLX);
