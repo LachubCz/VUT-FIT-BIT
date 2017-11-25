@@ -43,10 +43,11 @@ public:
     {
     	
     	float rand_val = (float) rand()/RAND_MAX;
-      	printf("%f\n", rand_val);
+      	//printf("%f\n", rand_val);
       	while (rand_val<=0.5)
 		{
         	Wait(3.3);
+        	rand_val = (float) rand()/RAND_MAX;
       	}
     }
   	
@@ -73,7 +74,7 @@ public:
             {
             	Wait(3.1);
           	}
-          rand_val = Random();
+          rand_val = (float) rand()/RAND_MAX;
         }
     }
   	
@@ -82,7 +83,7 @@ public:
   		//float rand_val = Random();
   		//srand(time(NULL));
   		float rand_val = (float) rand()/RAND_MAX;
-  		printf("%f\n", rand_val);
+  		//printf("%f\n", rand_val);
       	while (rand_val <= 0.97)
 		{	
 			// prevodovka still 29% z 97% = 28% ze 100%
@@ -159,7 +160,7 @@ public:
           			Wait(1.6);
           		}
           	}
-          	rand_val = Random();
+          	rand_val = (float) rand()/RAND_MAX;
         }
     }
 
