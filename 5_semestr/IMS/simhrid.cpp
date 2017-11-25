@@ -9,6 +9,8 @@
 #include "simlib.h"
 #include <cstdbool>
 #include <vector>
+#include <random>
+#include <time.h>
 
 int lastHridel = -1;
 int countOfHridels = 600;
@@ -19,10 +21,13 @@ int DC3_1Last = -1;
 int DC3_2Last = -1;
 int OCDLast = -1;
 
-
+Facility NLXbefore("NLX 1500/500 BF");
 Facility NLX("NLX 1500/500");
+Facility KOEPFERbefore("Koepfer 200 CNC BF");
 Facility KOEPFER("Koepfer 200 CNC");
+Facility DC3before("DC 3 BF");
 Facility DC3("DC 3");
+Facility BHOCDbefore("BH OCD 2040 BF");
 Facility BHOCD("BH OCD 2040");
 
 /*
@@ -36,7 +41,10 @@ public:
   	
     void wait_for_NLX()
     {
-      	while (Random()<=0.5)
+    	srand(time(NULL));
+    	float rand_val = (float) rand()/RAND_MAX;
+      	printf("%f\n", rand_val);
+      	while (rand_val<=0.5)
 		{
         	Wait(3.3);
       	}
@@ -44,7 +52,9 @@ public:
   	
   	void wait_for_KOEPFER()
     {
-		float rand_val = Random();
+		//float rand_val = Random();
+		srand(time(NULL));
+		float rand_val = (float) rand()/RAND_MAX;
       	while (rand_val <= 0.8)
 		{
 			if (rand_val <= 0.2)
@@ -69,7 +79,10 @@ public:
   	
   	void wait_for_DC3()
     {
-  		float rand_val = Random();
+  		//float rand_val = Random();
+  		srand(time(NULL));
+  		float rand_val = (float) rand()/RAND_MAX;
+  		printf("%f\n", rand_val);
       	while (rand_val <= 0.97)
 		{	
 			// prevodovka still 29% z 97% = 28% ze 100%
@@ -152,39 +165,52 @@ public:
 
 	void Behavior()
 	{
+
       	///////////////////////////////////////////
       	//NLX
       	///////////////////////////////////////////
+		printf("NLX: %d\n", numberOfHridel);
 		Wait(1.8); // transport na NLX
-		while(NLXLast != (numberOfHridel - 1));
+
+		//while(NLXLast != (numberOfHridel - 1));
+		//Print("Jsem za whilem: %i\n", numberOfHridel);
       	wait_for_NLX(); // proces cekani na stroj
+		//Print("Jsem za waitforseize: %i\n", numberOfHridel);
 		Seize(NLX); // zaberu a pracuju na NLX
+		//printf("NLX(1): %d\n", numberOfHridel);
+		wait_for_NLX();
+		//NLXLast = numberOfHridel;
 		Wait(7);
+		//printf("NLX(2): %d\n", numberOfHridel);
 		Release(NLX);
-		NLXLast = numberOfHridel;
+		//NLXLast = numberOfHridel;
         /*if (numberOfHridel != (countOfHridels - 1))
         {
         	(*SmeckaHrideli).at(numberOfHridel + 1)->Activate();
         }*/
 
+		printf("Koepfer: %d\n", numberOfHridel);
       	///////////////////////////////////////////
       	//Koepfer
       	///////////////////////////////////////////
 		Wait(0.7); // transport na Koepfer
-		while(KoepferLast != (numberOfHridel - 1));
-        wait_for_KOEPFER(); // proces cekani na stroj
+		//while(KoepferLast != (numberOfHridel - 1));
+        
 		Seize(KOEPFER); // zaberu a pracuju na Koepfer
+		wait_for_KOEPFER(); // proces cekani na stroj
 		Wait(3.2);
 		Release(KOEPFER);
 		KoepferLast = numberOfHridel;
 
+		printf("DC3(1): %d\n", numberOfHridel);
         ///////////////////////////////////////////
       	//DC3 poprve
       	///////////////////////////////////////////
 		Wait(0.8); // transport na DC3
-      	while(DC3_1Last != (numberOfHridel - 1));
-      	wait_for_DC3(); // proces cekani na stroj
+      	//while(DC3_1Last != (numberOfHridel - 1));
+      	
 		Seize(DC3); // zaberu a pracuju na DC3
+		wait_for_DC3(); // proces cekani na stroj
 		Wait(0.2);
 		Release(DC3);
 		DC3_1Last = numberOfHridel;
@@ -192,23 +218,27 @@ public:
 		Wait(3.2); // transport do skladu
 		Wait(7200); // doba cementace TODO 120h * 24
 
+		printf("OCD: %d\n", numberOfHridel);
       	///////////////////////////////////////////
       	//OCD
       	///////////////////////////////////////////
 		Wait(2.5); // transport na OCD
-      	while(OCDLast != (numberOfHridel - 1));
+      	//while(OCDLast != (numberOfHridel - 1));
 		Seize(BHOCD); // zaberu a pracuju na OCD
 		Wait(3.8);
 		Release(BHOCD);
 		OCDLast = numberOfHridel;
       	
+		printf("DC3(2): %d\n", numberOfHridel);
+
       	///////////////////////////////////////////
       	//DC3 podruhe
       	///////////////////////////////////////////
 		Wait(2.8); // transport na DC3
-      	while(DC3_2Last != (numberOfHridel - 1));
-      	wait_for_DC3(); // proces cekani na stroj
+      	//while(DC3_2Last != (numberOfHridel - 1));
+      	
 		Seize(DC3); // zaberu a pracuju na DC3
+		wait_for_DC3(); // proces cekani na stroj
 		Wait(0.2);
 		Release(DC3);
 		DC3_2Last = numberOfHridel;
@@ -224,12 +254,15 @@ int main()
 	// potreba nejake aktivace generatoru nebo tak neco(new Gener)->Activate();
   	//(new Generator)->Activate();
 
-	std::vector<Hridel> SmeckaHrideli(countOfHridels);
+	std::vector<Hridel*> SmeckaHrideli(countOfHridels);
 
   	for(int i = 0; i < SmeckaHrideli.size(); i++)
     {
-    	SmeckaHrideli.at(i).numberOfHridel = i;
-    	SmeckaHrideli.at(i).Activate();
+    	SmeckaHrideli.at(i) = new Hridel;//-;>Activate();
+      	//SmeckaHrideli.at(i) = new Hridel;
+      
+    	SmeckaHrideli.at(i)->numberOfHridel = i;
+    	SmeckaHrideli.at(i)->Activate();
     	//SmeckaHrideli.at(i).SmeckaHrideli = &SmeckaHrideli;
     }
   	//zkativuj me
