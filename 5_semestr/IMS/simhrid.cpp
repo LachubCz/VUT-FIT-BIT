@@ -41,7 +41,7 @@ public:
   	
     void wait_for_NLX()
     {
-    	srand(time(NULL));
+    	
     	float rand_val = (float) rand()/RAND_MAX;
       	printf("%f\n", rand_val);
       	while (rand_val<=0.5)
@@ -53,7 +53,7 @@ public:
   	void wait_for_KOEPFER()
     {
 		//float rand_val = Random();
-		srand(time(NULL));
+		//srand(time(NULL));
 		float rand_val = (float) rand()/RAND_MAX;
       	while (rand_val <= 0.8)
 		{
@@ -80,7 +80,7 @@ public:
   	void wait_for_DC3()
     {
   		//float rand_val = Random();
-  		srand(time(NULL));
+  		//srand(time(NULL));
   		float rand_val = (float) rand()/RAND_MAX;
   		printf("%f\n", rand_val);
       	while (rand_val <= 0.97)
@@ -260,14 +260,15 @@ int main()
     {
     	SmeckaHrideli.at(i) = new Hridel;//-;>Activate();
       	//SmeckaHrideli.at(i) = new Hridel;
-      
+      	
     	SmeckaHrideli.at(i)->numberOfHridel = i;
+    	srand(time(NULL));
     	SmeckaHrideli.at(i)->Activate();
     	//SmeckaHrideli.at(i).SmeckaHrideli = &SmeckaHrideli;
     }
   	//zkativuj me
   	//SmeckaHrideli.at(0).Activate();
-  
+  	
   	Run(); 
 	Print("Dokoncil jsem simulaci, hurray!\n");
 }
