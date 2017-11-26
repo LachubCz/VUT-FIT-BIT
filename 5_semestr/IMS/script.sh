@@ -1,5 +1,5 @@
 #!/bin/sh
-   echo "print"
+   echo -n "print"
    output1="$(make run | grep "DC3(2)" | wc -l | tr -d $'\r')"
    echo -n "($output1 + " | tr -d $'\r'
    sleep 1s | tr -d $'\r' | tr -d $'\r'
