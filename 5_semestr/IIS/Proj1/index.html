@@ -6,13 +6,18 @@
 	<title>Informační systém FIT</title>
 </head>
 <body id="body">
-<ul>
-  <li><img src="images/icon2.png" alt="logo"></li>
-  <li id="actual"><a id="actual" href="#home">Home</a></li>
-  <li><a href="#news">Termíny</a></li>
-  <li><a href="#contact">Předměty</a></li>
-  <li><a href="#contact">Registrace</a></li>
-  <li style="float:right"><a class="active" href="#about">Odhlásit</a></li>
-</ul>
+<div id="loginbox">
+<div class="box">
+	<img id="img1" src="images/icon2.png" alt="logo">
+  <div class="container">
+    <label><b>Login</b></label>
+    <input class="login" type="text" placeholder="" name="uname" required>
+
+    <label><b>Heslo</b></label>
+    <input type="password" placeholder="" name="psw" required>
+	<input class="checkbox" type="checkbox" checked="checked"> Pamatovat si mě
+    <button type="submit">Přihlásit se</button><br>
+   
+  </div></div></div>
 </body>
 </html>

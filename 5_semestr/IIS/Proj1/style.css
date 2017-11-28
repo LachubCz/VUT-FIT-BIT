@@ -56,5 +56,61 @@ li img{
     padding: 3.5px 16px;
     text-decoration: none;
     width: 40px;
-    /*background-color: #c1502e;*/
+}
+/*
+.container{
+    position:absolute;
+    width:100px;
+    height:100px;
+    left:50%;
+    top:50%;
+    margin-left:-50px;
+    margin-top:-50px;
+}
+*/
+.box
+{
+    /*position:absolute;*/
+    width:173px;
+    height:122px;
+    /*left:50%;
+    top:50%;
+    margin-left:-50px;
+    margin-top:-50px;*/
+    margin-left: 15px;
+	background-color: #588c7e;
+}
+
+#loginbox
+{
+    position:absolute;
+    width:204px;
+    height:261px;
+    left:50%;
+    top:50%;
+    margin-left:-80px;
+    margin-top:-150px;
+	background-color: #588c7e;
+}
+
+#img1
+{
+	margin-left: 41px;
+	margin-top: 12px;
+}
+
+button
+{
+	margin-top: 7px;
+}
+
+.checkbox
+{
+	margin-top: 10px;
+	margin-left: 0px;
+}
+
+.login
+{
+	margin-bottom: 3px;
 }
