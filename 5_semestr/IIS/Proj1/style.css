@@ -1,0 +1,60 @@
+@font-face {
+  font-family: MyriadPro-Regular;
+  src: url(MyriadPro-Regular.otf);
+}
+
+#body
+{
+	margin-top: 0px;
+	margin-left: 0px;
+	margin-bottom: 0px;
+	margin-right: 0px;
+	font-size: 12pt;
+	font-family: MyriadPro-Regular;
+	min-width: 850px;
+	background-color: #282828;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #588c7e;
+}
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+li a:hover:not(.active) {
+    background-color: #69a494;
+    color: white;
+}
+
+#actual {
+    background-color: #ffcc5c;
+    color: #282828;
+}
+
+.active {
+    background-color: #c1502e;
+}
+
+li img{
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 3.5px 16px;
+    text-decoration: none;
+    width: 40px;
+    /*background-color: #c1502e;*/
+}
