@@ -1,0 +1,156 @@
+@font-face {
+  font-family: MyriadPro-Regular;
+  src: url(MyriadPro-Regular.otf);
+}
+
+#body
+{
+	margin-top: 0px;
+	margin-left: 0px;
+	margin-bottom: 0px;
+	margin-right: 0px;
+	font-size: 12pt;
+	font-family: MyriadPro-Regular;
+	min-width: 850px;
+	background-color: #282828;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #588c7e;
+}
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+li a:hover:not(.active) {
+    background-color: #69a494;
+    color: white;
+}
+
+#actual {
+    background-color: #ffcc5c;
+    color: #282828;
+}
+
+.active {
+    background-color: #c1502e;
+}
+
+li img{
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 3.5px 16px;
+    text-decoration: none;
+    width: 40px;
+}
+
+.box
+{
+    width:173px;
+    height:122px;
+    margin-left: 15px;
+	background-color: #588c7e;
+}
+
+#loginbox
+{
+    position:absolute;
+    width:256px;
+    height:263px;
+    left:50%;
+    top:50%;
+    margin-left:-80px;
+    margin-top:-150px;
+	background-color: #588c7e;
+
+}
+
+#img1
+{
+	margin-left: 66px;
+	margin-top: 20px;
+    margin-bottom: 14px;
+}
+
+button
+{
+	margin-top: 12px;
+    font-family: MyriadPro-Regular;
+}
+
+.checkbox
+{
+	/*margin-top: 10px;  */    
+    padding-top: 5px;
+    vertical-align: bottom;
+    width: auto;
+}
+
+
+input
+{
+    font-family: MyriadPro-Regular;
+    margin-left: 5px;
+    width: 120px;
+    vertical-align: bottom;
+    margin-top: 5px;
+}
+
+.student
+{
+    color: white;
+    margin-left: 10px; 
+
+}
+h1
+{
+    margin-left: 10px; 
+    margin-top: 10px; 
+    margin-bottom: 10px;      
+    color: white;
+}
+
+.col-md-4.control-label
+{
+    float: left;
+    margin-top: 7px;
+    width: 68px;
+}
+
+
+.form-control
+{
+    width: 150px;
+    padding: 0px 0px 0px 0px;
+    margin-bottom: 5px;
+}
+
+.row
+{
+    width: 230px;
+}
+
+.col-md-6
+{
+    width: 300px;
+}
+
+.help-block
+{
+    font-size: 10px;
+    display: inline-table;
+}
