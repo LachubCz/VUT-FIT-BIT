@@ -58,7 +58,7 @@ public:
     {
     	
     	float rand_val = (float) rand()/RAND_MAX;
-      	////printf("%f\n", rand_val);
+      	//////printf("%f\n", rand_val);
       	while (rand_val<=0.5)
 		{
         	Wait(3.3);
@@ -96,7 +96,7 @@ public:
   		//float rand_val = Random();
   		//srand(time(NULL));
   		float rand_val = (float) rand()/RAND_MAX;
-  		////printf("%f\n", rand_val);
+  		//////printf("%f\n", rand_val);
       	while (rand_val <= 0.97)
 		{	
 			// prevodovka still 29% z 97% = 28% ze 100%
@@ -186,22 +186,22 @@ public:
       	///////////////////////////////////////////
       	//NLX
       	///////////////////////////////////////////
-		//printf("NLX: %d\n", numberOfHridel);
+		////printf("NLX: %d\n", numberOfHridel);
 		Wait(1.8); // transport na NLX
 
 		//while(NLXLast != (numberOfHridel - 1));
-		//Print("Jsem za whilem: %i\n", numberOfHridel);
+		////print("Jsem za whilem: %i\n", numberOfHridel);
       	//wait_for_NLX(); // proces cekani na stroj
-		//Print("Jsem za waitforseize: %i\n", numberOfHridel);
+		////print("Jsem za waitforseize: %i\n", numberOfHridel);
 		
         Seize(NLX); // zaberu a pracuju na NLX
-		////printf("NLX(1): %d\n", numberOfHridel);
+		//////printf("NLX(1): %d\n", numberOfHridel);
         NLX_waiting_time = Time;
 		wait_for_NLX();
         NLX_waiting_time = Time - NLX_waiting_time;
 		//NLXLast = numberOfHridel;
 		Wait(7);
-		////printf("NLX(2): %d\n", numberOfHridel);
+		//////printf("NLX(2): %d\n", numberOfHridel);
 		Release(NLX);
 		//NLXLast = numberOfHridel;
         /*if (numberOfHridel != (countOfHridels - 1))
@@ -209,7 +209,7 @@ public:
         	(*SmeckaHrideli).at(numberOfHridel + 1)->Activate();
         }*/
 
-		//printf("Koepfer: %d\n", numberOfHridel);
+		////printf("Koepfer: %d\n", numberOfHridel);
       	///////////////////////////////////////////
       	//Koepfer
       	///////////////////////////////////////////
@@ -224,7 +224,7 @@ public:
 		Release(KOEPFER);
 		//KoepferLast = numberOfHridel;
 
-		//printf("DC3(1): %d\n", numberOfHridel);
+		////printf("DC3(1): %d\n", numberOfHridel);
         ///////////////////////////////////////////
       	//DC3 poprve
       	///////////////////////////////////////////
@@ -241,7 +241,7 @@ public:
 		Wait(3.2); // transport do skladu
 		Wait(7200); // doba cementace TODO 120h * 24
 
-		//printf("OCD: %d\n", numberOfHridel);
+		////printf("OCD: %d\n", numberOfHridel);
       	///////////////////////////////////////////
       	//OCD
       	///////////////////////////////////////////
@@ -252,7 +252,7 @@ public:
 		Release(BHOCD);
 		OCDLast = numberOfHridel;
       	
-		//printf("DC3(2): %d\n", numberOfHridel);
+		////printf("DC3(2): %d\n", numberOfHridel);
 
       	///////////////////////////////////////////
       	//DC3 podruhe
@@ -272,14 +272,14 @@ public:
 		Wait(0.9); // transport do skladu hotoveho
 
         total_time_spent = Time - total_time_spent;
-		Print("--------------------------------------------\n");
-        Print("Hotovo: %i\n", numberOfHridel);
-        Print("a trvalo to: %f\n", total_time_spent);
-        Print("NLX wait time: %f\n", NLX_waiting_time);
-        Print("Koepfer wait time: %f\n", Koepfer_waiting_time);
-        Print("DC3 - 1 wait time: %f\n", DC3_1_waiting_time);
-        Print("DC3 - 2 wait time: %f\n", DC3_2_waiting_time);
-        Print("--------------------------------------------\n");
+		//print("--------------------------------------------\n");
+        //print("Hotovo: %i\n", numberOfHridel);
+        //print("a trvalo to: %f\n", total_time_spent);
+        //print("NLX wait time: %f\n", NLX_waiting_time);
+        //print("Koepfer wait time: %f\n", Koepfer_waiting_time);
+        //print("DC3 - 1 wait time: %f\n", DC3_1_waiting_time);
+        //print("DC3 - 2 wait time: %f\n", DC3_2_waiting_time);
+        //print("--------------------------------------------\n");
 		count++;
         NLX_waiting_time_gl += NLX_waiting_time;
         Koepfer_waiting_time_gl += Koepfer_waiting_time;
@@ -308,13 +308,13 @@ int tyden = 0;
 int until_now_count = 0;
 class Vypis : public Event {
   void Behavior() {
-    Print("------------TYDEN %i----for count of %i-------------\n", tyden, count-until_now_count);
-    Print("Statistiky wait funkci (avg):\n");
-    Print("NLX wait time: %f\n", NLX_waiting_time_gl / count);
-    Print("Koepfer wait time: %f\n", Koepfer_waiting_time_gl / count);
-    Print("DC3 - 1 wait time: %f\n", DC3_1_waiting_time_gl / count);
-    Print("DC3 - 2 wait time: %f\n", DC3_2_waiting_time_gl / count);
-    Print("--------------------------------------------\n");
+    //print("------------TYDEN %i----for count of %i-------------\n", tyden, count-until_now_count);
+    //print("Statistiky wait funkci (avg):\n");
+    //print("NLX wait time: %f\n", NLX_waiting_time_gl / count);
+    //print("Koepfer wait time: %f\n", Koepfer_waiting_time_gl / count);
+    //print("DC3 - 1 wait time: %f\n", DC3_1_waiting_time_gl / count);
+    //print("DC3 - 2 wait time: %f\n", DC3_2_waiting_time_gl / count);
+    //print("--------------------------------------------\n");
     tyden++;
     until_now_count = count;
     Activate(Time+10080);
@@ -339,22 +339,22 @@ int main()
     	//SmeckaHrideli.at(i)->Activate(); TODO toto zakomentovano
     	//SmeckaHrideli.at(i).SmeckaHrideli = &SmeckaHrideli;
     }
-  	//zaktivuj me
+  	//zkativuj me
   	//SmeckaHrideli.at(0).Activate();
   	(new Gener)->Activate();
     (new Vypis)->Activate();
   	Run(); 
 	Print("Dokoncil jsem simulaci, hurray! Count = %i.\n", count);
-    Print("--------------------------------------------\n");
-    Print("Statistiky wait funkci (avg):\n");
-    Print("NLX wait time: %f\n", NLX_waiting_time_gl / count);
-    Print("Koepfer wait time: %f\n", Koepfer_waiting_time_gl / count);
-    Print("DC3 - 1 wait time: %f\n", DC3_1_waiting_time_gl / count);
-    Print("DC3 - 2 wait time: %f\n", DC3_2_waiting_time_gl / count);
-    Print("--------------------------------------------\n");
-    NLX.Output();
-    KOEPFER.Output();
-    DC3.Output();
-    BHOCD.Output();
-    Table.Output();
+    //print("--------------------------------------------\n");
+    //print("Statistiky wait funkci (avg):\n");
+    //print("NLX wait time: %f\n", NLX_waiting_time_gl / count);
+    //print("Koepfer wait time: %f\n", Koepfer_waiting_time_gl / count);
+    //print("DC3 - 1 wait time: %f\n", DC3_1_waiting_time_gl / count);
+    //print("DC3 - 2 wait time: %f\n", DC3_2_waiting_time_gl / count);
+    //print("--------------------------------------------\n");
+    //NLX.Output();
+    //KOEPFER.Output();
+    //DC3.Output();
+    //BHOCD.Output();
+    //Table.Output();
 }
