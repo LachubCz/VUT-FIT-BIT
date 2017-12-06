@@ -19,13 +19,14 @@
 unsigned int delka_simulace_minuty = 524160;
 unsigned int tydenni_prirustek_zbozi = 320;
 
-unsigned int numOfActivated = 0;
-unsigned int count = 0;
+unsigned int numOfActivated = 0; // celkovy pocet dovezenych kusu materialu
+unsigned int count = 0; // celkovy pocet vyrobenych hrideli
 
 Facility NLX("NLX 1500/500");
 Facility KOEPFER("Koepfer 200 CNC");
 Facility DC3("DC 3");
 Facility BHOCD("BH OCD 2040");
+
 Histogram Table ("Table", 0, 500, 100);
 
 
@@ -36,9 +37,9 @@ class Hridel: public Process
 {
 public:
 	
+	// funkce simulujici cekani na stroj NLX 1500/500, nez obslouzi jine vyrobky tovarny
 	void wait_for_NLX()
 	{
-		
 		float rand_val = (float) rand()/RAND_MAX;
 
 		while (rand_val<=0.5)
@@ -48,6 +49,7 @@ public:
 		}
 	}
 	
+	// funkce simulujici cekani na stroj Koepfer 200 CNC, nez obslouzi jine vyrobky tovarny
 	void wait_for_KOEPFER()
 	{
 		float rand_val = (float) rand()/RAND_MAX;
@@ -73,9 +75,9 @@ public:
 		}
 	}
 	
+	// funkce simulujici cekani na stroj DC 3, nez obslouzi jine vyrobky tovarny
 	void wait_for_DC3()
 	{
-		//srand(time(NULL));
 		float rand_val = (float) rand()/RAND_MAX;
 
 		while (rand_val <= 0.97)
@@ -160,9 +162,9 @@ public:
 
 	void Behavior()
 	{
-		//total_time_spent = Time;
+		Priority = 1; // nastaveni zakladni priority fronty
 
-		Priority = 1; // TODO
+		srand(time(NULL));
 
 		///////////////////////////////////////////
 		//NLX
@@ -201,7 +203,7 @@ public:
 		Release(DC3);
 
 	  
-		Wait(3.2); // transport do skladu
+		Wait(3.2); // transport na cementaci
 		Wait(7200); // doba cementace TODO 120h * 24
 
 		///////////////////////////////////////////
@@ -219,7 +221,7 @@ public:
 		///////////////////////////////////////////
 		Wait(2.8); // transport na DC3
 		
-		Priority = 2;
+		Priority = 2; // nastaveni vyssi priority fronty pro tento proces (zajisteni prednosti na stroji DC 3 pred procesy, ktere jej chteji pouzit poprve)
 		Seize(DC3); // zaberu a pracuju na DC3
 
 		wait_for_DC3(); // proces cekani na stroj
@@ -227,9 +229,9 @@ public:
 		Wait(0.2);
 		Release(DC3);
 	  
-		Wait(0.9); // transport do skladu hotoveho
+		Wait(0.9); // transport do skladu hotovych vyrobku
 
-		count++;
+		count++; // inkrementujeme pocet vyrobenych hrideli
 		Table(Time);
 	}
 
@@ -239,11 +241,13 @@ public:
 
 class Gener : public Event {
   void Behavior() {
+  	// dovezl se urcity pocet materialu, vsechny posleme do vyroby
 	for (int i = 0; i < tydenni_prirustek_zbozi ;i++) {
 		(new Hridel)->Activate();
-		numOfActivated++;
+		numOfActivated++; // inkrementujeme pocet dovezenych kusu materialu
 	}
-
+	
+	// dovoz 1x za tyden
 	Activate(Time+10080);
   }
 };
@@ -253,7 +257,7 @@ int main()
 {
 	Init(0, delka_simulace_minuty);
 
-	srand(time(NULL));
+	//srand(time(NULL));
 
 	(new Gener)->Activate();
 
