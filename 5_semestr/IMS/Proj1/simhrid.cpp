@@ -15,20 +15,16 @@
 
 // 24 * 60 * 7 = 10080 = pocet minut v jednom tydni, 3 smenny provoz
 // 10080 * 52 = 524160 = pocet minut v roce, 3 smenny nepretrzity provoz
-// 262080
-unsigned int delka_simulace_minuty = 262080;
-unsigned int tydenni_prirustek_zbozi = 331;
+// 10080 * 26 = 262080 = pocet minut v pul roce, 3 smenny provoz
+unsigned int delka_simulace_minuty = 524160;
+unsigned int tydenni_prirustek_zbozi = 320;
 
 unsigned int numOfActivated = 0;
 unsigned int count = 0;
 
-Facility NLXbefore("NLX 1500/500 BF");
 Facility NLX("NLX 1500/500");
-Facility KOEPFERbefore("Koepfer 200 CNC BF");
 Facility KOEPFER("Koepfer 200 CNC");
-Facility DC3before("DC 3 BF");
 Facility DC3("DC 3");
-Facility BHOCDbefore("BH OCD 2040 BF");
 Facility BHOCD("BH OCD 2040");
 Histogram Table ("Table", 0, 500, 100);
 
@@ -262,13 +258,12 @@ int main()
 	(new Gener)->Activate();
 
 	Run();
-	//Print("asdf: %i\n", tydenni_prirustek_zbozi);
-	//Print("numOfActivated = %i.\n", numOfActivated);
-	//Print("Dokoncil jsem simulaci, hurray! Count = %i.\n", count);
-	//Print("Za dobu simulace se nezpracovalo %i dovezenych vyrobku.\n", numOfActivated - count);
-	//Print("V prumeru tydne produkuji %d vyrobku.\n", (count/52));
-
-	//Print("%i %i\n", numOfActivated - count, count);
+	
+	Print("%i\t- pocet tydne dovezenych kusu materialu\n", tydenni_prirustek_zbozi);
+	Print("%i\t- celkovy pocet dovezenych kusu materialu\n", numOfActivated);
+	Print("%i\t- celkovy pocet vyrobenych hrideli\n", count);
+	Print("%i\t- pocet nezpracovanych dovezenych kusu materialu\n", numOfActivated - count);
+	Print("%d\t- prumerny pocet vyrobenych hrideli za tyden\n", (count/52));
 
 	//NLX.Output();
 	//KOEPFER.Output();
@@ -276,4 +271,3 @@ int main()
 	//BHOCD.Output();
 	//Table.Output();
 }
-
