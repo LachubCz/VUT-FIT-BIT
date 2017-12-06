@@ -257,7 +257,7 @@ int main()
 {
 	Init(0, delka_simulace_minuty);
 
-	//srand(time(NULL));
+	srand(time(NULL));
 
 	(new Gener)->Activate();
 
