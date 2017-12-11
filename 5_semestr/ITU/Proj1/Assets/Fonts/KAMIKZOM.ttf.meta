@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: be3ec42c60bdc8c4380812089006b100
+timeCreated: 1507207808
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Komikazoom
+  fontNames:
+  - Komikazoom
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
