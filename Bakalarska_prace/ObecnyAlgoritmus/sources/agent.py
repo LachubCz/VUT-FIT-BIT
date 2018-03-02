@@ -31,9 +31,9 @@ class Agent:
     def getNN(self, env):
         net = Sequential()
 
-        net.add(Dense(32, activation="relu", input_shape=(self.stateSize,)))
-        net.add(Dense(16, activation="relu"))
-        net.add(Dense(self.actionCount, activation="linear"))
+        net.add(Dense(32, activation="relu", input_shape=(self.stateSize,), kernel_initializer="he_uniform"))
+        net.add(Dense(16, activation="relu", kernel_initializer="he_uniform"))
+        net.add(Dense(self.actionCount, activation="linear", kernel_initializer="he_uniform"))
 
         net.summary()
 
@@ -95,18 +95,25 @@ class Agent:
         target_fs = np.zeros((self.minibatchSize, self.actionCount))
         
         for i in range(0, self.minibatchSize):
-
+            if i == 0 : print("State: {}\nState[i]: {}\nnp.array([state[i]]): {}" .format(state,state[i],np.array([state[i]])))
             target_f = self.net.predict(np.array([state[i]]))
-
+            if i == 0 : print("Target_f: {}" .format(target_f))
+            if i == 0 : print("Reward[i]: {}" .format(reward[i]))
             if done[i] == 1:
                 target_f[0][action[i]] = reward[i]
+                if i == 0 : print("Target_f(first): {}" .format(target_f))
             else:
                 aNet = self.net.predict(np.array([nextState[i]]))[0]
+                if i == 0 : print("aNet: {}" .format(aNet))
+                if i == 0 : print("np.max(aNet): {}" .format(np.max(aNet)))
+                if i == 0 : print("np.amax(aNet): {}" .format(np.amax(aNet)))
                 target_f[0][action[i]] = reward[i] + self.gamma * np.max(aNet)
+                if i == 0 : print("Target_f(second): {}" .format(target_f))
+            for e in range(self.actionCount):
+                target_fs[i][e] = target_f[0][e]
+        
+        print("State: {}\nTarget_fs: {}".format(state, target_fs))
 
-            target_fs[i][0] = target_f[0][0]
-            target_fs[i][1] = target_f[0][1]
-            
         self.net.fit(state, target_fs, epochs=1, verbose=0)
                 
     def trainDDQN(self):
