@@ -1,0 +1,60 @@
+[33mWARN: gym.spaces.Box autodetected dtype as <class 'numpy.float32'>. Please provide explicit dtype.[0m
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+dense_1 (Dense)              (None, 32)                96        
+_________________________________________________________________
+dense_2 (Dense)              (None, 16)                528       
+_________________________________________________________________
+dense_3 (Dense)              (None, 3)                 51        
+=================================================================
+Total params: 675
+Trainable params: 675
+Non-trainable params: 0
+_________________________________________________________________
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+dense_4 (Dense)              (None, 32)                96        
+_________________________________________________________________
+dense_5 (Dense)              (None, 16)                528       
+_________________________________________________________________
+dense_6 (Dense)              (None, 3)                 51        
+=================================================================
+Total params: 675
+Trainable params: 675
+Non-trainable params: 0
+_________________________________________________________________
+Episode: 0/1000, epsilon: 1.0, average score: -200.0
+Episode: 0/1000, epsilon: 1.0, new best score: -200.0
+Episode: 50/1000, epsilon: 0.8, average score: -200.0
+Episode: 100/1000, epsilon: 0.6, average score: -200.0
+Episode: 150/1000, epsilon: 0.4, average score: -200.0
+Episode: 176/1000, epsilon: 0.3, new best score: -166.0
+Episode: 200/1000, epsilon: 0.2, average score: -200.0
+Episode: 218/1000, epsilon: 0.13, new best score: -156.0
+Episode: 232/1000, epsilon: 0.079, new best score: -136.0
+Episode: 234/1000, epsilon: 0.073, new best score: -110.0
+Episode: 249/1000, epsilon: 0.03, new best score: -105.0
+Episode: 250/1000, epsilon: 0.028, average score: -130.32
+Episode: 255/1000, epsilon: 0.015, new best score: -97.0
+Episode: 256/1000, epsilon: 0.013, new best score: -93.0
+Episode: 258/1000, epsilon: 0.0089, new best score: -87.0
+Episode: 285/1000, epsilon: 0.005, new best score: -86.0
+Episode: 300/1000, epsilon: 0.005, average score: -118.04
+Episode: 350/1000, epsilon: 0.005, average score: -137.08
+Episode: 361/1000, epsilon: 0.005, new best score: -85.0
+Episode: 362/1000, epsilon: 0.005, new best score: -84.0
+Episode: 400/1000, epsilon: 0.005, average score: -144.76
+Episode: 450/1000, epsilon: 0.005, average score: -128.92
+Episode: 500/1000, epsilon: 0.005, average score: -119.72
+Episode: 550/1000, epsilon: 0.005, average score: -101.52
+Episode: 562/1000, epsilon: 0.005, new best score: -83.0
+Episode: 600/1000, epsilon: 0.005, average score: -117.84
+Episode: 650/1000, epsilon: 0.005, average score: -155.48
+Episode: 700/1000, epsilon: 0.005, average score: -146.56
+Episode: 750/1000, epsilon: 0.005, average score: -163.96
+Episode: 800/1000, epsilon: 0.005, average score: -132.48
+Episode: 850/1000, epsilon: 0.005, average score: -141.44
+Episode: 900/1000, epsilon: 0.005, average score: -154.36
+Episode: 950/1000, epsilon: 0.005, average score: -145.2

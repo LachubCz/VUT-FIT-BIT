@@ -72,3 +72,10 @@ def agent_replay(env, agent, episodes, observetime, stateSize):
 
             if done:
                 break
+
+def weights_test(env, agent, games, state_size, path):
+    agent.loadNN("{}" .format(path))
+
+    avg_score = score_estimate(env, agent, games, state_size)
+
+    return avg_score
