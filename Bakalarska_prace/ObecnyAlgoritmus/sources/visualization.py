@@ -1,37 +1,41 @@
 import os
 import copy
 import matplotlib.pyplot as plt
-from sources.playing import *
 
-def scattergrams_graph(scores, episodesList):
-    plt.plot(episodesList, scores, 'ro')
+def scattergrams_graph(scores, episodes_numbers, name):
+    fig = plt.figure()
+    plt.plot(episodes_numbers, scores, 'ro')
     plt.ylabel("Score")
     plt.xlabel("Episodes")
     plt.title("Vysledky")
-    plt.show()
+    plt.savefig("./{}" .format(name))
+    plt.clf()
 
-def line_graph(scores, episodesList):
-    plt.plot(episodesList, scores)
+def line_graph(scores, episodes_numbers, name):
+    fig = plt.figure()
+    plt.plot(episodes_numbers, scores)
     plt.ylabel("Score")
     plt.xlabel("Episodes")
     plt.title("Funkce interpolace vysledku")
-    plt.show()
+    plt.savefig("./{}" .format(name))
+    plt.clf()
 
-def line_graph_i5(scores, episodesList):
+def line_graph_i5(scores, episodes_numbers, name):
     score1 = copy.copy(scores)
 
     for i in range (len(scores)):
         if i > 1 and i < (len(scores)-2):
             score1[i] = (scores[i - 2] + scores[i - 1] + scores[i] + scores[i + 1] + scores[i + 2])/5
 
-    plt.plot(episodesList, score1)
+    fig = plt.figure()
+    plt.plot(episodes_numbers, score1)
     plt.ylabel("Score")
     plt.xlabel("Episodes")
     plt.title("Funkce interpolace vysledku (filtr - prumer 5-ti prvku)")
-    plt.show()
+    plt.savefig("./{}" .format(name))
+    plt.clf()
 
-
-def line_graph_i11(scores, episodesList):
+def line_graph_i11(scores, episodes_numbers, name):
     score2 = copy.copy(scores)
 
     for i in range (len(scores)):
@@ -40,13 +44,15 @@ def line_graph_i11(scores, episodesList):
             score2[i] += scores[i + 5] + scores[i + 4] + scores[i + 3] + scores[i + 2] + scores[i + 1]
             score2[i] = score2[i]/11
 
-    plt.plot(episodesList, score2)
+    fig = plt.figure()
+    plt.plot(episodes_numbers, score2)
     plt.ylabel("Score")
     plt.xlabel("Episodes")
     plt.title("Funkce interpolace vysledku  (filtr - prumer 11-cti prvku)")
-    plt.show()
+    plt.savefig("./{}" .format(name))
+    plt.clf()
 
-def line_graph_i101(scores, episodesList):
+def line_graph_i101(scores, episodes_numbers, name):
     score3 = copy.copy(scores)
 
     for i in range (len(scores)):
@@ -55,11 +61,13 @@ def line_graph_i101(scores, episodesList):
                 score3[i] += scores[i - e] + scores[i + e] 
             score3[i] = score3[i]/101      
 
-    plt.plot(episodesList, score3)
+    fig = plt.figure()
+    plt.plot(episodes_numbers, score3)
     plt.ylabel("Score")
     plt.xlabel("Episodes")
     plt.title("Funkce interpolace vysledku  (filtr - prumer 101 prvku)")
-    plt.show()
+    plt.savefig("./{}" .format(name))
+    plt.clf()
 
 def learning_graph(env, agent, games, state_size, number_of_episodes, hop_lenght, path_to_enviroment_folder, weights_prefix):
     directories = next(os.walk("{}" .format(path_to_enviroment_folder)))[1]

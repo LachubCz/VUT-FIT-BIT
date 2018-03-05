@@ -10,30 +10,30 @@ from keras import losses
 from keras import metrics
 
 class Agent:
-    def __init__(self, env):
+    def __init__(self, state_size, action_size):
         self.startEpsilon = 1                           # Pravdepodobnost konani nahodneho tahu na zacatku
         self.endEpsilon = 0.005                         # Pravdepodobnost konani nahodneho tahu na konci
         self.currentEpsilon = self.startEpsilon         # Soucasna pravdepodobnost konani nahodneho tahu
         self.epsilonDiminution = (self.startEpsilon - self.endEpsilon) / 50000#(self.startEpsilon - self.endEpsilon)/(episodes * 2)                  # Hodnota snizovani epsilonu
         self.gamma = 0.99                               # Discount faktor
         self.minibatchSize = 64                         # Velikost minibatche
-        self.actionCount = env.action_space.n           # Pocet vstupu do prostredi
-        self.stateSize = env.observation_space.shape[0] # Pocet vystupu z prostredi
+        self.action_size = action_size                 # Pocet vstupu do prostredi
+        self.state_size = state_size                    # Pocet vystupu z prostredi
         self.learningRate = 0.001                       # Learning rate
         self.fractionUpdate = 0.125
         self.memory_size = 10000                        # Velikost Replay memory
         self.memory = deque(maxlen=self.memory_size)
         
-        self.net = self.getNN(env)
-        self.netTarget = self.getNN(env)
+        self.net = self.make_model()
+        self.netTarget = self.make_model()
         self.updateTargetNet()
 
-    def getNN(self, env):
+    def make_model(self):
         net = Sequential()
 
-        net.add(Dense(32, activation="relu", input_shape=(self.stateSize,)))
+        net.add(Dense(32, activation="relu", input_shape=(self.state_size,)))
         net.add(Dense(16, activation="relu"))
-        net.add(Dense(self.actionCount, activation="linear"))
+        net.add(Dense(self.action_size, activation="linear"))
 
         net.summary()
 
@@ -68,7 +68,7 @@ class Agent:
     
     def getActionWE(self, state):
         if np.random.rand() <= self.currentEpsilon:
-            return np.random.randint(0, self.actionCount, size=1)[0]
+            return np.random.randint(0, self.action_size, size=1)[0]
         else:
             Q = self.net.predict(state)
             return np.argmax(Q)
@@ -92,7 +92,7 @@ class Agent:
         nextState = np.vstack([i[3] for i in minibatch])
         done = [i[4] for i in minibatch]
 
-        target_fs = np.zeros((self.minibatchSize, self.actionCount))
+        target_fs = np.zeros((self.minibatchSize, self.action_size))
         
         for i in range(0, self.minibatchSize):
             target_f = self.net.predict(np.array([state[i]]))
@@ -103,7 +103,7 @@ class Agent:
                 aNet = self.net.predict(np.array([nextState[i]]))[0]
                 target_f[0][action[i]] = reward[i] + self.gamma * np.max(aNet)
 
-            for e in range(self.actionCount):
+            for e in range(self.action_size):
                 target_fs[i][e] = target_f[0][e]
 
         self.net.fit(state, target_fs, epochs=1, verbose=0)
@@ -120,7 +120,7 @@ class Agent:
         nextState = np.vstack([i[3] for i in minibatch])
         done = [i[4] for i in minibatch]
 
-        target_fs = np.zeros((self.minibatchSize, self.actionCount))
+        target_fs = np.zeros((self.minibatchSize, self.action_size))
 
         for i in range(0, self.minibatchSize):
 
@@ -135,13 +135,13 @@ class Agent:
 
                 target_f[0][action[i]] = reward[i] + self.gamma * tNet[np.argmax(aNet)]
             
-            for e in range(self.actionCount):
+            for e in range(self.action_size):
                 target_fs[i][e] = target_f[0][e]
 
         self.net.fit(state, target_fs, batch_size = self.minibatchSize, epochs = 1, verbose = 0)
     
-    def loadNN(self, name):
+    def load_model_weights(self, name):
         self.net.load_weights(name)
 
-    def saveNN(self, name):
+    def save_model_weights(self, name):
         self.net.save_weights(name)
