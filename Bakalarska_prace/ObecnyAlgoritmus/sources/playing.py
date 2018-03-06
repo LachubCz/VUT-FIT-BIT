@@ -59,7 +59,7 @@ def agent_replay(task, episodes, observetime):
         for t in range(observetime):
 
             state = np.reshape(state, (1, task.env_state_size))
-            action = task.agent.get_action(state)
+            action = task.agent.getActionWE(state)
 
             nextState, reward, done, info = task.env.step(action)
 
