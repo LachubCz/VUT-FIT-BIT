@@ -76,13 +76,14 @@ for eps in range(episodes):
 
             if eps % 25 == 0:
                 avg_score = score_estimate(task, games)                   # Vypocet aktualniho skore
-                
+                print("Pred: last_avg_score: {}, avg_score: {}" .format(last_avg_score, avg_score))
                 if avg_score > last_avg_score and eps != 0:
                     last_avg_score = avg_score
                     agent_replay(task, 10000, task.max_steps)
+                    print("UCENI")
                 else:
                     last_avg_score = avg_score
-                
+                print("Po: last_avg_score: {}, avg_score: {}" .format(last_avg_score, avg_score))
                 task.agent.save_model_weights("./{}-{}.h5" .format(task.name, eps))       # Ulozeni site
 
             break
