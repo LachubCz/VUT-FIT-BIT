@@ -7,14 +7,14 @@ def match_permutations(string, words):
     # {'tac', 'act', 'atc', 'tca', 'cat', 'cta'}
     perms = set(map(''.join, permutations(string)))
     # sorted list of matching strings
-    matching_perms =  "sample"# vase reseni
+    matching_perms = list(set(perms).intersection(words)) # vase reseni
     return matching_perms
 
 def plur2sing(singular, plural):
     # {'goose':'geese', 'man':'men', 'child':'children'}
     sg2pl = {s: p for s, p in zip(singular, plural)}
     # inversion using zip
-    pl2sg =  "sample"# vase reseni
+    pl2sg = {p: s for s, p in zip(singular, plural)} # vase reseni
     return pl2sg
 
 def vect2word(word2vect):
