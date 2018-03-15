@@ -58,7 +58,7 @@ for eps in range(episodes):
         nextState, reward, done, info = task.env.step(action)             # Provedeni akce
 
         task.agent.remember(state, action, reward, nextState, done, rand_agent = False)       # Ulozeni stavu do pameti
-        task.agent.trainDQN()                                             # Trenovani pameti
+        task.agent.trainDDQN()                                             # Trenovani pameti
         
         state = nextState                                                 # Zmena stavu
         

@@ -133,38 +133,39 @@ class Agent:
         
         self.net.fit(state, target_fs, epochs=1, verbose=0)
         self.memory.update_minibatch(minibatch, errors)
-                
+
     def trainDDQN(self):
-        if len(self.memory) >= self.minibatchSize:
-            minibatch = random.sample(list(self.memory), self.minibatchSize) #z D vybere pocet mb_size samplu
+        if self.memory.length >= self.minibatchSize:
+            minibatch = self.memory.sample(self.minibatchSize)
         else:
             return
 
-        state = np.vstack([i[0] for i in minibatch])
-        action = [i[1] for i in minibatch]
-        reward = [i[2] for i in minibatch]
-        nextState = np.vstack([i[3] for i in minibatch])
-        done = [i[4] for i in minibatch]
+        state = np.vstack([i[1][0] for i in minibatch])
+        action = [i[1][1] for i in minibatch]
+        reward = [i[1][2] for i in minibatch]
+        nextState = np.vstack([i[1][3] for i in minibatch])
+        done = [i[1][4] for i in minibatch]
 
         target_fs = np.zeros((self.minibatchSize, self.action_size))
+        errors = np.zeros(self.minibatchSize)
 
         for i in range(0, self.minibatchSize):
-
             target_f = self.net.predict(np.array([state[i]]))
+            errors[i] = target_f[0][action[i]]
 
             if done[i] == 1:
                 target_f[0][action[i]] = reward[i]
-
             else:
                 aNet = self.net.predict(np.array([nextState[i]]))[0]
                 tNet = self.netTarget.predict(np.array([nextState[i]]))[0]
-
                 target_f[0][action[i]] = reward[i] + self.gamma * tNet[np.argmax(aNet)]
-            
+
+            errors[i] = abs(errors[i] - target_f[0][action[i]])
             for e in range(self.action_size):
                 target_fs[i][e] = target_f[0][e]
-
-        self.net.fit(state, target_fs, batch_size = self.minibatchSize, epochs = 1, verbose = 0)
+        
+        self.net.fit(state, target_fs, epochs=1, verbose=0)
+        self.memory.update_minibatch(minibatch, errors)
     
     def load_model_weights(self, name):
         self.net.load_weights(name)
