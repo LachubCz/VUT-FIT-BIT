@@ -69,7 +69,7 @@ def rand_agent_replay(task, episodes, observetime):
             if done:
                 break
 
-def agent_replay(task, episodes, observetime):
+def agent_replay(task, episodes, observetime, max_new_samples):
     
     task.agent.clear_memory()
 
@@ -95,8 +95,8 @@ def agent_replay(task, episodes, observetime):
 
             state = nextState
             
-            #if task.agent.memory.length == task.agent.memory_size:
-            #    return new_observation
+            if new_observation == max_new_samples:
+                return new_observation
 
             if done:
                 break

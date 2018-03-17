@@ -26,13 +26,16 @@ class Task:
         self.test = self.cp0_test
 
     def cp0_test(self, episodes, scores, episodes_numbers):
-        first_estimation = score_estimate(self, 10)
-        if first_estimation < self.solved_score:
+        complete_estimation = score_estimate(self, 10)
+        if complete_estimation >= self.solved_score:
+            for i in range(2,11):
+                estimation = score_estimate(self, 10)
+                complete_estimation = complete_estimation + estimation
+                if (complete_estimation / i) < self.solved_score:
+                    return
+        else:
             return
-
-        second_estimation = score_estimate(self, 90)
-
-        score = 0.1 * first_estimation + (0.9 * second_estimation)
+        score = complete_estimation / 10
 
         if score > self.solved_score:
             self.agent.save_model_weights("{}-solved.h5" .format(self.name))
@@ -54,13 +57,16 @@ class Task:
         self.test = self.cp1_test
 
     def cp1_test(self, episodes, scores, episodes_numbers):
-        first_estimation = score_estimate(self, 10)
-        if first_estimation < self.solved_score:
+        complete_estimation = score_estimate(self, 10)
+        if complete_estimation >= self.solved_score:
+            for i in range(2,11):
+                estimation = score_estimate(self, 10)
+                complete_estimation = complete_estimation + estimation
+                if (complete_estimation / i) < self.solved_score:
+                    return
+        else:
             return
-
-        second_estimation = score_estimate(self, 90)
-
-        score = 0.1 * first_estimation + (0.9 * second_estimation)
+        score = complete_estimation / 10
 
         if score > self.solved_score:
             self.agent.save_model_weights("{}-solved.h5" .format(self.name))
@@ -82,13 +88,16 @@ class Task:
         self.test = self.mt0_test
 
     def mt0_test(self, episodes, scores, episodes_numbers):
-        first_estimation = score_estimate(self, 10)
-        if first_estimation < self.solved_score:
+        complete_estimation = score_estimate(self, 10)
+        if complete_estimation >= self.solved_score:
+            for i in range(2,11):
+                estimation = score_estimate(self, 10)
+                complete_estimation = complete_estimation + estimation
+                if (complete_estimation / i) < self.solved_score:
+                    return
+        else:
             return
-
-        second_estimation = score_estimate(self, 90)
-
-        score = 0.1 * first_estimation + (0.9 * second_estimation)
+        score = complete_estimation / 10
         
         if score > self.solved_score:
             self.agent.save_model_weights("{}-solved.h5" .format(self.name))

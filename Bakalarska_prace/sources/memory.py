@@ -16,7 +16,7 @@ class Memory:
 		self.observation_tree = np.zeros(self.capacity, dtype=object)
 		self.nw_elem_idx = 0
 		self.basic_error = 0.01
-		self.error_power = 2
+		self.error_power = 0
 		self.length = 0
 
 	def sample(self, minibatch_size):

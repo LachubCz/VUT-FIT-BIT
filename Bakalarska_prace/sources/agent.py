@@ -57,16 +57,16 @@ class Agent:
         self.netTarget.set_weights(weightsTarget)
         
     def get_error(self, state, action, reward, next_state, done):
-        target_f = self.net.predict(state)
-        obs_error = target_f[0][action]
+        q_value = self.net.predict(state)
+        obs_error = q_value[0][action]
 
         if done == 1:
-            target_f[0][action] = reward
+            q_value[0][action] = reward
         else:
             aNet = self.netTarget.predict(np.array([next_state]))[0]
-            target_f[0][action] = reward + self.gamma * np.max(aNet)
+            q_value[0][action] = reward + self.gamma * np.max(aNet)
 
-        obs_error = abs(obs_error - target_f[0][action])
+        obs_error = abs(obs_error - q_value[0][action])
 
         return obs_error
 
@@ -114,24 +114,22 @@ class Agent:
         nextState = np.vstack([i[1][3] for i in minibatch])
         done = [i[1][4] for i in minibatch]
 
-        target_fs = np.zeros((self.minibatchSize, self.action_size))
         errors = np.zeros(self.minibatchSize)
 
+        q_value = self.net.predict(state)
+        ns_target_pred = self.netTarget.predict(nextState)
+
         for i in range(0, self.minibatchSize):
-            target_f = self.net.predict(np.array([state[i]]))
-            errors[i] = target_f[0][action[i]]
+            errors[i] = q_value[i][action[i]]
 
             if done[i] == 1:
-                target_f[0][action[i]] = reward[i]
+                q_value[i][action[i]] = reward[i]
             else:
-                aNet = self.netTarget.predict(np.array([nextState[i]]))[0]
-                target_f[0][action[i]] = reward[i] + self.gamma * np.max(aNet)
+                q_value[i][action[i]] = reward[i] + self.gamma * np.max(ns_target_pred[i])
 
-            errors[i] = abs(errors[i] - target_f[0][action[i]])
-            for e in range(self.action_size):
-                target_fs[i][e] = target_f[0][e]
+            errors[i] = abs(errors[i] - q_value[i][action[i]])
         
-        self.net.fit(state, target_fs, epochs=1, verbose=0)
+        self.net.fit(state, q_value, epochs=1, verbose=0)
         self.memory.update_minibatch(minibatch, errors)
 
     def trainDDQN(self):
@@ -146,29 +144,33 @@ class Agent:
         nextState = np.vstack([i[1][3] for i in minibatch])
         done = [i[1][4] for i in minibatch]
 
-        target_fs = np.zeros((self.minibatchSize, self.action_size))
         errors = np.zeros(self.minibatchSize)
 
+        q_value = self.net.predict(state)
+        ns_model_pred = self.net.predict(nextState)
+        ns_target_pred = self.netTarget.predict(nextState)
+
         for i in range(0, self.minibatchSize):
-            target_f = self.net.predict(np.array([state[i]]))
-            errors[i] = target_f[0][action[i]]
+            errors[i] = q_value[i][action[i]]
 
             if done[i] == 1:
-                target_f[0][action[i]] = reward[i]
+                q_value[i][action[i]] = reward[i]
             else:
-                aNet = self.net.predict(np.array([nextState[i]]))[0]
-                tNet = self.netTarget.predict(np.array([nextState[i]]))[0]
-                target_f[0][action[i]] = reward[i] + self.gamma * tNet[np.argmax(aNet)]
+                q_value[i][action[i]] = reward[i] + self.gamma * ns_target_pred[i][np.argmax(ns_model_pred[i])]
 
-            errors[i] = abs(errors[i] - target_f[0][action[i]])
-            for e in range(self.action_size):
-                target_fs[i][e] = target_f[0][e]
+            errors[i] = abs(errors[i] - q_value[i][action[i]])
         
-        self.net.fit(state, target_fs, epochs=1, verbose=0)
+        self.net.fit(state, q_value, epochs=1, verbose=0)
         self.memory.update_minibatch(minibatch, errors)
     
     def load_model_weights(self, name):
-        self.net.load_weights(name)
+        self.net.load_weights()
 
     def save_model_weights(self, name):
-        self.net.save_weights(name)
+        self.net.save_weights("model-{}".format(name))
+
+    def load_target_weights(self, name):
+        self.net.load_weights(name)
+
+    def save_target_weights(self, name):
+        self.net.save_weights("target-{}".format(name))
