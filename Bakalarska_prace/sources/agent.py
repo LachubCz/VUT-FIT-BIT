@@ -1,19 +1,17 @@
 """
 docstring
 """
+import random
 import numpy as np
-from keras.models import Sequential, Model
-from keras.layers import Dense, Input, Concatenate, Subtract, Lambda, Add
-from keras import backend as K
-from keras import optimizers, losses
+from collections import deque
 from memory import Memory
-
+from network import Network as network
 
 class Agent:
     """
     docstring
     """
-    def __init__(self, state_size, action_size):
+    def __init__(self, algorithm, state_size, action_size, model_type, memory_type):
         self.initial_epsilon = 1
         self.final_epsilon = 0.005
         self.current_epsilon = self.initial_epsilon
@@ -22,54 +20,31 @@ class Agent:
         self.minibatch_size = 256
         self.learning_rate = 0.001
         self.fraction_update = 0.125
+
+        self.memory_type = memory_type
         self.memory_size = 10000
-        self.memory = Memory(self.memory_size)
+        if self.memory_type == "basic":
+            self.memory = deque(maxlen=self.memory_size)
+        else:
+            self.memory = Memory(self.memory_size)
+
         self.action_size = action_size
         self.state_size = state_size
 
-        self.model_net = self.build_model_dueling()
-        self.target_net = self.build_model_dueling()
+        if model_type == "basic":
+            self.model_net = network.make_basic_model(state_size, action_size, self.learning_rate)
+            self.target_net = network.make_basic_model(state_size, action_size, self.learning_rate)
+        else:
+            self.model_net = network.make_dueling_model(state_size, action_size, self.learning_rate)
+            self.target_net = network.make_dueling_model(state_size, action_size, self.learning_rate)
+
         self.update_target_net()
 
-    def make_model(self):
-        """
-        docstring
-        """
-        model_net = Sequential()
-
-        model_net.add(Dense(32, activation="relu", input_shape=(self.state_size,), kernel_initializer="he_uniform"))
-        model_net.add(Dense(16, activation="relu", kernel_initializer="he_uniform"))
-        model_net.add(Dense(self.action_size, activation="linear", kernel_initializer="he_uniform"))
-
-        model_net.summary()
-
-        model_net.compile(loss=losses.mean_squared_error, optimizer=optimizers.RMSprop(lr=self.learning_rate), metrics=['accuracy'])
-
-        return model_net
-
-    def build_model_dueling(self):
-        inp=Input(shape=(self.state_size,))
-        x=Dense(units=32,activation='relu',kernel_initializer='he_uniform')(inp)
-        x=Dense(units=16,activation='relu',kernel_initializer='he_uniform')(x)
-        value_=Dense(units=1,activation='linear',kernel_initializer='he_uniform')(x)
-        ac_activation=Dense(units=self.action_size,activation='linear',kernel_initializer='he_uniform')(x)
-
-        avg_ac_activation=Lambda(lambda x: K.mean(x,axis=1,keepdims=True))(ac_activation)
-
-        concat_value=Concatenate(axis=-1)([value_,value_])
-        concat_avg_ac=Concatenate(axis=-1)([avg_ac_activation,avg_ac_activation])
-        
-        for i in range(1,self.action_size-1):
-            concat_value=Concatenate(axis=-1)([concat_value,value_])
-            concat_avg_ac=Concatenate(axis=-1)([concat_avg_ac,avg_ac_activation])
-        
-        ac_activation=Subtract()([ac_activation,concat_avg_ac])
-
-        merged_layers=Add()([concat_value,ac_activation])
-        final_model=Model(inputs=inp,outputs=merged_layers)
-        final_model.summary()
-        final_model.compile(loss='mean_squared_error',optimizer=optimizers.Adam(lr=self.learning_rate))
-        return final_model
+        self.algorithm = algorithm
+        self.algorithms = {"DQN" : self.train_dqn,
+                           "DQN+Target" : self.train_target_dqn,
+                           "DDQN" : self.train_ddqn,
+                          }
 
     def update_target_net(self):
         """
@@ -112,12 +87,15 @@ class Agent:
         """
         docstring
         """
-        if rand_agent:
-            obs_error = abs(reward)
+        if self.memory_type == "basic":
+            self.memory.append((state, action, reward, next_state, done))
         else:
-            obs_error = self.get_error(state, action, reward, next_state, done)
+            if rand_agent:
+                obs_error = abs(reward)
+            else:
+                obs_error = self.get_error(state, action, reward, next_state, done)
 
-        self.memory.add_observation((state, action, reward, next_state, done), obs_error)
+            self.memory.add_observation((state, action, reward, next_state, done), obs_error)
 
     def clear_memory(self):
         """
@@ -149,20 +127,46 @@ class Agent:
             q_value = self.model_net.predict(state)
             return np.argmax(q_value)
 
+    def get_minibatch(self):
+        if self.memory_type == "basic":
+            minibatch = random.sample(list(self.memory), self.minibatch_size)
+
+            state = np.vstack([i[0] for i in minibatch])
+            action = [i[1] for i in minibatch]
+            reward = [i[2] for i in minibatch]
+            next_state = np.vstack([i[3] for i in minibatch])
+            done = [i[4] for i in minibatch]
+        else:
+            minibatch = self.memory.sample(self.minibatch_size)
+
+            state = np.vstack([i[1][0] for i in minibatch])
+            action = [i[1][1] for i in minibatch]
+            reward = [i[1][2] for i in minibatch]
+            next_state = np.vstack([i[1][3] for i in minibatch])
+            done = [i[1][4] for i in minibatch]
+
+        return state, action, reward, next_state, done
+
+    def train(self):
+        """
+        docstring
+        """
+        self.algorithms[self.algorithm]()
+
     def train_dqn(self):
         """
         docstring
         """
-        if self.memory.length >= self.minibatch_size:
-            minibatch = self.memory.sample(self.minibatch_size)
+        if self.memory_type == "basic":
+            if len(self.memory) >= self.minibatch_size:
+                state, action, reward, next_state, done = self.get_minibatch()
+            else:
+                return
         else:
-            return
-
-        state = np.vstack([i[1][0] for i in minibatch])
-        action = [i[1][1] for i in minibatch]
-        reward = [i[1][2] for i in minibatch]
-        next_state = np.vstack([i[1][3] for i in minibatch])
-        done = [i[1][4] for i in minibatch]
+            if self.memory.length >= self.minibatch_size:
+                state, action, reward, next_state, done = self.get_minibatch()
+            else:
+                return
 
         errors = np.zeros(self.minibatch_size)
 
@@ -180,22 +184,23 @@ class Agent:
             errors[i] = abs(errors[i] - q_value[i][action[i]])
 
         self.model_net.fit(state, q_value, epochs=1, verbose=0)
-        self.memory.update_minibatch(minibatch, errors)
+        if self.memory_type == "dueling":
+            self.memory.update_minibatch(minibatch, errors)
 
     def train_target_dqn(self):
         """
         docstring
         """
-        if self.memory.length >= self.minibatch_size:
-            minibatch = self.memory.sample(self.minibatch_size)
+        if self.memory_type == "basic":
+            if len(self.memory) >= self.minibatch_size:
+                state, action, reward, next_state, done = self.get_minibatch()
+            else:
+                return
         else:
-            return
-
-        state = np.vstack([i[1][0] for i in minibatch])
-        action = [i[1][1] for i in minibatch]
-        reward = [i[1][2] for i in minibatch]
-        next_state = np.vstack([i[1][3] for i in minibatch])
-        done = [i[1][4] for i in minibatch]
+            if self.memory.length >= self.minibatch_size:
+                state, action, reward, next_state, done = self.get_minibatch()
+            else:
+                return
 
         errors = np.zeros(self.minibatch_size)
 
@@ -213,22 +218,23 @@ class Agent:
             errors[i] = abs(errors[i] - q_value[i][action[i]])
 
         self.model_net.fit(state, q_value, epochs=1, verbose=0)
-        self.memory.update_minibatch(minibatch, errors)
+        if self.memory_type == "dueling":
+            self.memory.update_minibatch(minibatch, errors)
 
     def train_ddqn(self):
         """
         docstring
         """
-        if self.memory.length >= self.minibatch_size:
-            minibatch = self.memory.sample(self.minibatch_size)
+        if self.memory_type == "basic":
+            if len(self.memory) >= self.minibatch_size:
+                state, action, reward, next_state, done = self.get_minibatch()
+            else:
+                return
         else:
-            return
-
-        state = np.vstack([i[1][0] for i in minibatch])
-        action = [i[1][1] for i in minibatch]
-        reward = [i[1][2] for i in minibatch]
-        next_state = np.vstack([i[1][3] for i in minibatch])
-        done = [i[1][4] for i in minibatch]
+            if self.memory.length >= self.minibatch_size:
+                state, action, reward, next_state, done = self.get_minibatch()
+            else:
+                return
 
         errors = np.zeros(self.minibatch_size)
 
@@ -247,7 +253,8 @@ class Agent:
             errors[i] = abs(errors[i] - q_value[i][action[i]])
 
         self.model_net.fit(state, q_value, epochs=1, verbose=0)
-        #self.memory.update_minibatch(minibatch, errors)
+        if self.memory_type == "dueling":
+            self.memory.update_minibatch(minibatch, errors)
 
     def load_model_weights(self, name):
         """

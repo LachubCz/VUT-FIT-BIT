@@ -79,3 +79,20 @@ Testování DDQN se starou variantou paměti
 Testování DDQN s novou variantou paměti
 Testování DDQN se stejnými podmínkami jako DQN
 
+https://github.com/satyenrajpal/RL_Classical_control
+
+https://github.com/ShangtongZhang/DeepRL
+
+https://github.com/rgal/gym-2048
+
+https://gym.openai.com/users/tambetm/
+
+https://medium.com/mlreview/speeding-up-dqn-on-pytorch-solving-pong-in-30-minutes-81a1bd2dff55
+
+https://medium.com/@awjuliani/simple-reinforcement-learning-with-tensorflow-part-4-deep-q-networks-and-beyond-8438a3e2b8df
+
+https://github.com/analog-rl/Duel_DDQN/blob/master/duel.py
+
+https://gist.github.com/tambetm/0bd29b14d76b85946422b79f3a87df70
+
+https://www.reddit.com/r/MachineLearning/comments/6nc90q/d_a3c_versus_multithreaded_dqn/

@@ -7,8 +7,8 @@ import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 
 from task import Task
-from playing import score_estimate, rand_agent_replay, agent_replay
 from visualization import point_graph, gaussian_graph, combined_graph
+from playing import Playing as pl
 #from profiling import * #profiling - @do_profile(follow=[method, ])
 
 #@do_profile(follow=[Agent.trainDDQN, Task.cp0_test])
@@ -23,10 +23,13 @@ def main():
     episodes = 2500
     scores = []
     episodes_numbers = []
-    task = Task("MountainCar-v0")
+    task = Task("CartPole-v0", "DDQN", "dueling", "basic")
     #task.env = wrappers.Monitor(env, '/home/lachubcz/tmp/cartpole-experiment-1', force=True)
 
-    rand_agent_replay(task, 10000, task.max_steps)
+    new_memories = pl.rand_agent_replay(task, 10000, task.max_steps)
+
+    print("Random agent added {} new memories. Current memory_size: {}" 
+          .format(new_memories, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
 
     #task.agent.load_model_weights("./MountainCar-v0-solved.h5")
     #task.agent.load_target_weights("./target-CartPole-v0-0.h5")
@@ -41,31 +44,34 @@ def main():
             next_state, reward, done, info = task.env.step(action)
 
             task.agent.remember(state, action, reward, next_state, done, rand_agent=False)
-            task.agent.train_ddqn()
+            task.agent.train()
 
             state = next_state
 
             task.agent.decrease_epsilon()
             if done:
-                score = score_estimate(task, 1)
+                score = pl.score_estimate(task, 1)
                 scores.append(score)
                 episodes_numbers.append(eps)
-
-                print("Episode: {}/{}, epsilon: {:.2}, priority_tree: {:.2}, score: {}"
-                      .format(eps, episodes, task.agent.current_epsilon, task.agent.memory.priority_tree[0], score))
+                if task.agent.memory_type == "basic":
+                    print("Episode: {}/{}, epsilon: {:.2}, memory_size: {}, score: {}"
+                          .format(eps, episodes, task.agent.current_epsilon, len(task.agent.memory), score))
+                else:
+                    print("Episode: {}/{}, epsilon: {:.2}, memory_size: {}, priority_tree: {:.2}, score: {}"
+                          .format(eps, episodes, task.agent.current_epsilon, task.agent.memory.length, task.agent.memory.priority_tree[0], score))
 
                 if score >= task.solved_score:
                     task.test(eps, scores, episodes_numbers)
 
-                if eps % 25 == 0:
-                    if eps != 0:
-                        before = task.agent.memory.priority_tree[0]
-                        added = agent_replay(task, int((task.agent.memory_size / 10) / (task.max_steps * 2)),
-                                             task.max_steps, (task.agent.memory_size / 10))
-                        after = task.agent.memory.priority_tree[0]
-                        print("Added {} new memories. Value of priority_tree was {} and now is {}." .format(added, before, after))
+                #if eps % 25 == 0:
+                    #if eps != 0:
+                    #    before = task.agent.memory.priority_tree[0]
+                    #    added = agent_replay(task, int((task.agent.memory_size / 10) / (task.max_steps * 2)),
+                    #                         task.max_steps, (task.agent.memory_size / 10))
+                    #    after = task.agent.memory.priority_tree[0]
+                    #    print("Added {} new memories. Value of priority_tree was {} and now is {}." .format(added, before, after))
 
-                    task.agent.save_model_weights("{}-{}.h5" .format(task.name, eps))
+                    #task.agent.save_model_weights("{}-{}.h5" .format(task.name, eps))
 
                 task.agent.update_target_net()
                 break
