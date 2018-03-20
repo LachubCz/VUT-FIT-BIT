@@ -7,7 +7,6 @@ class Playing():
     docstring
     """
 
-
     def rand_score_estimate(task, games):
         """
         docstring

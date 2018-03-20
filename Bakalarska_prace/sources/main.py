@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 docstring
 """
@@ -9,9 +10,9 @@ from keras.backend.tensorflow_backend import set_session
 from task import Task
 from visualization import point_graph, gaussian_graph, combined_graph
 from playing import Playing as pl
-#from profiling import * #profiling - @do_profile(follow=[method, ])
+from profiling import * #profiling - @do_profile(follow=[method, ])
 
-#@do_profile(follow=[Agent.trainDDQN, Task.cp0_test])
+#@do_profile(follow=[pl.rand_agent_replay])
 def main():
     """
     docstring
@@ -23,10 +24,13 @@ def main():
     episodes = 2500
     scores = []
     episodes_numbers = []
-    task = Task("CartPole-v0", "DDQN", "dueling", "basic")
+    task = Task("CartPole-v0", "DDQN", "dueling", "priority")
     #task.env = wrappers.Monitor(env, '/home/lachubcz/tmp/cartpole-experiment-1', force=True)
 
-    new_memories = pl.rand_agent_replay(task, 10000, task.max_steps)
+    if task.agent.memory_type == "basic":
+        new_memories = pl.rand_agent_replay(task, 10000, task.max_steps)
+    else:
+        new_memories = pl.prior_rand_agent_replay(task, 10000, task.max_steps)
 
     print("Random agent added {} new memories. Current memory_size: {}" 
           .format(new_memories, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
