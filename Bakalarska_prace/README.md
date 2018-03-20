@@ -65,3 +65,17 @@ https://github.com/rlcode/reinforcement-learning/blob/master/2-cartpole/2-double
 Double dueling DQN keras
 https://github.com/p-Mart/Double-Dueling-DQN-Keras/blob/master/DDDQN.py
 https://github.com/analog-rl/Duel_DDQN/blob/master/duel.py
+
+Plán:
+Protřídit odkazy - smazat nesmysly + zapisování využitých zdrojů
+Popsat experimenty
+Lambda výraz v duel DQN
+
+Experiment:
+Měření rychlosti při přeskočení trénování a zvětšení minibatchů
+Testování zvětšení minibatchů
+Testování reagování prioritized paměti na stejné výsledky v DQN
+Testování DDQN se starou variantou paměti
+Testování DDQN s novou variantou paměti
+Testování DDQN se stejnými podmínkami jako DQN
+

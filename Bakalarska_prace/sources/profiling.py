@@ -1,3 +1,10 @@
+"""
+    Title: Profiling Python Like a Boss - Line Profiler
+    Author: Bryan Helmig
+    Date: 2013
+    Code version: 1.0
+    Availability: https://zapier.com/engineering/profiling-python-boss/
+"""
 try:
     from line_profiler import LineProfiler
 

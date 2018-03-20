@@ -1,100 +1,76 @@
-#!/usr/bin/env python
-import copy                                   # Kopirovani prvku
-import numpy as np                            # Matematicke operace s maticemi
-import random                                 # Vyber nahodnych prvku
-import h5py                                   # Ukladani vah site
-import gym                                    # Prostredi Open AI Gym
-from gym import wrappers                      # Nahravani zaznamu
-
-#%matplotlib inline
-#import matplotlib.pyplot as plt
-from collections import deque                 # Pamet
-#from __future__ import division              # Deleni realnych cisel (kvuli nizsi verzi Pythonu 2.6)
-#from tqdm import tnrange, tqdm_notebook      # Progress bar
-from profiling import * #profiling - @do_profile(follow=[method, ])
-from playing import *
-from visualization import *
-from agent import *
-from task import *
-from memory import *
-
-#Keras
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten
-from keras import regularizers
-from keras import optimizers
-from keras import losses
-from keras import metrics
-
+"""
+docstring
+"""
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-
-#Tensorflow session
-import tensorflow as tf                     # Knihovna Tensorflow
+import numpy as np
+import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
-config = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
-set_session(tf.Session(config=config))
+
+from task import Task
+from playing import score_estimate, rand_agent_replay, agent_replay
+from visualization import point_graph, gaussian_graph, combined_graph
+#from profiling import * #profiling - @do_profile(follow=[method, ])
 
 #@do_profile(follow=[Agent.trainDDQN, Task.cp0_test])
 def main():
-    # Parametry
-    episodes = 2500                              # Pocet epizod
-    games = 20                                   # Pocet her
-    #steps = 0
-    scores = []                                  # Pole pro ulozeni vysledku na analyzu
-    episodes_numbers = []                        # Pole pro ulozeni cisel epizod na analyzu
-    last_avg_score = float("-inf")               # Promenna pro ukladani nejlepsiho prumerneho vysledku
-    task = Task("CartPole-v0")
+    """
+    docstring
+    """
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    config = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+    set_session(tf.Session(config=config))
+
+    episodes = 2500
+    scores = []
+    episodes_numbers = []
+    task = Task("MountainCar-v0")
     #task.env = wrappers.Monitor(env, '/home/lachubcz/tmp/cartpole-experiment-1', force=True)
 
     rand_agent_replay(task, 10000, task.max_steps)
 
-    #task.agent.load_model_weights("./DDQN-MountainCar-v0.h5")                # Nacteni vah NN
-    #task.agent.updateTargetNet()                                             # Nacteni NN do netTarget
+    #task.agent.load_model_weights("./MountainCar-v0-solved.h5")
+    #task.agent.load_target_weights("./target-CartPole-v0-0.h5")
+    #task.agent.update_target_net()
 
     for eps in range(episodes):
-        state = task.env.reset()                                              # Resetovani prostredi
-        
+        state = task.env.reset()
+
         for t in range(task.max_steps):
-            state = np.reshape(state, (1, task.env_state_size))               # Formatovani
-            action = task.agent.getActionWE(state)                            # Ziskani akce
-            nextState, reward, done, info = task.env.step(action)             # Provedeni akce
+            state = np.reshape(state, (1, task.env_state_size))
+            action = task.agent.get_action(state, epsilon=True)
+            next_state, reward, done, info = task.env.step(action)
 
-            task.agent.remember(state, action, reward, nextState, done, rand_agent = False)       # Ulozeni stavu do pameti
-            task.agent.trainDDQN()                                             # Trenovani pameti
-            
-            state = nextState                                                 # Zmena stavu
-            
-            task.agent.epsilonActulization()                                  # Aktualizace epsilon
-            #steps = steps + 1
-            #if steps % 200 == 0:
+            task.agent.remember(state, action, reward, next_state, done, rand_agent=False)
+            task.agent.train_ddqn()
 
-            if done:                                                          # Konec epizody
-                #print("{}".format(task.agent.memory.priority_tree))
-                score = score_estimate(task, 1)                               # Vypocet aktualniho skore
-                scores.append(score)                                          # Ulozeni aktualniho skore
-                episodes_numbers.append(eps)                                  # Ulozeni aktualniho cisla epizody
+            state = next_state
 
-                print("Episode: {}/{}, epsilon: {:.2}, priority_tree: {:.2}, score: {}".format(eps, episodes, task.agent.currentEpsilon, task.agent.memory.priority_tree[0], score))
+            task.agent.decrease_epsilon()
+            if done:
+                score = score_estimate(task, 1)
+                scores.append(score)
+                episodes_numbers.append(eps)
+
+                print("Episode: {}/{}, epsilon: {:.2}, priority_tree: {:.2}, score: {}"
+                      .format(eps, episodes, task.agent.current_epsilon, task.agent.memory.priority_tree[0], score))
+
+                if score >= task.solved_score:
+                    task.test(eps, scores, episodes_numbers)
 
                 if eps % 25 == 0:
-                    if score >= task.solved_score:
-                        task.test(eps, scores, episodes_numbers)
-                    #avg_score = score_estimate(task, games)                   # Vypocet aktualniho skore
-                    #if eps != 0:
-                    #    #last_avg_score = avg_score
-                    #    before = task.agent.memory.priority_tree[0]
-                    #    added = agent_replay(task, 100, task.max_steps, 2000)
-                    #    after = task.agent.memory.priority_tree[0]
-                    #    print ("Added {} new memories. Value of priority_tree was {} and now is {}." .format(added, before, after))
-                    #else:
-                        #last_avg_score = avg_score
-                    task.agent.save_model_weights("./{}-{}.h5" .format(task.name, eps))       # Ulozeni site
-               
-                task.agent.updateTargetNet()                                  # Aktualizace target site
+                    if eps != 0:
+                        before = task.agent.memory.priority_tree[0]
+                        added = agent_replay(task, int((task.agent.memory_size / 10) / (task.max_steps * 2)),
+                                             task.max_steps, (task.agent.memory_size / 10))
+                        after = task.agent.memory.priority_tree[0]
+                        print("Added {} new memories. Value of priority_tree was {} and now is {}." .format(added, before, after))
+
+                    task.agent.save_model_weights("{}-{}.h5" .format(task.name, eps))
+
+                task.agent.update_target_net()
                 break
 
-    task.agent.save_model_weights("./{}-last.h5" .format(task.name, eps))                    # Ulozeni site
+    task.agent.save_model_weights("{}-last.h5" .format(task.name))
     point_graph(scores, episodes_numbers, "{}-point_graph.png" .format(task.name))
     gaussian_graph(scores, episodes_numbers, "{}-gaussian_graph.png" .format(task.name))
     combined_graph(scores, episodes_numbers, "{}-combined_graph.png" .format(task.name))
