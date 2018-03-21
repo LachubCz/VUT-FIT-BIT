@@ -1,0 +1,92 @@
+[33mWARN: gym.spaces.Box autodetected dtype as <class 'numpy.float32'>. Please provide explicit dtype.[0m
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_1 (InputLayer)            (None, 4)            0                                            
+__________________________________________________________________________________________________
+dense_1 (Dense)                 (None, 32)           160         input_1[0][0]                    
+__________________________________________________________________________________________________
+dense_2 (Dense)                 (None, 16)           528         dense_1[0][0]                    
+__________________________________________________________________________________________________
+dense_4 (Dense)                 (None, 2)            34          dense_2[0][0]                    
+__________________________________________________________________________________________________
+lambda_1 (Lambda)               (None, 1)            0           dense_4[0][0]                    
+__________________________________________________________________________________________________
+dense_3 (Dense)                 (None, 1)            17          dense_2[0][0]                    
+__________________________________________________________________________________________________
+concatenate_2 (Concatenate)     (None, 2)            0           lambda_1[0][0]                   
+                                                                 lambda_1[0][0]                   
+__________________________________________________________________________________________________
+concatenate_1 (Concatenate)     (None, 2)            0           dense_3[0][0]                    
+                                                                 dense_3[0][0]                    
+__________________________________________________________________________________________________
+subtract_1 (Subtract)           (None, 2)            0           dense_4[0][0]                    
+                                                                 concatenate_2[0][0]              
+__________________________________________________________________________________________________
+add_1 (Add)                     (None, 2)            0           concatenate_1[0][0]              
+                                                                 subtract_1[0][0]                 
+==================================================================================================
+Total params: 739
+Trainable params: 739
+Non-trainable params: 0
+__________________________________________________________________________________________________
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_2 (InputLayer)            (None, 4)            0                                            
+__________________________________________________________________________________________________
+dense_5 (Dense)                 (None, 32)           160         input_2[0][0]                    
+__________________________________________________________________________________________________
+dense_6 (Dense)                 (None, 16)           528         dense_5[0][0]                    
+__________________________________________________________________________________________________
+dense_8 (Dense)                 (None, 2)            34          dense_6[0][0]                    
+__________________________________________________________________________________________________
+lambda_2 (Lambda)               (None, 1)            0           dense_8[0][0]                    
+__________________________________________________________________________________________________
+dense_7 (Dense)                 (None, 1)            17          dense_6[0][0]                    
+__________________________________________________________________________________________________
+concatenate_4 (Concatenate)     (None, 2)            0           lambda_2[0][0]                   
+                                                                 lambda_2[0][0]                   
+__________________________________________________________________________________________________
+concatenate_3 (Concatenate)     (None, 2)            0           dense_7[0][0]                    
+                                                                 dense_7[0][0]                    
+__________________________________________________________________________________________________
+subtract_2 (Subtract)           (None, 2)            0           dense_8[0][0]                    
+                                                                 concatenate_4[0][0]              
+__________________________________________________________________________________________________
+add_2 (Add)                     (None, 2)            0           concatenate_3[0][0]              
+                                                                 subtract_2[0][0]                 
+==================================================================================================
+Total params: 739
+Trainable params: 739
+Non-trainable params: 0
+__________________________________________________________________________________________________
+Random agent added 10000 new memories. Current memory_size: 10000
+Episode: 0/2500, epsilon: 1.0, memory_size: 10000, priority_tree: 1e+04, score: 9.0
+Episode: 1/2500, epsilon: 1.0, memory_size: 10000, priority_tree: 1e+04, score: 9.0
+Episode: 2/2500, epsilon: 1.0, memory_size: 10000, priority_tree: 1e+04, score: 9.0
+Episode: 3/2500, epsilon: 1.0, memory_size: 10000, priority_tree: 1e+04, score: 10.0
+Episode: 4/2500, epsilon: 1.0, memory_size: 10000, priority_tree: 1e+04, score: 9.0
+Episode: 5/2500, epsilon: 1.0, memory_size: 10000, priority_tree: 1e+04, score: 10.0
+Episode: 6/2500, epsilon: 1.0, memory_size: 10000, priority_tree: 1e+04, score: 10.0
+Episode: 7/2500, epsilon: 1.0, memory_size: 10000, priority_tree: 1e+04, score: 9.0
+Episode: 8/2500, epsilon: 1.0, memory_size: 10000, priority_tree: 1e+04, score: 11.0
+Episode: 9/2500, epsilon: 1.0, memory_size: 10000, priority_tree: 1e+04, score: 10.0
+Episode: 10/2500, epsilon: 1.0, memory_size: 10000, priority_tree: 1e+04, score: 12.0
+Episode: 11/2500, epsilon: 1.0, memory_size: 10000, priority_tree: 1e+04, score: 16.0
+Episode: 12/2500, epsilon: 0.99, memory_size: 10000, priority_tree: 1e+04, score: 32.0
+Episode: 13/2500, epsilon: 0.99, memory_size: 10000, priority_tree: 1e+04, score: 85.0
+Episode: 14/2500, epsilon: 0.99, memory_size: 10000, priority_tree: 1e+04, score: 35.0
+Episode: 15/2500, epsilon: 0.99, memory_size: 10000, priority_tree: 1e+04, score: 54.0
+Episode: 16/2500, epsilon: 0.99, memory_size: 10000, priority_tree: 1e+04, score: 103.0
+Episode: 17/2500, epsilon: 0.99, memory_size: 10000, priority_tree: 1e+04, score: 39.0
+Episode: 18/2500, epsilon: 0.99, memory_size: 10000, priority_tree: 1e+04, score: 41.0
+Episode: 19/2500, epsilon: 0.99, memory_size: 10000, priority_tree: 1e+04, score: 41.0
+Episode: 20/2500, epsilon: 0.99, memory_size: 10000, priority_tree: 1e+04, score: 60.0
+Episode: 21/2500, epsilon: 0.99, memory_size: 10000, priority_tree: 1e+04, score: 80.0
+Episode: 22/2500, epsilon: 0.99, memory_size: 10000, priority_tree: 1e+04, score: 55.0
+Episode: 23/2500, epsilon: 0.99, memory_size: 10000, priority_tree: 1e+04, score: 95.0
+Episode: 24/2500, epsilon: 0.99, memory_size: 10000, priority_tree: 1e+04, score: 125.0
+Episode: 25/2500, epsilon: 0.99, memory_size: 10000, priority_tree: 1e+04, score: 146.0
+Episode: 26/2500, epsilon: 0.99, memory_size: 10000, priority_tree: 1e+04, score: 200.0
+Task solved after 26 episodes with score 198.17000000000002.

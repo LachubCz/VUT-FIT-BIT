@@ -24,7 +24,7 @@ def main():
     episodes = 2500
     scores = []
     episodes_numbers = []
-    task = Task("CartPole-v0", "DDQN", "dueling", "priority")
+    task = Task("MountainCar-v0", "DDQN", "dueling", "priority")
     #task.env = wrappers.Monitor(env, '/home/lachubcz/tmp/cartpole-experiment-1', force=True)
 
     if task.agent.memory_type == "basic":
