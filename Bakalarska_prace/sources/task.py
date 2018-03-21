@@ -22,14 +22,16 @@ class Task:
         self.max_steps = None
         self.agent = None
         self.test = None
-        self.envs = {"CartPole-v0" : self.cp0,
-                     "CartPole-v1" : self.cp1,
-                     "MountainCar-v0" : self.mt0,
-                     "Acrobot-v1" : self.a1,
+        self.envs = {"CartPole-v0" : self.cartp0,
+                     "CartPole-v1" : self.cartp1,
+                     "MountainCar-v0" : self.mcar0,
+                     "Acrobot-v1" : self.acro1,
+                     "Pong-v0" : self.pong1,
+                     "Breakout-v0" : self.break0,
                     }
         self.envs[name](name, algorithm, model_type, memory_type)
 
-    def cp0(self, name, algorithm, model_type, memory_type):
+    def cartp0(self, name, algorithm, model_type, memory_type):
         """
         docstring
         """
@@ -41,9 +43,9 @@ class Task:
         self.average_rand_score = 22.25
         self.max_steps = 200
         self.agent = Agent(algorithm, self.env_state_size, self.env_action_size, model_type, memory_type)
-        self.test = self.cp0_test
+        self.test = self.cartp0_test
 
-    def cp0_test(self, episodes, scores, episodes_numbers):
+    def cartp0_test(self, episodes, scores, episodes_numbers):
         """
         docstring
         """
@@ -66,7 +68,7 @@ class Task:
             combined_graph(scores, episodes_numbers, "{}-combined_graph.png" .format(self.name))
             sys.exit()
 
-    def cp1(self, name, algorithm, model_type, memory_type):
+    def cartp1(self, name, algorithm, model_type, memory_type):
         """
         docstring
         """
@@ -78,9 +80,9 @@ class Task:
         self.average_rand_score = 22.25
         self.max_steps = 500
         self.agent = Agent(algorithm, self.env_state_size, self.env_action_size, model_type, memory_type)
-        self.test = self.cp1_test
+        self.test = self.cartp1_test
 
-    def cp1_test(self, episodes, scores, episodes_numbers):
+    def cartp1_test(self, episodes, scores, episodes_numbers):
         """
         docstring
         """
@@ -103,7 +105,7 @@ class Task:
             combined_graph(scores, episodes_numbers, "{}-combined_graph.png" .format(self.name))
             sys.exit()
 
-    def mt0(self, name, algorithm, model_type, memory_type):
+    def mcar0(self, name, algorithm, model_type, memory_type):
         """
         docstring
         """
@@ -115,9 +117,9 @@ class Task:
         self.average_rand_score = -200
         self.max_steps = 200
         self.agent = Agent(algorithm, self.env_state_size, self.env_action_size, model_type, memory_type)
-        self.test = self.mt0_test
+        self.test = self.mcar0_test
 
-    def mt0_test(self, episodes, scores, episodes_numbers):
+    def mcar0_test(self, episodes, scores, episodes_numbers):
         """
         docstring
         """
@@ -140,7 +142,7 @@ class Task:
             combined_graph(scores, episodes_numbers, "{}-combined_graph.png" .format(self.name))
             sys.exit()
 
-    def a1(self, name, algorithm, model_type, memory_type):
+    def acro1(self, name, algorithm, model_type, memory_type):
         """
         docstring
         """
@@ -152,9 +154,63 @@ class Task:
         self.average_rand_score = -498.95
         self.max_steps = 500
         self.agent = Agent(algorithm, self.env_state_size, self.env_action_size, model_type, memory_type)
-        self.test = self.a1_test
+        self.test = self.acro1_test
 
-    def a1_test(self, episodes, scores, episodes_numbers):
+    def acro1_test(self, episodes, scores, episodes_numbers):
+        """
+        docstring
+        """
+        if episodes == 99:
+            score = pl.score_estimate(self, 100)
+            self.agent.save_model_weights("{}-solved.h5" .format(self.name))
+            print("Task solved after {} episodes with score {}." .format(episodes, score))
+            point_graph(scores, episodes_numbers, "{}-point_graph.png" .format(self.name))
+            gaussian_graph(scores, episodes_numbers, "{}-gaussian_graph.png" .format(self.name))
+            combined_graph(scores, episodes_numbers, "{}-combined_graph.png" .format(self.name))
+            sys.exit()
+
+    def pong1(self, name, algorithm, model_type, memory_type):
+        """
+        docstring
+        """
+        self.name = name
+        self.env = gym.make(name)
+        self.env_state_size = self.env.observation_space.shape[0]
+        self.env_action_size = self.env.action_space.n
+        self.solved_score = float("-inf")
+        self.average_rand_score = -498.95
+        self.max_steps = 500
+        self.agent = Agent(algorithm, self.env_state_size, self.env_action_size, model_type, memory_type)
+        self.test = self.acro1_test
+
+    def pong1_test(self, episodes, scores, episodes_numbers):
+        """
+        docstring
+        """
+        if episodes == 99:
+            score = pl.score_estimate(self, 100)
+            self.agent.save_model_weights("{}-solved.h5" .format(self.name))
+            print("Task solved after {} episodes with score {}." .format(episodes, score))
+            point_graph(scores, episodes_numbers, "{}-point_graph.png" .format(self.name))
+            gaussian_graph(scores, episodes_numbers, "{}-gaussian_graph.png" .format(self.name))
+            combined_graph(scores, episodes_numbers, "{}-combined_graph.png" .format(self.name))
+            sys.exit()
+
+    def break0(self, name, algorithm, model_type, memory_type):
+        """
+        docstring
+        """
+        self.name = name
+        self.env = gym.make(name)
+        self.env_state_size = self.env.observation_space.shape[0]
+        self.env_action_size = self.env.action_space.n
+        self.solved_score = float("-inf")
+        self.average_rand_score = -498.95
+        self.max_steps = 500
+        self.agent = Agent(algorithm, self.env_state_size, self.env_action_size, model_type, memory_type)
+        self.test = self.acro1_test
+
+    def break0_test(self, episodes, scores, episodes_numbers):
         """
         docstring
         """
