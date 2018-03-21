@@ -1,11 +1,11 @@
 # TO-DO
 ### Tvorba
-⋅⋅* Popsat experimenty a začít s článkem
+* Popsat experimenty a začít s článkem
 
 ### Experimenty:
-⋅⋅* Testování hraní s obrázky
+* Testování hraní s obrázky
 
-⋅⋅* Testování zvětšení minibatchů
+* Testování zvětšení minibatchů
 
 # Odkazy
 
