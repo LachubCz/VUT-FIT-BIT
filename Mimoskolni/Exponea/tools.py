@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-    tools to parse file and get dataset
+    methods for file parsing and making of datasets
 """
 import os
 from collections import deque

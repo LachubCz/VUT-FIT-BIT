@@ -1,33 +1,52 @@
 import numpy as np
 from tools import get_dataset, print_custmr_info, print_smllrdata_info
-from decision_tree import get_entropy, get_types, get_info_gain_array
+from decision_tree import get_entropy, get_types, get_info_gain_array, get_entropies, tree_nodes, remove_done_val, get_attrib_array, remove_done_attr, correct_dataset
+from sklearn import tree
+
+def func(dataset, labels):
+    X = dataset
+    Y = labels
+    clf = tree.DecisionTreeClassifier()
+    clf = clf.fit(X, Y)
+
+    print(clf.predict([[1, 1, 1, 2]]))
 
 dataset = get_dataset("small_dataset.txt")
 
-print_smllrdata_info(dataset[0])
-print(dataset)
-length = len(dataset[0])
-print(length)
+dataset, labels = correct_dataset(dataset)
+#print(dataset)
 
-print(get_info_gain_array(dataset))
+func(dataset, labels)
 
-def get_class(attribute, number_of_attribute, dataset):
-    attribute_array = np.array([])
-    for i, item in enumerate(dataset): 
-        if item[number_of_attribute] == attribute:
-            attribute_array = np.append(attribute_array, item[len(dataset[0])-1])
-    return attribute_array
 
-#print(get_class("Male",0, dataset))
 
-def get_entropies():
-    for x in xrange(1,10):
+def func():
+    tree = np.ndarray(shape=(len(dataset[0]), 2), dtype=object)
+    print(tree)
+    tree[0][1] = 1
+    print(tree)
+
+    array =  np.zeros(shape=(2,2))
+    #array = np.append(array, ("alement" : "as"))
+    array = np.append(array, np.array(["alem"]))
+    print(array)
+    #print_smllrdata_info(dataset[0])
+
+    def train_tree():
+        global dataset
+        info_gain = get_info_gain_array(dataset)
+
+        first_selected = np.argmax(info_gain)
+
+        dataset = remove_done_attr(dataset, first_selected)
+        train_tree(dataset)
+
+    #dataset = remove_done_val(dataset, first_selected, "Standart")
+
+
+    def search_tree(element):
         pass
 
-    attribute_array = np.array([])
-    for i, item in enumerate(dataset):
-        attribute_array = np.append(attribute_array, item[4])
 
-    get_entropy(attribute_array)
-#print(attribute_array)
-
+    #print(dataset)
+    #print(get_attrib_array(dataset, first_selected))
