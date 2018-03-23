@@ -150,7 +150,7 @@ class Task:
         self.env = gym.make(name)
         self.env_state_size = self.env.observation_space.shape[0]
         self.env_action_size = self.env.action_space.n
-        self.solved_score = float("-inf")
+        self.solved_score = -100
         self.average_rand_score = -498.95
         self.max_steps = 500
         self.agent = Agent(algorithm, self.env_state_size, self.env_action_size, model_type, memory_type)
@@ -160,8 +160,18 @@ class Task:
         """
         docstring
         """
-        if episodes == 99:
-            score = pl.score_estimate(self, 100)
+        complete_estimation = pl.score_estimate(self, 10)
+        if complete_estimation >= self.solved_score:
+            for i in range(2, 11):
+                estimation = pl.score_estimate(self, 10)
+                complete_estimation = complete_estimation + estimation
+                if (complete_estimation / i) < self.solved_score:
+                    return
+        else:
+            return
+        score = complete_estimation / 10
+
+        if score > self.solved_score:
             self.agent.save_model_weights("{}-solved.h5" .format(self.name))
             print("Task solved after {} episodes with score {}." .format(episodes, score))
             point_graph(scores, episodes_numbers, "{}-point_graph.png" .format(self.name))
@@ -175,11 +185,11 @@ class Task:
         """
         self.name = name
         self.env = gym.make(name)
-        self.env_state_size = self.env.observation_space.shape[0]
+        self.env_state_size = (2, 84, 84)
         self.env_action_size = self.env.action_space.n
         self.solved_score = float("-inf")
-        self.average_rand_score = -498.95
-        self.max_steps = 500
+        self.average_rand_score = float("-inf")
+        self.max_steps = 10000
         self.agent = Agent(algorithm, self.env_state_size, self.env_action_size, model_type, memory_type)
         self.test = self.acro1_test
 
@@ -187,14 +197,8 @@ class Task:
         """
         docstring
         """
-        if episodes == 99:
-            score = pl.score_estimate(self, 100)
-            self.agent.save_model_weights("{}-solved.h5" .format(self.name))
-            print("Task solved after {} episodes with score {}." .format(episodes, score))
-            point_graph(scores, episodes_numbers, "{}-point_graph.png" .format(self.name))
-            gaussian_graph(scores, episodes_numbers, "{}-gaussian_graph.png" .format(self.name))
-            combined_graph(scores, episodes_numbers, "{}-combined_graph.png" .format(self.name))
-            sys.exit()
+        pass
+
 
     def break0(self, name, algorithm, model_type, memory_type):
         """
@@ -202,11 +206,11 @@ class Task:
         """
         self.name = name
         self.env = gym.make(name)
-        self.env_state_size = self.env.observation_space.shape[0]
+        self.env_state_size = (2, 84, 84)
         self.env_action_size = self.env.action_space.n
         self.solved_score = float("-inf")
-        self.average_rand_score = -498.95
-        self.max_steps = 500
+        self.average_rand_score = float("-inf")
+        self.max_steps = 10000
         self.agent = Agent(algorithm, self.env_state_size, self.env_action_size, model_type, memory_type)
         self.test = self.acro1_test
 
@@ -214,11 +218,4 @@ class Task:
         """
         docstring
         """
-        if episodes == 99:
-            score = pl.score_estimate(self, 100)
-            self.agent.save_model_weights("{}-solved.h5" .format(self.name))
-            print("Task solved after {} episodes with score {}." .format(episodes, score))
-            point_graph(scores, episodes_numbers, "{}-point_graph.png" .format(self.name))
-            gaussian_graph(scores, episodes_numbers, "{}-gaussian_graph.png" .format(self.name))
-            combined_graph(scores, episodes_numbers, "{}-combined_graph.png" .format(self.name))
-            sys.exit()
+        pass

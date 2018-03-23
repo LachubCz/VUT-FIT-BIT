@@ -1,8 +1,8 @@
 """
 docstring
 """
-from keras.models import Model
-from keras.layers import Input, Dense, Concatenate, Lambda, Subtract, Add
+from keras.models import Model, Sequential
+from keras.layers import Input, Dense, Concatenate, Lambda, Subtract, Add, Conv2D, Flatten
 from keras import backend as K
 from keras import optimizers, losses
 
@@ -18,6 +18,31 @@ class Network:
 
         net = Dense(units=32, activation="relu", kernel_initializer="he_uniform")(network_input)
         net = Dense(units=16, activation="relu", kernel_initializer="he_uniform")(net)
+        net = Dense(units=action_size, activation="linear", kernel_initializer="he_uniform")(net)
+
+        model = Model(inputs=network_input, outputs=net)
+        model.summary()
+
+        model.compile(loss=losses.mean_squared_error, optimizer=optimizers.Adam(lr=learning_rate), metrics=['accuracy'])
+
+        return model
+
+    def make_basic_img_model(state_size, action_size, learning_rate):
+        """
+        docstring
+        """
+        network_input = Input(shape=(state_size))
+
+        #net = Dense(units=32, activation="relu", )
+        net = Conv2D(filters=32, kernel_size=(8, 8), strides=(4, 4), activation="relu", 
+                     kernel_initializer="he_uniform", data_format="channels_first")(network_input)
+        net = Conv2D(filters=64, kernel_size=(4, 4), strides=(2, 2), activation="relu",
+                     kernel_initializer="he_uniform")(net)
+        net = Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), activation="relu",
+                     kernel_initializer="he_uniform")(net)
+        net = Flatten()(net)
+
+        net = Dense(units=512, activation="relu", kernel_initializer="he_uniform")(net)
         net = Dense(units=action_size, activation="linear", kernel_initializer="he_uniform")(net)
 
         model = Model(inputs=network_input, outputs=net)

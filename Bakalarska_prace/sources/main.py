@@ -4,6 +4,7 @@ docstring
 """
 import os
 import numpy as np
+import scipy
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 
@@ -11,6 +12,15 @@ from task import Task
 from visualization import point_graph, gaussian_graph, combined_graph
 from playing import Playing as pl
 from profiling import * #profiling - @do_profile(follow=[method, ])
+
+def processImage( img ):
+    rgb = scipy.misc.imresize(img, (84, 84), interp='bilinear')
+
+    r, g, b = rgb[:,:,0], rgb[:,:,1], rgb[:,:,2]
+    gray = 0.2989 * r + 0.5870 * g + 0.1140 * b     # extract luminance
+
+    o = gray.astype('float32') / 128 - 1    # normalize
+    return o
 
 #@do_profile(follow=[pl.rand_agent_replay])
 def main():
@@ -24,16 +34,16 @@ def main():
     episodes = 2500
     scores = []
     episodes_numbers = []
-    task = Task("MountainCar-v0", "DDQN", "dueling", "priority")
+    task = Task("CartPole-v0", "DQN", "basic", "basic")
     #task.env = wrappers.Monitor(env, '/home/lachubcz/tmp/cartpole-experiment-1', force=True)
 
-    if task.agent.memory_type == "basic":
-        new_memories = pl.rand_agent_replay(task, 10000, task.max_steps)
-    else:
-        new_memories = pl.prior_rand_agent_replay(task, 10000, task.max_steps)
+    #if task.agent.memory_type == "basic":
+    #    new_memories = pl.rand_agent_replay(task, 10000, task.max_steps)
+    #else:
+    #    new_memories = pl.prior_rand_agent_replay(task, 10000, task.max_steps)
 
-    print("Random agent added {} new memories. Current memory_size: {}" 
-          .format(new_memories, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
+    #print("Random agent added {} new memories. Current memory_size: {}" 
+    #      .format(new_memories, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
 
     #task.agent.load_model_weights("./MountainCar-v0-solved.h5")
     #task.agent.load_target_weights("./target-CartPole-v0-0.h5")
@@ -41,11 +51,21 @@ def main():
 
     for eps in range(episodes):
         state = task.env.reset()
+        task.env.render()
+        state = processImage(state)
+        state = np.array([state, state])
 
         for t in range(task.max_steps):
-            state = np.reshape(state, (1, task.env_state_size))
+            #state = np.reshape(state, (1, task.env_state_size))
+
             action = task.agent.get_action(state, epsilon=True)
+            print(t, action)
             next_state, reward, done, info = task.env.step(action)
+            print(reward)
+            next_state = np.array([state[1], processImage(next_state)])
+
+            if done:
+                next_state = None
 
             task.agent.remember(state, action, reward, next_state, done, rand_agent=False)
             task.agent.train()

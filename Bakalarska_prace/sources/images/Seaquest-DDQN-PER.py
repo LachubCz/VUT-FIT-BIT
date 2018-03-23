@@ -162,7 +162,7 @@ class Agent:
 
     def _getTargets(self, batch):
         no_state = numpy.zeros(self.stateCnt)
-
+        print(batch)
         states = numpy.array([ o[1][0] for o in batch ])
         states_ = numpy.array([ (no_state if o[1][3] is None else o[1][3]) for o in batch ])
 
@@ -204,7 +204,7 @@ class Agent:
         self.brain.train(x, y)
 
 class RandomAgent:
-    memory = Memory(MEMORY_CAPACITY)
+    memory = Memory(5000)
     exp = 0
 
     def __init__(self, actionCnt):
@@ -229,6 +229,7 @@ class Environment:
 
     def run(self, agent):                
         img = self.env.reset()
+        self.env.render()
         w = processImage(img)
         s = numpy.array([w, w])
 
@@ -269,9 +270,9 @@ randomAgent = RandomAgent(actionCnt)
 
 try:
     print("Initialization with random agent...")
-    while randomAgent.exp < MEMORY_CAPACITY:
+    while randomAgent.exp < 5000:
         env.run(randomAgent)
-        print(randomAgent.exp, "/", MEMORY_CAPACITY)
+        print(randomAgent.exp, "/", 1000)
 
     agent.memory = randomAgent.memory
 
