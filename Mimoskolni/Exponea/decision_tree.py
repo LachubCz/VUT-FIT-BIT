@@ -115,15 +115,17 @@ def remove_done_attr(dataset, number_of_attribute):
         dataset[i] = np.delete(item, number_of_attribute, 0)
     return dataset
 
+
 def correct_dataset(dataset):
     number_of_attributes = get_num_of_attr(dataset) + 1
-
+    dictionary = [dict() for i in range(len(dataset[0]))]
     for number_of_attribute in range(number_of_attributes):
         value_array = get_attrib_array(dataset, number_of_attribute)
         types = get_types(value_array)
         
         for e in range(len(types[0])):
             types[1][e] = e
+            dictionary[number_of_attribute].update({types[0][e]: e})
 
         for e, item in enumerate(dataset):
             for i in range(len(types[0])):
@@ -136,4 +138,4 @@ def correct_dataset(dataset):
         labels = np.append(labels, dataset[i][-1])
         dataset[i] = np.delete(dataset[i], len(dataset[0])-1, 0)
 
-    return dataset, labels
+    return dataset, labels, dictionary

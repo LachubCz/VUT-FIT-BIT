@@ -9,15 +9,22 @@ def func(dataset, labels):
     clf = tree.DecisionTreeClassifier()
     clf = clf.fit(X, Y)
 
-    print(clf.predict([[1, 1, 1, 2]]))
+    return clf
+
 
 dataset = get_dataset("small_dataset.txt")
 
-dataset, labels = correct_dataset(dataset)
-#print(dataset)
+testset = get_dataset("test_dataset.txt")
+#print(testset)
 
-func(dataset, labels)
+dataset, labels, dictionary = correct_dataset(dataset)
+print(dataset)
+dataset1, labels1, dictionary1 = correct_dataset(testset)
+print(dictionary1)
 
+clf = func(dataset, labels)
+#print(dataset1)
+print(clf.predict(dataset1))
 
 
 def func():

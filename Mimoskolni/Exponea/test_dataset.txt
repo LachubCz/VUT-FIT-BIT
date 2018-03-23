@@ -1,0 +1,3 @@
+Male, 1, Standard, High, Train
+Male, 0, Cheap, Medium, Bus
+Female, 1, Cheap, High, Bus
