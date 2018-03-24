@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
     methods for file parsing and making of datasets
 """
@@ -67,13 +66,3 @@ def print_custmr_info(customer):
     print("total intl charge:     {} [continuous]    {}" .format(customer[18], type(customer[18])))
     print("number customer service calls: {} [continuous]    {}" .format(customer[19], type(customer[19])))
     print("state: {}" .format(customer[20]))
-
-def print_smllrdata_info(customer):
-    """
-    method prints small_dataset data with its types
-    """
-    print("Gender:          {} [discrete]  {}" .format(customer[0], type(customer[0])))
-    print("Car Ownership:   {} [discrete]  {}" .format(customer[1], type(customer[1])))
-    print("Travel Cost:     {} [discrete]  {}" .format(customer[2], type(customer[2])))
-    print("Income Level:    {} [discrete]  {}" .format(customer[3], type(customer[3])))
-    print("Transportation:  {} [discrete]  {}" .format(customer[4], type(customer[4])))
