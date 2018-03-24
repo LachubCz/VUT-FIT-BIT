@@ -170,51 +170,22 @@ def corr_continuous(dataset, number_of_attribute, bins):
 
     return dataset, bin_edges
 
-def correct_dataset(dataset, bins, var):
-    bin_edges_list = list()
+def correct_dataset(dataset):
     dictionary_list = list()
+    """
     dataset, dictionary = corr_discrete(dataset, 0)
     dictionary_list.append(dictionary)
-    #dataset, bin_edges = corr_continuous(dataset, 1, var)
-    #bin_edges_list.append(bin_edges)
-    #dataset, bin_edges = corr_continuous(dataset, 2, bins)
-    #bin_edges_list.append(bin_edges)
-    #dataset, dictionary = corr_discrete(dataset, 3)
-    #dictionary_list.append(dictionary)
     dataset, dictionary = corr_discrete(dataset, 3)
     dictionary_list.append(dictionary)
     dataset, dictionary = corr_discrete(dataset, 4)
     dictionary_list.append(dictionary)
-    #dataset, bin_edges = corr_continuous(dataset, 6, bins)
-    #bin_edges_list.append(bin_edges)
-    #dataset, bin_edges = corr_continuous(dataset, 7, bins)
-    #bin_edges_list.append(bin_edges)
-    #dataset, bin_edges = corr_continuous(dataset, 8, bins)
-    #bin_edges_list.append(bin_edges)
-    #dataset, bin_edges = corr_continuous(dataset, 9, bins)
-    #bin_edges_list.append(bin_edges)
-    #dataset, bin_edges = corr_continuous(dataset, 10, bins)
-    #bin_edges_list.append(bin_edges)
-    #dataset, bin_edges = corr_continuous(dataset, 11, bins)
-    #bin_edges_list.append(bin_edges)
-    #dataset, bin_edges = corr_continuous(dataset, 12, bins)
-    #bin_edges_list.append(bin_edges)
-    #dataset, bin_edges = corr_continuous(dataset, 13, bins)
-    #bin_edges_list.append(bin_edges)
-    #dataset, bin_edges = corr_continuous(dataset, 14, bins)
-    #bin_edges_list.append(bin_edges)
-    #dataset, bin_edges = corr_continuous(dataset, 15, bins)
-    #bin_edges_list.append(bin_edges)
-    #dataset, bin_edges = corr_continuous(dataset, 16, bins)
-    #bin_edges_list.append(bin_edges)
-    #dataset, bin_edges = corr_continuous(dataset, 17, bins)
-    #bin_edges_list.append(bin_edges)
-    #dataset, bin_edges = corr_continuous(dataset, 18, bins)
-    #bin_edges_list.append(bin_edges)
-    #dataset, bin_edges = corr_continuous(dataset, 19, bins)
-    #bin_edges_list.append(bin_edges)
-
-    return dataset, dictionary_list, bin_edges_list
+    """
+    dataset, dictionary = corr_discrete(dataset, 2)
+    dictionary_list.append(dictionary)
+    dataset, dictionary = corr_discrete(dataset, 3)
+    dictionary_list.append(dictionary)
+    
+    return dataset, dictionary_list
 
 def split_dataset(dataset):
     train_set = deque()
@@ -250,40 +221,18 @@ def make_array_corr(dataset, bin_edges_list, be_num, data_num):
                dataset[i][data_num] = e
     return dataset
 
-def estimate_score(predict_labels, true_labels):
-    correct = 0
-    for i in range(len(predict_labels)):
-        if predict_labels[i] == true_labels[i]:
-            correct = correct + 1
-
-    return correct / len(predict_labels)
-
-def make_test_set(test_set, dictionary_list, bin_edges_list):
-    test_set = make_dict_corr(test_set, dictionary_list, 0, 0)
-    #test_set = make_array_corr(test_set, bin_edges_list, 0, 1)
-    #test_set = make_array_corr(test_set, bin_edges_list, 1, 2)
+def make_test_set(test_set, dictionary_list):
+    #test_set = make_dict_corr(test_set, dictionary_list, 0, 0)
     #test_set = make_dict_corr(test_set, dictionary_list, 1, 3)
+    #test_set = make_dict_corr(test_set, dictionary_list, 2, 4)
+
+    test_set = make_dict_corr(test_set, dictionary_list, 0, 2)
     test_set = make_dict_corr(test_set, dictionary_list, 1, 3)
-    test_set = make_dict_corr(test_set, dictionary_list, 2, 4)
-    #test_set = make_array_corr(test_set, bin_edges_list, 2, 6)
-    #test_set = make_array_corr(test_set, bin_edges_list, 3, 7)
-    #test_set = make_array_corr(test_set, bin_edges_list, 4, 8)
-    #test_set = make_array_corr(test_set, bin_edges_list, 5, 9)
-    #test_set = make_array_corr(test_set, bin_edges_list, 6, 10)
-    #test_set = make_array_corr(test_set, bin_edges_list, 7, 11)
-    #test_set = make_array_corr(test_set, bin_edges_list, 8, 12)
-    #test_set = make_array_corr(test_set, bin_edges_list, 9, 13)
-    #test_set = make_array_corr(test_set, bin_edges_list, 10, 14)
-    #test_set = make_array_corr(test_set, bin_edges_list, 11, 15)
-    #test_set = make_array_corr(test_set, bin_edges_list, 12, 16)
-    #test_set = make_array_corr(test_set, bin_edges_list, 13, 17)
-    #test_set = make_array_corr(test_set, bin_edges_list, 14, 18)
-    #test_set = make_array_corr(test_set, bin_edges_list, 15, 19)
 
     return test_set
 
 def export_graphviz(dec_tree):
-    labels = np.array(["state", "account length", "area code", 
+    labels = np.array([ "account length", "area code", 
                       "international plan", "voice mail plan", "number vmail messages", 
                       "total day minutes", "total day calls", "total day charge", 
                       "total eve minutes", "total eve calls", "total eve charge", 
@@ -293,3 +242,26 @@ def export_graphviz(dec_tree):
     dotfile = open(os.getcwd()+"\\" + "model.dot", "w")
     tree.export_graphviz(dec_tree, out_file = dotfile, feature_names = labels)
     dotfile.close()
+
+def make_test_set1(test_set, dictionary_list):
+    test_set = make_dict_corr(test_set, dictionary_list, 0, 0)
+    test_set = make_dict_corr(test_set, dictionary_list, 1, 3)
+    test_set = make_dict_corr(test_set, dictionary_list, 2, 4)
+    test_set = make_dict_corr(test_set, dictionary_list, 3, 5)
+
+
+    return test_set
+
+def correct_dataset1(dataset):
+    dictionary_list = list()
+    dataset, dictionary = corr_discrete(dataset, 0)
+    dictionary_list.append(dictionary)
+    dataset, dictionary = corr_discrete(dataset, 3)
+    dictionary_list.append(dictionary)
+    dataset, dictionary = corr_discrete(dataset, 4)
+    dictionary_list.append(dictionary)
+    dataset, dictionary = corr_discrete(dataset, 5)
+    dictionary_list.append(dictionary)
+
+
+    return dataset, dictionary_list
