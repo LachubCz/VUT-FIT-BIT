@@ -1,17 +1,27 @@
 #!/usr/bin/env python3
 """
-    script for churn data analyzation
-    contains tree models:
-                logistic regression
-                decision tree
-                random forrest
+    File name: main.py
+    Author: Petr Buchal
+    Date created: 23/03/2013
+    Date last modified: 26/03/2013
+    Python Version: 3.6
+    Description:
+        script for churn data analyzation
+        contains three models:
+                    logistic regression
+                    decision tree
+                    random forrest
 """
 import sys
 import os.path
 import argparse
+import numpy as np
 from tools import get_dataset
 import data_worker as dt
 from models import Model
+
+#this will allow to print all numpy array for evaluation mode
+np.set_printoptions(threshold=np.nan)
 
 def err_print(*args, **kwargs):
     """
@@ -169,6 +179,6 @@ def main():
     if args.s:
         models.save_models()
         models.save_dictionary()
-        models.export_graphviz("decision_tree.dot")
+        models.save_dec_tree_graph("decision_tree.dot")
 
 main()

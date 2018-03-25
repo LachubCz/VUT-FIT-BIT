@@ -1,5 +1,11 @@
 """
-    docstring
+    File name: models.py
+    Author: Petr Buchal
+    Date created: 24/03/2013
+    Date last modified: 26/03/2013
+    Python Version: 3.6
+    Description:
+        file contains class for storing data analyzation models
 """
 import os
 import pickle
@@ -10,7 +16,7 @@ from sklearn.ensemble import RandomForestClassifier
 
 class Model():
     """
-    docstring
+    class contains models and dictionary for data backtransformation
     """
     def __init__(self, log_regression=False, decision_tree=False, rnd_forest=False):
         if log_regression:
@@ -31,7 +37,7 @@ class Model():
 
     def train_on_batch(self, batch, labels):
         """
-        docstring
+        method trains each model if it's initialized
         """
         if self.log_regression != None:
             self.log_regression.fit(batch, labels)
@@ -44,7 +50,7 @@ class Model():
 
     def predict_on_batch(self, batch):
         """
-        docstring
+        method returns batch prediction on initialized models
         """
         labels_lr = None
         if self.log_regression != None:
@@ -62,7 +68,7 @@ class Model():
 
     def score_on_batch(self, batch, labels):
         """
-        docstring
+        method returns succes rate of each initialized model
         """
         score_lr = None
         if self.log_regression != None:
@@ -78,9 +84,9 @@ class Model():
 
         return score_lr, score_dt, score_rf
 
-    def export_graphviz(self, filename):
+    def save_dec_tree_graph(self, filename):
         """
-        docstring
+        method saves graphviz visualization of decision tree
         """
         if self.decision_tree != None:
             labels = np.array(["account length", "area code", "international plan", "voice mail plan",
@@ -96,7 +102,7 @@ class Model():
 
     def save_models(self):
         """
-        docstring
+        method saves all initialized models using pickle
         """
         if self.log_regression != None:
             with open("log_regression.pkl", "wb") as output:
@@ -112,7 +118,7 @@ class Model():
 
     def load_model(self, model_type, filename):
         """
-        docstring
+        method loads all initialized models using pickle
         """
         if model_type == "log_regression":
             with open(filename, "rb") as input:
@@ -128,15 +134,15 @@ class Model():
 
     def save_dictionary(self):
         """
-        docstring
+        method saves dictionary using pickle
         """
-        if self.rnd_forest != None:
+        if self.dictionary != None:
             with open("dictionary.pkl", "wb") as output:
                 pickle.dump(self.dictionary, output, pickle.HIGHEST_PROTOCOL)
 
     def load_dictionary(self, filename):
         """
-        docstring
+        method loads dictionary using pickle
         """
         with open(filename, "rb") as input:
             self.dictionary = pickle.load(input)
