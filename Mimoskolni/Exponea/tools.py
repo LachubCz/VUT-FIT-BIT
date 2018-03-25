@@ -17,6 +17,8 @@ def corr_type(string):
         return False
     elif string == "True.\n":
         return True
+    elif string == "None.\n":
+        return None
     else:
         return string[:-1] if string[-1] == "\n" else string
 

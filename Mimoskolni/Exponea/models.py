@@ -27,6 +27,8 @@ class Model():
         else:
             self.rnd_forest = None
 
+        self.dictionary = None
+
     def train_on_batch(self, batch, labels):
         """
         docstring
@@ -123,3 +125,18 @@ class Model():
         elif model_type == "rnd_forest":
             with open(filename, "rb") as input:
                 self.rnd_forest = pickle.load(input)
+
+    def save_dictionary(self):
+        """
+        docstring
+        """
+        if self.rnd_forest != None:
+            with open("dictionary.pkl", "wb") as output:
+                pickle.dump(self.dictionary, output, pickle.HIGHEST_PROTOCOL)
+
+    def load_dictionary(self, filename):
+        """
+        docstring
+        """
+        with open(filename, "rb") as input:
+            self.dictionary = pickle.load(input)
