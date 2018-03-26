@@ -6,21 +6,28 @@ Script processes customers data and tries to predict, which customers are gonna 
 
 **Data models:**
 
-* Logistic Regression
-* Decision Tree
-* Random Forest
+* Logistic Regression (~ 0.8664 %)
+* Decision Tree (~ 0.9224 %)
+* Random Forest (~ 0.9524 %)
 
 Usage
 -----
-##### python main.py [-lr] [-dt] [-rf][-d dataset] [-train] [-test] [-eval] [-train_test] [-s] [-lrm lrmodel] [-dtm dtmodel] [-rfm rfmodel] [-dic dictionary]
+##### python main.py [-lr] [-dt] [-rf] [-d d] [-train] [-test] [-eval] [-train_test] [-s] [-lrm lrm] [-dtm dtm] [-rfm rfm] [-dic dic]
 ###### Parameters: 
 
-    -h  |   Vypíše nápovědu a ukončí program.
-    -a aggr-key   |   Zapnutí agregace podle klíče aggr-key, což může být srcmac značící zdrojovou MAC adresu, dstmac značící cílovou MAC adresu, srcip značící zdrojovou IP adresu, dstip značící cílovou IP adresu, srcport značící číslo zdrojového transportního portu nebo dstport značící číslo cílového transportního portu.
-    -s sort-key |   Zapnutí řazení podle klíče sort-key, což může být packets (počet paketů) nebo bytes (počet bajtů). Řadit lze jak agregované tak i neagregované položky. Řadí se vždy sestupně.
-    -l limit    |    Nezáporné celé číslo v desítkové soustavě udávající limit počtu vypsaných položek.
-    -f filter-expression    |    Program zpracuje pouze pakety, které vyhovují filtru danému řetězcem filter-expression. 
-    file    |    Cesta k souboru ve formátu pcap (čitelný knihovnou libpcap). Možné je zadat jeden a více souborů.
+    -lr             |   script will use Logistic Regression model (it's possible to run multiple modes simultaneously)
+    -dt             |   script will use Decision Tree model (it's possible to run multiple modes simultaneously)
+    -rf             |   script will use Random Forest model (it's possible to run multiple modes simultaneously)
+    -d dataset      |   dataset name (location) to load
+    -train          |   script will run in train mode, model will train on hole dataset, no output
+    -test           |   script will run in test mode, model will process hole dataset and compare own predictions with correct labels, output is performace
+    -eval           |   script will run in eval mode, model will predict labels for hole dataset and return them, if you want to use this mode, you have to load taugh models, output is array of predicted labels
+    -train_test     |   script will run in train_test mode, first half of dataset will be used as training data and second half as a testing data, output is performace
+    -s              |   script will save models
+    -lrm lrmodel    |   name of Logistic Regression model (location) to load
+    -dtm dtmodel    |   name of Decision Tree model (location) to load
+    -rfm rfmodel    |   name of Random Forest model (location) to load
+    -dic dictionary |   name of dictionary (location) to load
 
 Examples
 -----------------
@@ -30,16 +37,45 @@ Examples
     ./isashark -l 3 -s packets -a dstport filename.pcap
     ./isashark -f "src host 2001:db8::1" filename.pcap
 
+Libraries
+-----------------
+**Standard libraries:**
+* os
+* sys
+* math
+* argparse
+* collections
+* pickle
 
-Source code:
+**Third party libraries:**
+* numpy
+* sklearn
+
+Files:
 ---------------------------
-data_worker.py
+**./:**
 
-main.py
+* data_worker.py
+* main.py
+* models.py
+* readme.md
+* tools.py
 
-models.py
+**./datasets:**
 
-tools.py
+* churn.ALL
+* churn.NAMES
+* churn_for_eval.ALL
+* churn_for_test.ALL
+* churn_for_train.ALL
+
+**./models:**
+
+* decision_tree.dot
+* decision_tree.pkl
+* dictionary.pkl
+* log_regression.pkl
+* rmd_forest.pkl
 
 ****
 
