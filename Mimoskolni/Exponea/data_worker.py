@@ -1,5 +1,5 @@
 """
-    File name: models.py
+    File name: data_worker.py
     Author: Petr Buchal
     Date created: 23/03/2013
     Date last modified: 26/03/2013

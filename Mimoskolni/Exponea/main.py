@@ -176,7 +176,7 @@ def main():
         models.train_on_batch(train_data, train_labels)
         #testing
         score_lr, score_dt, score_rf = models.score_on_batch(test_data, test_labels)
-        print("Logistic Regression: {}\nDecision Tree: {}\nRandom Forest: {}\n"
+        print("Logistic Regression: {}\nDecision Tree: {}\nRandom Forest: {}"
               .format(score_lr, score_dt, score_rf))
 
     #save models
