@@ -35,6 +35,9 @@ class Agent:
         if model_type == "basic":
             self.model_net = network.make_basic_model(state_size, action_size, self.learning_rate)
             self.target_net = network.make_basic_model(state_size, action_size, self.learning_rate)
+        elif model_type == "basic_img":
+            self.model_net = network.make_basic_img_model(state_size, action_size, self.learning_rate)      
+            self.target_net = network.make_basic_img_model(state_size, action_size, self.learning_rate)
         else:
             self.model_net = network.make_dueling_model(state_size, action_size, self.learning_rate)
             self.target_net = network.make_dueling_model(state_size, action_size, self.learning_rate)
@@ -125,17 +128,17 @@ class Agent:
         if np.random.rand() <= self.current_epsilon:
             return np.random.randint(0, self.action_size, size=1)[0]
         else:
-            q_value = self.model_net.predict(state)
+            q_value = self.model_net.predict(np.array([state]))
             return np.argmax(q_value)
 
     def get_minibatch(self):
         if self.memory_type == "basic":
             minibatch = random.sample(list(self.memory), self.minibatch_size)
 
-            state = np.vstack([i[0] for i in minibatch])
+            state = np.array([i[0] for i in minibatch])
             action = [i[1] for i in minibatch]
             reward = [i[2] for i in minibatch]
-            next_state = np.vstack([i[3] for i in minibatch])
+            next_state = np.array([i[3] for i in minibatch])
             done = [i[4] for i in minibatch]
         else:
             minibatch = self.memory.sample(self.minibatch_size)

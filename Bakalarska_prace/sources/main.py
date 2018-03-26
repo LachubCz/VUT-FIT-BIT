@@ -3,8 +3,10 @@
 docstring
 """
 import os
-import numpy as np
+import os.path
+import argparse
 import scipy
+import numpy as np
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 
@@ -21,6 +23,29 @@ def processImage( img ):
 
     o = gray.astype('float32') / 128 - 1    # normalize
     return o
+
+def get_args():
+    """
+    method for parsing of arguments
+    """
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-mem', action="store", dest="memory", choices=["basic", "prioritized"], default="basic")
+    parser.add_argument('-net', action="store", dest="network", choices=["basic", "dueling"], default="basic")
+    parser.add_argument('-alg', action="store", dest="algorithm", choices=["DQN", "DQN+TN", "DDQN"], default="DQN")
+    parser.add_argument('-env', action="store", dest="environment", required=True)
+    parser.add_argument('-eps', action="store", dest="episodes", type=int, required=True)
+    parser.add_argument('-mdl', action="store", dest="model")
+    parser.add_argument('-pu', action="store", dest="process_unit", choices=["CPU", "GPU"], default="CPU")
+
+    args = parser.parse_args()
+    
+    if args.model is not None:
+        if not os.path.isfile(args.model):
+            err_print("Model file doesn't exist.")
+            sys.exit(-1)
+
+    return args
 
 #@do_profile(follow=[pl.rand_agent_replay])
 def main():
@@ -105,4 +130,6 @@ def main():
     gaussian_graph(scores, episodes_numbers, "{}-gaussian_graph.png" .format(task.name))
     combined_graph(scores, episodes_numbers, "{}-combined_graph.png" .format(task.name))
 
-main()
+#main()
+
+print(get_args())
