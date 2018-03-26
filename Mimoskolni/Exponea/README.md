@@ -1,65 +1,81 @@
-Analyzátor paketů
+Models for churn analyzation (data mining)
 ====================
-Popis programu
+Script description
 -----------
-Konzolová aplikace pro offline analýzu síťového provozu, umožňující agregaci, řazení a filtraci. Program nepodporuje slučování fragmentovaných paketů v protokolu IPv4.
+Script processes customers data and tries to predict, which customers are gonna be lost.
 
-**Podporované protokoly:**
+**Data models:**
 
-Vrstva síťového rozhraní:
-* Ethernet
-* IEEE 802.1Q včetně IEEE 802.1ad
+* Logistic Regression (~ 0.8664 %)
+* Decision Tree (~ 0.9224 %)
+* Random Forest (~ 0.9524 %)
 
-Síťová vrstva:
-* IPv4
-* IPv6
-* ICMPv4
-* ICMPv6
-
-Transportní vrstva:
-* TCP
-* UDP
-
-Použití
+Usage
 -----
-##### isashark [-h] [-a aggr-key] [-s sort-key] [-l limit] [-f filter-expression] file ..
-###### Parametry: 
+##### python main.py [-lr] [-dt] [-rf] [-d d] [-train] [-test] [-eval] [-train_test] [-s] [-lrm lrm] [-dtm dtm] [-rfm rfm] [-dic dic]
+###### Parameters: 
 
-    -h  |   Vypíše nápovědu a ukončí program.
-    -a aggr-key   |   Zapnutí agregace podle klíče aggr-key, což může být srcmac značící zdrojovou MAC adresu, dstmac značící cílovou MAC adresu, srcip značící zdrojovou IP adresu, dstip značící cílovou IP adresu, srcport značící číslo zdrojového transportního portu nebo dstport značící číslo cílového transportního portu.
-    -s sort-key |   Zapnutí řazení podle klíče sort-key, což může být packets (počet paketů) nebo bytes (počet bajtů). Řadit lze jak agregované tak i neagregované položky. Řadí se vždy sestupně.
-    -l limit    |    Nezáporné celé číslo v desítkové soustavě udávající limit počtu vypsaných položek.
-    -f filter-expression    |    Program zpracuje pouze pakety, které vyhovují filtru danému řetězcem filter-expression. 
-    file    |    Cesta k souboru ve formátu pcap (čitelný knihovnou libpcap). Možné je zadat jeden a více souborů.
+    -lr         |   script will use Logistic Regression model (it's possible to run multiple modes simultaneously)
+    -dt         |   script will use Decision Tree model (it's possible to run multiple modes simultaneously)
+    -rf         |   script will use Random Forest model (it's possible to run multiple modes simultaneously)
+    -d d        |   dataset name (location) to load
+    -train      |   script will run in train mode, model will train on hole dataset, no output
+    -test       |   script will run in test mode, model will process hole dataset and compare own predictions with correct labels, output is performace
+    -eval       |   script will run in eval mode, model will predict labels for hole dataset and return them, if you want to use this mode, you have to load taugh models, output is array of predicted labels
+    -train_test |   script will run in train_test mode, first half of dataset will be used as training data and second half as a testing data, output is performace
+    -s          |   script will save models
+    -lrm lrm    |   name of Logistic Regression model (location) to load
+    -dtm dtm    |   name of Decision Tree model (location) to load
+    -rfm rfm    |   name of Random Forest model (location) to load
+    -dic dic    |   name of dictionary (location) to load
 
-Příklady použití
+Examples
 -----------------
-    ./isashark --h
-    ./isashark -a dstmac filename.pcap
-    ./isashark -s bytes filename1.pcap filename2.pcap
-    ./isashark -l 3 -s packets -a dstport filename.pcap
-    ./isashark -f "src host 2001:db8::1" filename.pcap
+    python main.py -d datasets/churn.all -lr -rf -dt -train_test -s
+    python main.py -d datasets/churn_for_train.all -lr -train -s
+    python main.py -d datasets/churn_for_test.all -lr -test -lrm models/log_regression.pkl -dic models/dictionary.pkl
+    python main.py -d datasets/churn_for_eval.all -lr -dt -eval -lrm models/log_regression.pkl -dtm models/decision_tree.pkl -dic models/dictionary.pkl
 
-Makefile
---------
-`make`        - přeloží zdrojový kód programu
+Libraries
+-----------------
+**Standard libraries:**
+* os
+* sys
+* math
+* argparse
+* collections
+* pickle
 
-`make reassemble`    - smaže přeložený zdrojový kód a přeloží ho znovu
+**Third party libraries:**
+* numpy
+* sklearn
 
-Implementace
--------------------------------------
-Detaily implementace jsou popsány v souboru manual.pdf.
-
-Seznam odevzdaných souborů:
+Files:
 ---------------------------
-isashark.c
+**./:**
 
-Makefile
+* data_worker.py
+* main.py
+* models.py
+* readme.md
+* tools.py
 
-manual.pdf
+**./datasets:**
 
-readme.md
+* churn.ALL
+* churn.NAMES
+* churn_for_eval.ALL
+* churn_for_test.ALL
+* churn_for_train.ALL
+
+**./models:**
+
+* decision_tree.dot
+* decision_tree.pkl
+* dictionary.pkl
+* log_regression.pkl
+* rmd_forest.pkl
 
 ****
 
-###### Vytvořil: Petr Buchal (xbucha02)
+###### Created by: Petr Buchal
