@@ -62,6 +62,10 @@ def get_args():
         err_print("You haven't selected dataset file.")
         sys.exit(-1)
 
+    if not os.path.isfile(args.d):
+        err_print("Dataset file doesn't exist.")
+        sys.exit(-1)
+
     mode = 0
     if args.train:
         mode = mode + 1
@@ -132,9 +136,9 @@ def main():
         #get data for training
         train_data, train_labels = dt.get_labels(dataset)
         #transform categorical values into numerical values
-        train_data, dictionary_list = dt.correct_dataset(train_data)
+        train_data, dictionaries_list = dt.transform_to_dict(train_data)
         #copy dictionary to models.dictionary
-        models.dictionary = dictionary_list
+        models.dictionary = dictionaries_list
         #training
         models.train_on_batch(train_data, train_labels)
 
@@ -143,10 +147,10 @@ def main():
         #get data for testing
         test_data, test_labels = dt.get_labels(dataset)
         #transform categorical values into numerical values according to dictionary in models
-        test_data = dt.make_test_set(test_data, models.dictionary)
+        test_data = dt.transform_from_dict(test_data, models.dictionary)
         #get scores
         score_lr, score_dt, score_rf = models.score_on_batch(test_data, test_labels)
-        print("Logistic Regression: {}\nDecision Tree: {}\nRandom Forest: {}\n"
+        print("Logistic Regression: {}\nDecision Tree: {}\nRandom Forest: {}"
               .format(score_lr, score_dt, score_rf))
 
     #evaluation
@@ -154,7 +158,7 @@ def main():
         #get data for evaluating
         eval_data, _ = dt.get_labels(dataset)
         #transform categorical values into numerical values according to dictionary in models
-        eval_data = dt.make_test_set(eval_data, models.dictionary)
+        eval_data = dt.transform_from_dict(eval_data, models.dictionary)
         #print predictions
         print(models.predict_on_batch(eval_data))
 
@@ -163,11 +167,11 @@ def main():
         #get data for training and testing
         train_data, test_data, train_labels, test_labels = dt.split_dataset(dataset)
         #transform categorical values into numerical values
-        train_data, dictionary_list = dt.correct_dataset(train_data)
+        train_data, dictionaries_list = dt.transform_to_dict(train_data)
         #copy dictionary to models.dictionary
-        models.dictionary = dictionary_list
+        models.dictionary = dictionaries_list
         #transform categorical values into numerical values according to dictionary gained from training data
-        test_data = dt.make_test_set(test_data, models.dictionary)
+        test_data = dt.transform_from_dict(test_data, models.dictionary)
         #training
         models.train_on_batch(train_data, train_labels)
         #testing

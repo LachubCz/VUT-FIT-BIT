@@ -5,7 +5,7 @@
     Date last modified: 26/03/2013
     Python Version: 3.6
     Description:
-        file contains class for storing data analyzation models
+        file contains class for storing models
 """
 import os
 import pickle

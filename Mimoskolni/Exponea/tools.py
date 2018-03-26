@@ -1,5 +1,11 @@
 """
-    methods for file parsing and making of datasets
+    File name: models.py
+    Author: Petr Buchal
+    Date created: 23/03/2013
+    Date last modified: 26/03/2013
+    Python Version: 3.6
+    Description:
+        methods for file parsing and dataset making
 """
 import os
 from collections import deque
@@ -7,7 +13,7 @@ import numpy as np
 
 def corr_type(string):
     """
-    method makes proper type from string
+    method casts proper type from string
     """
     if string.isdigit():
         return int(string)
@@ -24,7 +30,7 @@ def corr_type(string):
 
 def split_custmr(customer):
     """
-    method parses string "customer" and return numpy array of its splitted parts
+    method parses string "customer" and return numpy array of it's splitted parts
     """
     return np.array([corr_type(string) for string in customer.split(", ")], dtype=object)
 
@@ -45,7 +51,7 @@ def get_dataset(filename):
 
 def print_custmr_info(customer):
     """
-    method prints customer data with its types
+    method prints customer data
     """
     print("state:                 {} [discrete]      {}" .format(customer[0], type(customer[0])))
     print("account length:        {} [continuous]    {}".format(customer[1], type(customer[1])))
