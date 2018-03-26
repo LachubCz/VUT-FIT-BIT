@@ -6,9 +6,9 @@ Script processes customers data and tries to predict, which customers are gonna 
 
 **Data models:**
 
-* Logistic Regression (~ 0.8664 %)
-* Decision Tree (~ 0.9224 %)
-* Random Forest (~ 0.9524 %)
+* Logistic Regression (86.64 %)
+* Decision Tree (92.24 %)
+* Random Forest (95.24 %)
 
 Usage
 -----
@@ -57,6 +57,7 @@ Files:
 * data_worker.py
 * main.py
 * models.py
+* presentation.pdf
 * readme.md
 * tools.py
 
