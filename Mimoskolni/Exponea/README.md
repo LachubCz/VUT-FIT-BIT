@@ -1,29 +1,19 @@
-Analyzátor paketů
+Models for churn analyzation (data mining)
 ====================
-Popis programu
+Script description
 -----------
-Konzolová aplikace pro offline analýzu síťového provozu, umožňující agregaci, řazení a filtraci. Program nepodporuje slučování fragmentovaných paketů v protokolu IPv4.
+Script processes customers data and tries to predict, which customers are gonna be lost.
 
-**Podporované protokoly:**
+**Data models:**
 
-Vrstva síťového rozhraní:
-* Ethernet
-* IEEE 802.1Q včetně IEEE 802.1ad
+* Logistic Regression
+* Decision Tree
+* Random Forest
 
-Síťová vrstva:
-* IPv4
-* IPv6
-* ICMPv4
-* ICMPv6
-
-Transportní vrstva:
-* TCP
-* UDP
-
-Použití
+Usage
 -----
-##### isashark [-h] [-a aggr-key] [-s sort-key] [-l limit] [-f filter-expression] file ..
-###### Parametry: 
+##### python main.py [-lr] [-dt] [-rf][-d dataset] [-train] [-test] [-eval] [-train_test] [-s] [-lrm lrmodel] [-dtm dtmodel] [-rfm rfmodel] [-dic dictionary]
+###### Parameters: 
 
     -h  |   Vypíše nápovědu a ukončí program.
     -a aggr-key   |   Zapnutí agregace podle klíče aggr-key, což může být srcmac značící zdrojovou MAC adresu, dstmac značící cílovou MAC adresu, srcip značící zdrojovou IP adresu, dstip značící cílovou IP adresu, srcport značící číslo zdrojového transportního portu nebo dstport značící číslo cílového transportního portu.
@@ -32,7 +22,7 @@ Použití
     -f filter-expression    |    Program zpracuje pouze pakety, které vyhovují filtru danému řetězcem filter-expression. 
     file    |    Cesta k souboru ve formátu pcap (čitelný knihovnou libpcap). Možné je zadat jeden a více souborů.
 
-Příklady použití
+Examples
 -----------------
     ./isashark --h
     ./isashark -a dstmac filename.pcap
@@ -40,26 +30,17 @@ Příklady použití
     ./isashark -l 3 -s packets -a dstport filename.pcap
     ./isashark -f "src host 2001:db8::1" filename.pcap
 
-Makefile
---------
-`make`        - přeloží zdrojový kód programu
 
-`make reassemble`    - smaže přeložený zdrojový kód a přeloží ho znovu
-
-Implementace
--------------------------------------
-Detaily implementace jsou popsány v souboru manual.pdf.
-
-Seznam odevzdaných souborů:
+Source code:
 ---------------------------
-isashark.c
+data_worker.py
 
-Makefile
+main.py
 
-manual.pdf
+models.py
 
-readme.md
+tools.py
 
 ****
 
-###### Vytvořil: Petr Buchal (xbucha02)
+###### Created by: Petr Buchal
