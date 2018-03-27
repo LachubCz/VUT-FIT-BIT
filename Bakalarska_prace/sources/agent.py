@@ -6,6 +6,7 @@ import numpy as np
 from collections import deque
 from memory import Memory
 from network import Network as network
+from profiling import * #profiling - @do_profile(follow=[method, ])
 
 class Agent:
     """
@@ -17,7 +18,7 @@ class Agent:
         self.current_epsilon = self.initial_epsilon
         self.epsilon_decay = 0.00002
         self.gamma = 0.99
-        self.minibatch_size = 4
+        self.minibatch_size = 256
         self.learning_rate = 0.001
         self.fraction_update = 0.125
 
@@ -35,7 +36,7 @@ class Agent:
             self.model_net = network.make_basic_model(state_size, action_size, self.learning_rate)
             self.target_net = network.make_basic_model(state_size, action_size, self.learning_rate)
         elif model_type == "basic_img":
-            self.model_net = network.make_basic_img_model(state_size, action_size, self.learning_rate)
+            self.model_net = network.make_basic_img_model(state_size, action_size, self.learning_rate)      
             self.target_net = network.make_basic_img_model(state_size, action_size, self.learning_rate)
         else:
             self.model_net = network.make_dueling_model(state_size, action_size, self.learning_rate)
@@ -71,7 +72,7 @@ class Agent:
         """
         docstring
         """
-        q_value = self.model_net.predict(state)
+        q_value = self.model_net.predict(np.array([state]))
         ns_model_pred = self.model_net.predict(np.array([next_state]))
         ns_target_pred = self.target_net.predict(np.array([next_state]))
 
@@ -142,10 +143,10 @@ class Agent:
         else:
             minibatch = self.memory.sample(self.minibatch_size)
 
-            state = np.vstack([i[1][0] for i in minibatch])
+            state = np.array([i[1][0] for i in minibatch])
             action = [i[1][1] for i in minibatch]
             reward = [i[1][2] for i in minibatch]
-            next_state = np.vstack([i[1][3] for i in minibatch])
+            next_state = np.array([i[1][3] for i in minibatch])
             done = [i[1][4] for i in minibatch]
 
         return state, action, reward, next_state, done

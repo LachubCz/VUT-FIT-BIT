@@ -1,7 +1,7 @@
 """
 docstring
 """
-from keras.models import Model, Sequential
+from keras.models import Model
 from keras.layers import Input, Dense, Concatenate, Lambda, Subtract, Add, Conv2D, Flatten
 from keras import backend as K
 from keras import optimizers, losses

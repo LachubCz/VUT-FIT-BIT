@@ -1,6 +1,8 @@
 """
 methods for learning progress vizualization
 """
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.ndimage.filters import gaussian_filter
 
