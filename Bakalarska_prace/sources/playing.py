@@ -163,7 +163,6 @@ class Playing():
                     return new_observation
 
                 if done:
-                    print(game)
                     break
 
 
