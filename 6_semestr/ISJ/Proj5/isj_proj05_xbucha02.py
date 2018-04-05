@@ -7,11 +7,11 @@
 
 class Polynomial:
     """
-    docstring
+    trida pro praci s polynomy
     """
     def __init__(self,*arguments, x0=0, x1=0, x2=0, x3=0, x4=0, x5=0, x6=0, x7=0, x8=0, x9=0):
         """
-        docstring
+        inicializace tridy
         """
         self.args = []
         self.args.extend([x0, x1, x2, x3, x4, x5, x6, x7, x8, x9])
@@ -30,7 +30,7 @@ class Polynomial:
 
     def __str__(self):
         """
-        docstring
+        vytisknuti polynomu
         """
         expression = ""
 
@@ -81,7 +81,7 @@ class Polynomial:
         
     def __add__(self, other):
         """
-        docstring
+        secteni polynomu
         """
         new_lst = [];
         for i, j in zip(self.args, other.args):
@@ -90,16 +90,16 @@ class Polynomial:
 
     def __eq__(self, other):
         """
-        docstring
+        porovnani polynomu
         """
         for i, item in enumerate(self.args):
             if item != other.args[i]:
                 return 0
         return 1
     
-    def power(self,pol1, pol2):
+    def power(self, pol1, pol2):
         """
-        docstring
+        pomocna metoda pro vypocet mocniny polynomu
         """
         matrix = []
 
@@ -121,7 +121,7 @@ class Polynomial:
     
     def __pow__(self, power):
         """
-        docstring
+        umocneni polynomu
         """
         array = []
         array.extend(self.args)
@@ -136,7 +136,7 @@ class Polynomial:
     
     def derivative(self):
         """
-        docstring
+        derivace polynomu
         """
         array = []
         array.extend(self.args)
@@ -150,7 +150,7 @@ class Polynomial:
                 
     def at_value(self, x, *y):
         """
-        docstring
+        hodnota polynomu pro x
         """
         x_result = 0
         y_result = 0
