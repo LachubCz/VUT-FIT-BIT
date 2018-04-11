@@ -77,7 +77,7 @@ class Network:
         net = Add()([value_function, advantage_function])
 
         model = Model(inputs=network_input, outputs=net)
-        model.summary()
+        #model.summary()
 
         model.compile(loss=losses.mean_squared_error, optimizer=optimizers.Adam(lr=learning_rate), metrics=["accuracy"])
 

@@ -190,7 +190,7 @@ class Task:
             combined_graph(scores, episodes_numbers, "{}-combined_graph.png" .format(self.name))
             sys.exit()
         """
-        if episodes_numbers[-1] == 3:
+        if episodes_numbers[-1] == 100:
             score = pl.score_estimate_vect(self, 100)
             self.agent.save_model_weights("{}-solved.h5" .format(self.name))
             print("Task solved after {} episodes with score {}." .format(episodes_numbers[-1], score))

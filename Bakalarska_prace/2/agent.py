@@ -18,7 +18,7 @@ class Agent:
         self.current_epsilon = self.initial_epsilon
         self.epsilon_decay = 0.00002
         self.gamma = 0.99
-        self.minibatch_size = 32
+        self.minibatch_size = 256
         self.learning_rate = 0.001
         self.fraction_update = 0.125
 
@@ -46,7 +46,7 @@ class Agent:
 
         self.algorithm = algorithm
         self.algorithms = {"DQN" : self.train_dqn,
-                           "DQN+Target" : self.train_target_dqn,
+                           "DQN+TN" : self.train_target_dqn,
                            "DDQN" : self.train_ddqn,
                           }
 
