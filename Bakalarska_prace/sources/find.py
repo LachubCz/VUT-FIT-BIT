@@ -1,3 +1,6 @@
+"""
+docstring
+"""
 import glob
 import os
 import subprocess
@@ -5,6 +8,9 @@ import re
 from collections import deque
 
 def get_eps_count(string):
+    """
+    docstring
+    """
     regex = re.compile('(?<=Task solved after )\w*')
     value = regex.findall(string)
     if value == []:
@@ -13,6 +19,9 @@ def get_eps_count(string):
         return int(regex.findall(string)[0])
 
 def get_val_count(string):
+    """
+    docstring
+    """
     regex = re.compile('(?<=Task solved after 100 episodes with score )[-+]?[0-9]*\.?[0-9]*')
     value = regex.findall(string)
     if value == []:
@@ -21,6 +30,9 @@ def get_val_count(string):
         return float(regex.findall(string)[0])
 
 def get_last_line(filename):
+    """
+    docstring
+    """
     with open(filename) as f:
         data = f.readlines()
     lastline = data[-1]
@@ -28,6 +40,9 @@ def get_last_line(filename):
     return tail[0]
 
 def insert_nw_val(dictionary, testname, new_value):
+    """
+    docstring
+    """
     if testname in dictionary:
         values = dictionary[testname]
     else:
@@ -38,6 +53,9 @@ def insert_nw_val(dictionary, testname, new_value):
     return dictionary
 
 def get_results(dictionary):
+    """
+    docstring
+    """
     keys = list(dictionary.keys())
     results = dict()
 
@@ -49,6 +67,9 @@ def get_results(dictionary):
     return results
 
 def get_eps_results():
+    """
+    docstring
+    """
     cwd = os.getcwd()
     dictionary = dict()
 
@@ -65,6 +86,9 @@ def get_eps_results():
         print ("{}: {}" .format(key, results[key]))
 
 def get_val_results():
+    """
+    docstring
+    """
     cwd = os.getcwd()
     dictionary = dict()
 
@@ -80,7 +104,10 @@ def get_val_results():
     for key in sorted(results):
         print ("{}: {}" .format(key, results[key]))
 
-def get_data():    
+def get_data():
+    """
+    docstring
+    """
     print("______________________")
     print("Number of episodes: ")
     print("______________________")
@@ -91,6 +118,9 @@ def get_data():
     get_val_results()
 
 def parse_table(filename):
+    """
+    docstring
+    """
     dataset = deque()
 
     file = open(os.getcwd()+"\\" + filename, "r")
@@ -103,10 +133,16 @@ def parse_table(filename):
         dataset.append(customer)
 
 def get_min(time_str):
+    """
+    docstring
+    """
     h, m, s = time_str.split(':')
     return float(h) * 60 + float(m) + float(s) / 60
 
 def get_times():
+    """
+    docstring
+    """
     dataset = parse_table("table.txt")
     for i, item in enumerate(dataset):
         dataset[i] = re.sub('\s+', ' ', item).strip()
@@ -124,3 +160,6 @@ def get_times():
 
     for key in sorted(dictionary):
         print ("{}: {}" .format(key, dictionary[key]))
+
+get_times()
+get_data()

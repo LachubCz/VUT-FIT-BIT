@@ -21,7 +21,7 @@ class Network:
         net = Dense(units=action_size, activation="linear", kernel_initializer="he_uniform")(net)
 
         model = Model(inputs=network_input, outputs=net)
-        #model.summary()
+        model.summary()
 
         model.compile(loss=losses.mean_squared_error, optimizer=optimizers.Adam(lr=learning_rate), metrics=['accuracy'])
 
