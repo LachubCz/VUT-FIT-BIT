@@ -4,11 +4,16 @@ docstring
 import scipy
 import numpy as np
 
-def processImage(img):
-    rgb = scipy.misc.imresize(img, (84, 84), interp='bilinear')
-    r, g, b = rgb[:,:,0], rgb[:,:,1], rgb[:,:,2]
-    gray = 0.2989 * r + 0.5870 * g + 0.1140 * b     # extract luminance
-    o = gray.astype('float32') / 128 - 1    # normalize
+def engineer_img(img):
+    """
+    docstring
+    """
+    img = scipy.misc.imresize(img, (84, 84), interp='bilinear') 
+
+    red, green, blue = img[:,:,0], img[:,:,1], img[:,:,2]
+    img = 0.299 * red + 0.587 * green + 0.114 * blue #RGB -> Luma (Digital ITU BT.601)
+
+    img = img.astype(np.uint8) / 255.0 - 0.5 #normalizace
     return o
 
 class Playing():
@@ -86,14 +91,14 @@ class Playing():
 
         for eps in range(episodes):
             state = task.env.reset()
-            state = processImage(state)
+            state = engineer_img(state)
             state = np.array([state, state])
 
             for t in range(observetime):
                 action = np.random.randint(0, task.env_action_size, size=1)[0]
                 next_state, reward, done, info = task.env.step(action)
 
-                next_state = np.array([state[1], processImage(next_state)])
+                next_state = np.array([state[1], engineer_img(next_state)])
 
                 if done:
                     next_state = None
@@ -175,13 +180,13 @@ class Playing():
 
         for eps in range(episodes):
             state = task.env.reset()
-            state = processImage(state)
+            state = engineer_img(state)
             state = np.array([state, state])
 
             for t in range(task.max_steps):
                 action = np.random.randint(0, task.env_action_size, size=1)[0]
                 next_state, reward, done, info = task.env.step(action)
-                next_state = np.array([state[1], processImage(next_state)])
+                next_state = np.array([state[1], engineer_img(next_state)])
         
                 task.agent.remember(state, action, reward, next_state, done, rand_agent=True)
                 new_observation = new_observation + 1

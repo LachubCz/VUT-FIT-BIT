@@ -13,7 +13,7 @@ from keras.backend.tensorflow_backend import set_session
 from task import Task
 from visualization import point_graph, gaussian_graph, combined_graph
 from playing import Playing as pl
-from playing import processImage
+from playing import engineer_img
 from agent import Agent
 from profiling import * #profiling - @do_profile(follow=[method, ])
 
@@ -130,7 +130,7 @@ def img_game(task, args):
 
     for eps in range(args.episodes):
         state = task.env.reset()
-        state = processImage(state)
+        state = engineer_img(state)
         state = np.array([state, state])
 
         score = 0
@@ -138,7 +138,7 @@ def img_game(task, args):
         for t in range(task.max_steps):
             action = task.agent.get_action(state, epsilon=True)
             next_state, reward, done, info = task.env.step(action)
-            next_state = np.array([state[1], processImage(next_state)])
+            next_state = np.array([state[1], engineer_img(next_state)])
 
             score = score + reward
 

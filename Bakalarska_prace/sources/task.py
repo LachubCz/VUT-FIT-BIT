@@ -170,26 +170,6 @@ class Task:
         """
         docstring
         """
-        """
-        complete_estimation = pl.score_estimate_vect(self, 10)
-        if complete_estimation >= self.solved_score:
-            for i in range(2, 11):
-                estimation = pl.score_estimate_vect(self, 10)
-                complete_estimation = complete_estimation + estimation
-                if (complete_estimation / i) < self.solved_score:
-                    return
-        else:
-            return
-        score = complete_estimation / 10
-
-        if score > self.solved_score:
-            self.agent.save_model_weights("{}-solved.h5" .format(self.name))
-            print("Task solved after {} episodes with score {}." .format(episodes_numbers[-1], score))
-            point_graph(scores, episodes_numbers, "{}-point_graph.png" .format(self.name))
-            gaussian_graph(scores, episodes_numbers, "{}-gaussian_graph.png" .format(self.name))
-            combined_graph(scores, episodes_numbers, "{}-combined_graph.png" .format(self.name))
-            sys.exit()
-        """
         if episodes_numbers[-1] == 100:
             score = pl.score_estimate_vect(self, 100)
             self.agent.save_model_weights("{}-solved.h5" .format(self.name))
