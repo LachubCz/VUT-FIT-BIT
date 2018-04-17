@@ -58,7 +58,7 @@ def scoring(task, scores, episodes_numbers, eps, test_type="always", test_freq=N
                     print("Added {} new memories. Value of priority_tree was {} and now is {}." .format(added, before, after))
 
     if save_freq is not None:
-        if episodes_numbers[-1] % save_freq:
+        if episodes_numbers[-1] % save_freq == 0:
             task.agent.save_model_weights("{}-{}.h5" .format(task.name, episodes_numbers[-1]))
             print("Model was saved.")
 
@@ -161,7 +161,7 @@ def img_game(task, args):
                           .format(eps+1, task.args.episodes, task.agent.current_epsilon, 
                                   task.agent.memory.length, task.agent.memory.priority_tree[0], score))
 
-                scoring(task, scores, episodes_numbers, eps, test_type="always", test_freq=None, save_freq=25, refresh_freq=None)
+                scoring(task, scores, episodes_numbers, eps, test_type="always", test_freq=None, save_freq=10, refresh_freq=None)
 
                 task.agent.update_target_net()
                 break
@@ -176,6 +176,10 @@ def main():
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="3"
     if args.process_unit == "CPU":
         config = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+        set_session(tf.Session(config=config))
+    else:
+        config = tf.ConfigProto()
+        config.gpu_options.per_process_gpu_memory_fraction = 1
         set_session(tf.Session(config=config))
 
     task = Task(args)

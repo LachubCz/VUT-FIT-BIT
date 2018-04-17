@@ -23,7 +23,7 @@ class Agent:
         self.fraction_update = 0.125
 
         self.memory_type = memory_type
-        self.memory_size = 10000
+        self.memory_size = 100000
         if self.memory_type == "basic":
             self.memory = deque(maxlen=self.memory_size)
         else:
