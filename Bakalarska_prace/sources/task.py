@@ -30,6 +30,7 @@ class Task:
                      "Acrobot-v1" : self.acro1,
                      "Pong-v0" : self.pong1,
                      "Breakout-v0" : self.break0,
+                     "SpaceInvaders-v0" : self.space0,
                     }
         self.envs[args.environment]()
 
@@ -201,7 +202,6 @@ class Task:
         """
         pass
 
-
     def break0(self):
         """
         docstring
@@ -219,6 +219,28 @@ class Task:
         self.test = self.acro1_test
 
     def break0_test(self, scores, episodes_numbers):
+        """
+        docstring
+        """
+        pass
+
+    def space0(self):
+        """
+        docstring
+        """
+        self.name = self.args.environment
+        self.env = gym.make(self.name)
+        self.env_state_size = (2, 84, 84)
+        self.env_action_size = self.env.action_space.n
+        self.type = "img"
+        self.solved_score = float("-inf")
+        self.average_rand_score = float("-inf")
+        self.max_steps = 10000
+        self.agent = Agent(self.args.algorithm, self.env_state_size, self.env_action_size,
+                           "basic_img", self.args.memory)
+        self.test = self.acro1_test
+
+    def space0_test(self, scores, episodes_numbers):
         """
         docstring
         """

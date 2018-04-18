@@ -14,16 +14,16 @@ class Agent:
     """
     def __init__(self, algorithm, state_size, action_size, model_type, memory_type):
         self.initial_epsilon = 1
-        self.final_epsilon = 0.005
+        self.final_epsilon = 0.1
         self.current_epsilon = self.initial_epsilon
-        self.epsilon_decay = 0.00002
+        self.epsilon_decay = 0.0000009
         self.gamma = 0.99
-        self.minibatch_size = 256
+        self.minibatch_size = 32
         self.learning_rate = 0.001
         self.fraction_update = 0.125
 
         self.memory_type = memory_type
-        self.memory_size = 100000
+        self.memory_size = 200000
         if self.memory_type == "basic":
             self.memory = deque(maxlen=self.memory_size)
         else:
@@ -36,7 +36,7 @@ class Agent:
             self.model_net = network.make_basic_model(state_size, action_size, self.learning_rate)
             self.target_net = network.make_basic_model(state_size, action_size, self.learning_rate)
         elif model_type == "basic_img":
-            self.model_net = network.make_basic_img_model(state_size, action_size, self.learning_rate)      
+            self.model_net = network.make_basic_img_model(state_size, action_size, self.learning_rate)
             self.target_net = network.make_basic_img_model(state_size, action_size, self.learning_rate)
         else:
             self.model_net = network.make_dueling_model(state_size, action_size, self.learning_rate)

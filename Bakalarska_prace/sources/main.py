@@ -127,6 +127,7 @@ def vect_game(task, args):
 def img_game(task, args):
     scores = []
     episodes_numbers = []
+    steps = 0
 
     for eps in range(args.episodes):
         state = task.env.reset()
@@ -148,6 +149,12 @@ def img_game(task, args):
             state = next_state
 
             task.agent.decrease_epsilon()
+
+            steps = steps + 1
+
+            if steps % 10000 == 0:
+                task.agent.update_target_net()
+
             if done:
                 scores.append(score)
                 episodes_numbers.append(eps)
@@ -161,9 +168,8 @@ def img_game(task, args):
                           .format(eps+1, task.args.episodes, task.agent.current_epsilon, 
                                   task.agent.memory.length, task.agent.memory.priority_tree[0], score))
 
-                scoring(task, scores, episodes_numbers, eps, test_type="always", test_freq=None, save_freq=10, refresh_freq=None)
+                scoring(task, scores, episodes_numbers, eps, test_type="always", test_freq=None, save_freq=25, refresh_freq=None)
 
-                task.agent.update_target_net()
                 break
     return task, scores, episodes_numbers
 
