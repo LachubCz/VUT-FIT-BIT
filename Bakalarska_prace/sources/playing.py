@@ -14,7 +14,7 @@ def engineer_img(img):
     img = 0.299 * red + 0.587 * green + 0.114 * blue #RGB -> Luma (Digital ITU BT.601)
 
     img = img.astype(np.uint8) / 255.0 - 0.5 #normalizace
-    return o
+    return img
 
 class Playing():
     """
@@ -22,7 +22,7 @@ class Playing():
     """
     def rand_score_estimate(task, games):
         """
-        docstring
+        odhad nahodneho skore pro vectorove hry
         """
         total_reward = 0
 
@@ -39,7 +39,7 @@ class Playing():
 
     def score_estimate_vect(task, games):
         """
-        docstring
+        odhad agentova skore pro vektorove hry
         """
         total_reward = 0
 
@@ -49,7 +49,6 @@ class Playing():
 
             while not done:
 
-                state = np.reshape(state, (1, task.env_state_size))
                 action = task.agent.get_action(state, epsilon=False)
                 next_state, reward, done, info = task.env.step(action)
 
@@ -58,9 +57,33 @@ class Playing():
 
         return total_reward / games
 
+    def score_estimate_img(task, games):
+        """
+        odhad agentova skore pro obrazove hry
+        """
+        total_reward = 0
+
+        for game in range(games):
+            state = task.env.reset()
+            state = engineer_img(state)
+            state = np.array([state, state])
+            done = False
+
+            while not done:
+                action = task.agent.get_action(state, epsilon=False)
+                next_state, reward, done, info = task.env.step(action)
+
+                next_state = np.array([state[1], engineer_img(next_state)])
+
+                state = next_state
+
+                total_reward = total_reward + reward
+
+        return total_reward / games
+
     def prior_rand_agent_replay_vect(task, episodes, observetime):
         """
-        docstring
+        nahodny agent s prioritni pameti a vektorovym prostredim
         """
         task.agent.clear_memory()
         new_observation = 0
@@ -84,7 +107,7 @@ class Playing():
 
     def prior_rand_agent_replay_img(task, episodes, observetime):
         """
-        docstring
+        nahodny agent s prioritni pameti a obrazovym prostredim
         """
         new_observation = 0
         task.agent.clear_memory()
@@ -94,14 +117,11 @@ class Playing():
             state = engineer_img(state)
             state = np.array([state, state])
 
-            for t in range(observetime):
+            for t in range(task.max_steps):
                 action = np.random.randint(0, task.env_action_size, size=1)[0]
                 next_state, reward, done, info = task.env.step(action)
 
                 next_state = np.array([state[1], engineer_img(next_state)])
-
-                if done:
-                    next_state = None
 
                 task.agent.remember(state, action, reward, next_state, done, rand_agent=True)
                 new_observation = new_observation + 1
@@ -116,7 +136,7 @@ class Playing():
 
     def prior_agent_replay_vect(task, episodes, observetime, max_new_samples):
         """
-        docstring
+        nenahodny agent s normalni pameti a vektorovym prostredim
         """
         new_observation = 0
         #task.agent.clear_memory()
@@ -146,9 +166,37 @@ class Playing():
 
         return new_observation
 
+    def prior_agent_replay_img(task, episodes, observetime):
+        """
+        nenahodny agent s prioritni pameti a obrazovym prostredim NEDOKONCENO
+        """
+        new_observation = 0
+        task.agent.clear_memory()
+
+        for eps in range(episodes):
+            state = task.env.reset()
+            state = engineer_img(state)
+            state = np.array([state, state])
+
+            for t in range(task.max_steps):
+                action = task.agent.get_action(state, epsilon=True)
+                next_state, reward, done, info = task.env.step(action)
+                next_state = np.array([state[1], engineer_img(next_state)])
+        
+                task.agent.remember(state, action, reward, next_state, done, rand_agent=False)
+                new_observation = new_observation + 1
+
+                state = next_state
+
+                if task.agent.memory.length == task.agent.memory_size:
+                    return new_observation
+
+                if done:
+                    break
+
     def rand_agent_replay_vect(task, episodes, observetime):
         """
-        docstring
+        nahodny agent s normalni pameti a vektorovym prostredim
         """
         new_observation = 0
         task.agent.clear_memory()
@@ -173,7 +221,7 @@ class Playing():
 
     def rand_agent_replay_img(task, episodes, observetime):
         """
-        docstring
+        nahodny agent s normalni pameti a obrazovym prostredim
         """
         new_observation = 0
         task.agent.clear_memory()
@@ -201,7 +249,7 @@ class Playing():
 
     def agent_replay_vect(task, episodes, observetime):
         """
-        docstring
+        nenahodny agent s normalni pameti a vektorovym prostredim
         """
         new_observation = 0
         task.agent.clear_memory()
@@ -218,6 +266,34 @@ class Playing():
                 new_observation = new_observation + 1
                 state = next_state
                 
+                if len(task.agent.memory) == task.agent.memory_size:
+                    return new_observation
+
+                if done:
+                    break
+
+    def agent_replay_img(task, episodes, observetime):
+        """
+        nenahodny agent s normalni pameti a obrazovym prostredim
+        """
+        new_observation = 0
+        task.agent.clear_memory()
+
+        for eps in range(episodes):
+            state = task.env.reset()
+            state = engineer_img(state)
+            state = np.array([state, state])
+
+            for t in range(task.max_steps):
+                action = task.agent.get_action(state, epsilon=True)
+                next_state, reward, done, info = task.env.step(action)
+                next_state = np.array([state[1], engineer_img(next_state)])
+        
+                task.agent.remember(state, action, reward, next_state, done, rand_agent=False)
+                new_observation = new_observation + 1
+
+                state = next_state
+
                 if len(task.agent.memory) == task.agent.memory_size:
                     return new_observation
 

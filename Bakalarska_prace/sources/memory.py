@@ -115,3 +115,4 @@ class Memory:
         self.priority_tree = np.zeros(2*self.capacity - 1)
         self.observation_tree = np.zeros(self.capacity, dtype=object)
         self.nw_elem_idx = 0
+        self.length = 0

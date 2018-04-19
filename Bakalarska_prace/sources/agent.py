@@ -122,7 +122,7 @@ class Agent:
         docstring
         """
         if not epsilon:
-            q_value = self.model_net.predict(state)
+            q_value = self.model_net.predict(np.array([state]))
             return np.argmax(q_value)
 
         if np.random.rand() <= self.current_epsilon:

@@ -31,6 +31,7 @@ class Task:
                      "Pong-v0" : self.pong1,
                      "Breakout-v0" : self.break0,
                      "SpaceInvaders-v0" : self.space0,
+                     "BeamRider-v0" : self.beam0,
                     }
         self.envs[args.environment]()
 
@@ -241,6 +242,28 @@ class Task:
         self.test = self.acro1_test
 
     def space0_test(self, scores, episodes_numbers):
+        """
+        docstring
+        """
+        pass
+
+    def beam0(self):
+        """
+        docstring
+        """
+        self.name = self.args.environment
+        self.env = gym.make(self.name)
+        self.env_state_size = (2, 84, 84)
+        self.env_action_size = self.env.action_space.n
+        self.type = "img"
+        self.solved_score = float("-inf")
+        self.average_rand_score = float("-inf")
+        self.max_steps = 10000
+        self.agent = Agent(self.args.algorithm, self.env_state_size, self.env_action_size,
+                           "basic_img", self.args.memory)
+        self.test = self.acro1_test
+
+    def beam0_test(self, scores, episodes_numbers):
         """
         docstring
         """

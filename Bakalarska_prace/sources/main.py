@@ -160,13 +160,13 @@ def img_game(task, args):
                 episodes_numbers.append(eps)
 
                 if task.agent.memory_type == "basic":
-                    print("Episode: {}/{}, epsilon: {:.2}, memory_size: {}, score: {}"
+                    print("Episode: {}/{}, epsilon: {:.2}, memory_size: {}, score: {}, steps: {}"
                           .format(eps+1, task.args.episodes, task.agent.current_epsilon, 
-                                  len(task.agent.memory), score))
+                                  len(task.agent.memory), score, steps))
                 else:
-                    print("Episode: {}/{}, epsilon: {:.2}, memory_size: {}, priority_tree: {:.2}, score: {}"
+                    print("Episode: {}/{}, epsilon: {:.2}, memory_size: {}, priority_tree: {:.2}, score: {}, steps: {}"
                           .format(eps+1, task.args.episodes, task.agent.current_epsilon, 
-                                  task.agent.memory.length, task.agent.memory.priority_tree[0], score))
+                                  task.agent.memory.length, task.agent.memory.priority_tree[0], score, steps))
 
                 scoring(task, scores, episodes_numbers, eps, test_type="always", test_freq=None, save_freq=25, refresh_freq=None)
 
@@ -209,8 +209,30 @@ def main():
               .format(new_memories, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
 
     if args.model is not None:
-        task.agent.load_model_weights("./{}" .format(args.mdl))
+        task.agent.load_model_weights("./{}" .format(args.model))
         task.agent.update_target_net()
+        task.agent.clear_memory()
+
+        task.agent.current_epsilon = 0.65
+
+        #print("Score of model: ", pl.score_estimate_img(task, 100))
+
+        print("Memore cleared. Memory length:", task.agent.memory.length)
+        
+
+        if task.agent.memory_type == "basic":
+            if task.type == "vect":
+                new_memories = pl.agent_replay_vect(task, 10000, task.max_steps)
+            else:
+                new_memories = pl.agent_replay_img(task, 10000, task.max_steps)
+        else:
+            if task.type == "vect":
+                new_memories = pl.prior_agent_replay_vect(task, 10000, task.max_steps)
+            else:
+                new_memories = pl.prior_agent_replay_img(task, 10000, task.max_steps)
+
+        print("Agent added {} new memories. Current memory_size: {}" 
+              .format(new_memories, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
 
     if task.type == "vect":
         task, scores, episodes_numbers = vect_game(task, args)
@@ -218,6 +240,7 @@ def main():
         task, scores, episodes_numbers = img_game(task, args)
 
     task.agent.save_model_weights("{}-last.h5" .format(task.name))
+    task.agent.save_target_weights("{}-last.h5" .format(task.name))
     point_graph(scores, episodes_numbers, "{}-point_graph.png" .format(task.name))
     gaussian_graph(scores, episodes_numbers, "{}-gaussian_graph.png" .format(task.name))
     combined_graph(scores, episodes_numbers, "{}-combined_graph.png" .format(task.name))

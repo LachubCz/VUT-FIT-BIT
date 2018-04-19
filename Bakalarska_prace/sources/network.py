@@ -49,7 +49,7 @@ class Network:
         model = Model(inputs=network_input, outputs=net)
 
         model.summary()
-        plot_model(model, to_file='model.pdf', show_shapes=True, show_layer_names=False)
+        #plot_model(model, to_file='model.pdf', show_shapes=True, show_layer_names=False)
 
         model.compile(loss=losses.mean_squared_error, optimizer=optimizers.Adam(lr=learning_rate), metrics=['accuracy'])
 
