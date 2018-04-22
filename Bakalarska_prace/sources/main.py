@@ -9,6 +9,7 @@ import scipy
 import numpy as np
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
+import gym.wrappers as wrappers
 
 from task import Task
 from visualization import point_graph, gaussian_graph, combined_graph
@@ -190,9 +191,6 @@ def main():
 
     task = Task(args)
 
-    if args.vids:
-        task.env = wrappers.Monitor(task.env, "./", force=True)
-
     if args.init:
         if task.agent.memory_type == "basic":
             if task.type == "vect":
@@ -233,6 +231,9 @@ def main():
 
         print("Agent added {} new memories. Current memory_size: {}" 
               .format(new_memories, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
+
+    if args.vids:
+        task.env = wrappers.Monitor(task.env, "./MountainCar-v0/", video_callable=lambda episode_id: episode_id%20==0, force=True)
 
     if task.type == "vect":
         task, scores, episodes_numbers = vect_game(task, args)
