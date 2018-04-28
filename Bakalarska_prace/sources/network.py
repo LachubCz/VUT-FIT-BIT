@@ -10,14 +10,14 @@ class Network:
     """
     docstring
     """
-    def make_basic_model(state_size, action_size, learning_rate):
+    def make_2layer_bsc_mdl(state_size, action_size, learning_rate, units):
         """
         docstring
         """
         network_input = Input(shape=(state_size,))
 
-        net = Dense(units=32, activation="relu", kernel_initializer="he_uniform")(network_input)
-        net = Dense(units=16, activation="relu", kernel_initializer="he_uniform")(net)
+        net = Dense(units=units[0], activation="relu", kernel_initializer="he_uniform")(network_input)
+        net = Dense(units=units[1], activation="relu", kernel_initializer="he_uniform")(net)
         net = Dense(units=action_size, activation="linear", kernel_initializer="he_uniform")(net)
 
         model = Model(inputs=network_input, outputs=net)
@@ -29,40 +29,14 @@ class Network:
 
         return model
 
-    def make_basic_img_model(state_size, action_size, learning_rate):
-        """
-        docstring
-        """
-        network_input = Input(shape=(state_size))
-
-        net = Conv2D(filters=32, kernel_size=(8, 8), strides=(4, 4), activation="relu", 
-                     kernel_initializer="he_uniform", data_format="channels_first")(network_input)
-        net = Conv2D(filters=64, kernel_size=(4, 4), strides=(2, 2), activation="relu",
-                     kernel_initializer="he_uniform")(net)
-        net = Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), activation="relu",
-                     kernel_initializer="he_uniform")(net)
-        net = Flatten()(net)
-
-        net = Dense(units=512, activation="relu", kernel_initializer="he_uniform")(net)
-        net = Dense(units=action_size, activation="linear", kernel_initializer="he_uniform")(net)
-
-        model = Model(inputs=network_input, outputs=net)
-
-        model.summary()
-        #plot_model(model, to_file='model.pdf', show_shapes=True, show_layer_names=False)
-
-        model.compile(loss=losses.mean_squared_error, optimizer=optimizers.Adam(lr=learning_rate), metrics=['accuracy'])
-
-        return model
-
-    def make_dueling_model(state_size, action_size, learning_rate):
+    def make_2layer_duel_mdl(state_size, action_size, learning_rate, units):
         """
         docstring
         """
         network_input = Input(shape=(state_size,))
 
-        net = Dense(units=32, activation="relu", kernel_initializer="he_uniform")(network_input)
-        net = Dense(units=16, activation="relu", kernel_initializer="he_uniform")(net)
+        net = Dense(units=units[0], activation="relu", kernel_initializer="he_uniform")(network_input)
+        net = Dense(units=units[1], activation="relu", kernel_initializer="he_uniform")(net)
 
         state_value = Dense(units=1, activation="linear", kernel_initializer="he_uniform")(net)
         value_function = Concatenate(axis=-1)([state_value, state_value])
@@ -88,7 +62,33 @@ class Network:
 
         return model
 
-    def make_dueling_img_model(state_size, action_size, learning_rate):
+    def make_bsc_img_mdl(state_size, action_size, learning_rate):
+        """
+        docstring
+        """
+        network_input = Input(shape=(state_size))
+
+        net = Conv2D(filters=32, kernel_size=(8, 8), strides=(4, 4), activation="relu", 
+                     kernel_initializer="he_uniform", data_format="channels_first")(network_input)
+        net = Conv2D(filters=64, kernel_size=(4, 4), strides=(2, 2), activation="relu",
+                     kernel_initializer="he_uniform")(net)
+        net = Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), activation="relu",
+                     kernel_initializer="he_uniform")(net)
+        net = Flatten()(net)
+
+        net = Dense(units=512, activation="relu", kernel_initializer="he_uniform")(net)
+        net = Dense(units=action_size, activation="linear", kernel_initializer="he_uniform")(net)
+
+        model = Model(inputs=network_input, outputs=net)
+
+        model.summary()
+        #plot_model(model, to_file='model.pdf', show_shapes=True, show_layer_names=False)
+
+        model.compile(loss=losses.mean_squared_error, optimizer=optimizers.Adam(lr=learning_rate), metrics=['accuracy'])
+
+        return model
+
+    def make_duel_img_model(state_size, action_size, learning_rate):
         """
         docstring
         """
@@ -118,6 +118,21 @@ class Network:
         advantage_function = Subtract()([action_values, concat_avg_action])
 
         net = Add()([value_function, advantage_function])
+
+        model = Model(inputs=network_input, outputs=net)
+
+        model.summary()
+        #plot_model(model, to_file='model.pdf', show_shapes=True, show_layer_names=False)
+
+        model.compile(loss=losses.mean_squared_error, optimizer=optimizers.Adam(lr=learning_rate), metrics=['accuracy'])
+
+        return model
+
+    def make_1layer_ram_mdl(state_size, action_size, learning_rate, units):
+        network_input = Input(shape=(state_size,))
+
+        net = Dense(units=units, activation="relu", kernel_initializer="he_uniform")(network_input)
+        net = Dense(units=action_size, activation="linear", kernel_initializer="he_uniform")(net)
 
         model = Model(inputs=network_input, outputs=net)
 

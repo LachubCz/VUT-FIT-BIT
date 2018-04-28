@@ -6,20 +6,20 @@ import numpy as np
 from collections import deque
 from memory import Memory
 from network import Network as network
-from profiling import * #profiling - @do_profile(follow=[method, ])
+#from profiling import * #profiling - @do_profile(follow=[method, ])
 
 class Agent:
     """
     docstring
     """
-    def __init__(self, algorithm, state_size, action_size, model_type, memory_type):
+    def __init__(self, algorithm, state_size, action_size, model_type, memory_type, net_units=None):
         self.initial_epsilon = 1
         self.final_epsilon = 0.1
         self.current_epsilon = self.initial_epsilon
-        self.epsilon_decay = 0.000032#0.0000009
+        self.epsilon_decay = 0.0032#0.0000009
         self.gamma = 0.99
         self.minibatch_size = 256
-        self.learning_rate = 0.001
+        self.learning_rate = 0.00025
         self.fraction_update = 0.125
 
         self.memory_type = memory_type
@@ -32,15 +32,21 @@ class Agent:
         self.action_size = action_size
         self.state_size = state_size
 
-        if model_type == "basic":
-            self.model_net = network.make_basic_model(state_size, action_size, self.learning_rate)
-            self.target_net = network.make_basic_model(state_size, action_size, self.learning_rate)
-        elif model_type == "basic_img":
-            self.model_net = network.make_basic_img_model(state_size, action_size, self.learning_rate)
-            self.target_net = network.make_basic_img_model(state_size, action_size, self.learning_rate)
-        else:
-            self.model_net = network.make_dueling_model(state_size, action_size, self.learning_rate)
-            self.target_net = network.make_dueling_model(state_size, action_size, self.learning_rate)
+        if model_type == "2layer_bsc_mdl":
+            self.model_net = network.make_2layer_bsc_mdl(state_size, action_size, self.learning_rate, net_units)
+            self.target_net = network.make_2layer_bsc_mdl(state_size, action_size, self.learning_rate, net_units)
+        elif model_type == "2layer_duel_mdl":
+            self.model_net = network.make_2layer_duel_mdl(state_size, action_size, self.learning_rate, net_units)
+            self.target_net = network.make_2layer_duel_mdl(state_size, action_size, self.learning_rate, net_units)
+        elif model_type == "bsc_img_mdl":
+            self.model_net = network.make_bsc_img_mdl(state_size, action_size, self.learning_rate)
+            self.target_net = network.make_bsc_img_mdl(state_size, action_size, self.learning_rate)
+        elif model_type == "duel_img_model":
+            self.model_net = network.make_duel_img_model(state_size, action_size, self.learning_rate)
+            self.target_net = network.make_duel_img_model(state_size, action_size, self.learning_rate)
+        elif model_type == "1layer_ram_mdl":
+            self.model_net = network.make_1layer_ram_mdl(state_size, action_size, self.learning_rate, net_units)
+            self.target_net = network.make_1layer_ram_mdl(state_size, action_size, self.learning_rate, net_units)
 
         self.update_target_net()
 
