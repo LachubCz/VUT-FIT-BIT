@@ -20,7 +20,7 @@ def combined_graph(scores, episodes_numbers, name):
     z = np.polyfit(episodes_numbers, scores, 50)
     f = np.poly1d(z)
 
-    x_new = np.linspace(episodes_numbers[0], episodes_numbers[-1], 50)
+    x_new = np.linspace(episodes_numbers[0], episodes_numbers[-1], 1000)
     y_new = f(x_new)
 
     plt.plot(x_new, y_new, 'lime', linewidth=1)
@@ -29,17 +29,15 @@ def combined_graph(scores, episodes_numbers, name):
     plt.ylabel("Skóre")
     plt.xlabel("Epizody")
     plt.title("2048")
-    plt.xlim([0,6000])
-    plt.ylim([0,10])
+    plt.xlim([0,10000])
+    plt.ylim([0,7000])
     plt.savefig("./{}" .format(name))
     plt.clf()
-
-
 
 dataset = list()
 numbers = list()
 counter = 0
-file = open(os.getcwd()+"/" + "results_Breakout-v0_06.out", "r")
+file = open(os.getcwd()+"/" + "results.out", "r")
 while True:
     customer = file.readline()
     if customer == "":
@@ -48,4 +46,4 @@ while True:
     numbers.append(counter)
     counter=counter+1
 
-combined_graph(dataset, numbers, "{}-results_Breakout-v0_06.pdf" .format("results"))
+combined_graph(dataset, numbers, "{}.pdf" .format("results"))

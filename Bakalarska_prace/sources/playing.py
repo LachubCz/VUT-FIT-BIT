@@ -53,8 +53,10 @@ class Playing():
                 state = state / 255
 
             while not done:
-
-                action = task.agent.get_action(state, epsilon=False)
+                if task.name == "2048-v0":
+                    action = task.agent.get_action(state, epsilon=True)
+                else:
+                    action = task.agent.get_action(state, epsilon=False)
                 next_state, reward, done, info = task.env.step(action)
 
                 if task.type == "text": 
@@ -112,12 +114,12 @@ class Playing():
 
                 if normalize_score and task.type != "basic":
                     if reward > 0.0:
-                        reward = 1
+                        reward = 1.0
                     else:
-                        reward = 0
+                        reward = 0.0
 
                     if done:
-                        reward = -1
+                        reward = -1.0
 
                 if task.type == "text": 
                     next_state = next_state / 16384
@@ -152,12 +154,12 @@ class Playing():
 
                 if normalize_score and task.type != "basic":
                     if reward > 0.0:
-                        reward = 1
+                        reward = 1.0
                     else:
-                        reward = 0
+                        reward = 0.0
 
                     if done:
-                        reward = -1
+                        reward = -1.0
 
                 next_state = np.array([state[1], engineer_img(next_state)])
 
@@ -193,12 +195,12 @@ class Playing():
 
                 if normalize_score and task.type != "basic":
                     if reward > 0.0:
-                        reward = 1
+                        reward = 1.0
                     else:
-                        reward = 0
+                        reward = 0.0
 
                     if done:
-                        reward = -1
+                        reward = -1.0
 
                 if task.type == "text": 
                     next_state = next_state / 16384
@@ -234,12 +236,12 @@ class Playing():
 
                 if normalize_score and task.type != "basic":
                     if reward > 0.0:
-                        reward = 1
+                        reward = 1.0
                     else:
-                        reward = 0
+                        reward = 0.0
 
                     if done:
-                        reward = -1
+                        reward = -1.0
 
                 task.agent.remember(state, action, reward, next_state, done, rand_agent=False)
                 new_observation = new_observation + 1
@@ -273,12 +275,12 @@ class Playing():
 
                 if normalize_score and task.type != "basic":
                     if reward > 0.0:
-                        reward = 1
+                        reward = 1.0
                     else:
-                        reward = 0
+                        reward = 0.0
 
                     if done:
-                        reward = -1
+                        reward = -1.0
 
                 if task.type == "text": 
                     next_state = next_state / 16384
@@ -315,12 +317,12 @@ class Playing():
 
                 if normalize_score and task.type != "basic":
                     if reward > 0.0:
-                        reward = 1
+                        reward = 1.0
                     else:
-                        reward = 0
+                        reward = 0.0
 
                     if done:
-                        reward = -1
+                        reward = -1.0
 
                 task.agent.remember(state, action, reward, next_state, done, rand_agent=True)
                 new_observation = new_observation + 1
@@ -354,12 +356,12 @@ class Playing():
 
                 if normalize_score and task.type != "basic":
                     if reward > 0.0:
-                        reward = 1
+                        reward = 1.0
                     else:
-                        reward = 0
+                        reward = 0.0
 
                     if done:
-                        reward = -1
+                        reward = -1.0
 
                 if task.type == "text": 
                     next_state = next_state / 16384
@@ -395,12 +397,12 @@ class Playing():
 
                 if normalize_score and task.type != "basic":
                     if reward > 0.0:
-                        reward = 1
+                        reward = 1.0
                     else:
-                        reward = 0
+                        reward = 0.0
 
                     if done:
-                        reward = -1
+                        reward = -1.0
 
                 task.agent.remember(state, action, reward, next_state, done, rand_agent=False)
                 new_observation = new_observation + 1

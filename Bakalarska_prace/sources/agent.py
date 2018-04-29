@@ -16,14 +16,14 @@ class Agent:
         self.initial_epsilon = 1
         self.final_epsilon = 0.1
         self.current_epsilon = self.initial_epsilon
-        self.epsilon_decay = 0.0032#0.0000009
+        self.epsilon_decay = 0.0000009
         self.gamma = 0.99
-        self.minibatch_size = 256
+        self.minibatch_size = 128
         self.learning_rate = 0.00025
         self.fraction_update = 0.125
 
         self.memory_type = memory_type
-        self.memory_size = 10000#200000
+        self.memory_size = 200000
         if self.memory_type == "basic":
             self.memory = deque(maxlen=self.memory_size)
         else:

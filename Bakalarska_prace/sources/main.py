@@ -93,9 +93,11 @@ def fullstate_game(task, normalize_score=True):
     normalized_scores = []
 
     steps = 0
+    last = None
 
     for eps in range(task.args.episodes):
         state = task.env.reset()
+        last_state = state
 
         if task.type == "text": 
             state = state / 16384
@@ -105,6 +107,7 @@ def fullstate_game(task, normalize_score=True):
         normalized_score = 0
         true_score = 0
         moves = 0
+        wrong_moves = 0
 
         for t in range(task.max_steps):
             action = task.agent.get_action(state, epsilon=True)
@@ -114,15 +117,20 @@ def fullstate_game(task, normalize_score=True):
 
             if normalize_score and task.type != "basic":
                 if reward > 0.0:
-                    reward = 1
+                    reward = 1.0
                 else:
-                    reward = 0
+                    reward = 0.0
+                if task.type == "text":
+                    if sum(last_state) == sum(next_state):
+                        reward = -0.1
+                        wrong_moves = wrong_moves + 1
 
                 if done:
-                    reward = -1
+                    reward = -1.0
 
             normalized_score = normalized_score + reward
 
+            last_state = next_state
             if task.type == "text": 
                 next_state = next_state / 16384
             elif task.type == "ram":
@@ -130,7 +138,7 @@ def fullstate_game(task, normalize_score=True):
 
             steps = steps + 1
             moves = moves + 1
-
+            
             task.agent.remember(state, action, reward, next_state, done, rand_agent=False)
             task.agent.train()
 
@@ -145,7 +153,7 @@ def fullstate_game(task, normalize_score=True):
                 if eps % task.args.save_f == 0:
                     task.agent.save_model_weights("{}-{}.h5" .format(task.name, eps))
                     print("[Model was saved.]")
-
+                
                 if task.type == "basic":
                     task.agent.update_target_net()
                     print("[Target network was updated.]")
@@ -157,13 +165,17 @@ def fullstate_game(task, normalize_score=True):
                 if task.name == "2048-v0":
                     highest.append(task.env.unwrapped.highest())
 
-                    print("Episode: {}/{}, Steps: {}, Memory: {}, Epsilon: {:.2}, Moves in episode: {}, Highest: {}, Normalized score: {}, True score: {}" 
+                    print("Episode: {}/{}, Steps: {}, Memory: {}, Epsilon: {:.2}, Moves in episode: {}, Highest: {}, Normalized score: {:.4}, True score: {}" 
                           .format(eps, task.args.episodes-1, steps, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length,
-                                  task.agent.current_epsilon, moves, task.env.unwrapped.highest(), normalized_score, true_score))
+                                  task.agent.current_epsilon, moves, task.env.unwrapped.highest(), float(normalized_score), true_score), end="")
                 else:
                     print("Episode: {}/{}, Steps: {}, Memory: {}, Epsilon: {:.2}, Moves in episode: {}, Normalized score: {}, True score: {}" 
                           .format(eps, task.args.episodes-1, steps, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length,
-                                  task.agent.current_epsilon, moves, true_score, normalized_score))
+                                  task.agent.current_epsilon, moves, normalized_score, true_score), end="")
+                if task.name == "2048-v0":
+                    print(", Wrong moves: {}" .format(wrong_moves))
+                else:
+                    print("\n", end="")
 
                 if task.type == "basic":
                     task.test(true_scores, episodes_numbers)
@@ -196,12 +208,12 @@ def partstate_game(task, normalize_score=True):
 
             if normalize_score:
                 if reward > 0.0:
-                    reward = 1
+                    reward = 1.0
                 else:
-                    reward = 0
+                    reward = 0.0
 
                 if done:
-                    reward = -1
+                    reward = -1.0
 
             normalized_score = normalized_score + reward
 
@@ -276,7 +288,7 @@ def main():
         task.agent.load_model_weights("./{}" .format(task.args.model))
         task.agent.update_target_net()
 
-        task.agent.current_epsilon = 1.0
+        task.agent.current_epsilon = 1
 
         if task.args.init:
             if task.agent.memory_type == "basic":
