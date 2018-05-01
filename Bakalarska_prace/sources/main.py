@@ -273,13 +273,13 @@ def main():
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="3"
     if args.process_unit == "CPU":
         config = tf.ConfigProto(
-            device_count={'CPU' : 1, 'GPU' : 0},
+            #device_count={'CPU' : 1, 'GPU' : 0},
             intra_op_parallelism_threads=1, 
             inter_op_parallelism_threads=1)
         set_session(tf.Session(config=config))
     else:
-        config = tf.ConfigProto(
-            device_count={'CPU' : 1, 'GPU' : 1})
+        #config = tf.ConfigProto(
+        #    device_count={'CPU' : 1, 'GPU' : 1})
         config.gpu_options.per_process_gpu_memory_fraction = 1
         set_session(tf.Session(config=config))
 
@@ -303,7 +303,7 @@ def main():
     if task.args.model is not None:
         task.agent.load_model_weights("./{}" .format(task.args.model))
         task.agent.update_target_net()
-
+        print("[Model has been loaded.]")
         task.agent.current_epsilon = 1
 
         if task.args.init:
