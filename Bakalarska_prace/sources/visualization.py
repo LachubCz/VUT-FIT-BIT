@@ -26,6 +26,7 @@ def combined_graph(scores, episodes_numbers, name, coordinates, avg_value=None):
 
     if avg_value is not None:
         plt.plot([0, episodes_numbers[-1]], [avg_value, avg_value], 'k-', linewidth=1)
+        #plt.plot([0, episodes_numbers[-1]], [2000, 2000], 'k-', linewidth=1)
 
     z = np.polyfit(episodes_numbers, scores, 50)
     f = np.poly1d(z)
@@ -94,4 +95,4 @@ def get_visualization(filename, graph_name, idx_val, coordinates, avg_value=None
 
     combined_graph(values, counter, graph_name, coordinates, avg_value)
 
-#get_visualization("results1.out", "max_value.pdf", 7, [72000, 6000], 1011)
+#get_visualization("results.out", "results.pdf", 7, [45000, 7000], 1011)

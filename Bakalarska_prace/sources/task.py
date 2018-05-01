@@ -207,10 +207,10 @@ class Task:
         """
         self.name = self.args.environment
         self.env = gym.make(self.name)
-        self.env_state_size = (2, 84, 84)
+        self.env_state_size = (self.args.num_of_frames, 84, 84)
         self.env_action_size = self.env.action_space.n
         self.type = "image"
-        self.solved_score = None
+        self.solved_score = 168
         self.average_rand_score = 1.2
         self.max_steps = 10000
         self.agent = Agent(self.args.algorithm, self.env_state_size, self.env_action_size,
@@ -223,10 +223,10 @@ class Task:
         """
         self.name = self.args.environment
         self.env = gym.make(self.name)
-        self.env_state_size = (2, 84, 84)
+        self.env_state_size = (self.args.num_of_frames, 84, 84)
         self.env_action_size = self.env.action_space.n
         self.type = "image"
-        self.solved_score = None
+        self.solved_score = 581
         self.average_rand_score = 179
         self.max_steps = 10000
         self.agent = Agent(self.args.algorithm, self.env_state_size, self.env_action_size,
@@ -239,10 +239,10 @@ class Task:
         """
         self.name = self.args.environment
         self.env = gym.make(self.name)
-        self.env_state_size = (2, 84, 84)
+        self.env_state_size = (self.args.num_of_frames, 84, 84)
         self.env_action_size = self.env.action_space.n
         self.type = "image"
-        self.solved_score = None
+        self.solved_score = 4092
         self.average_rand_score = 354
         self.max_steps = 10000
         self.agent = Agent(self.args.algorithm, self.env_state_size, self.env_action_size,
@@ -258,7 +258,7 @@ class Task:
         self.env_state_size = (128)
         self.env_action_size = self.env.action_space.n
         self.type = "ram"
-        self.solved_score = None
+        self.solved_score = 168
         self.average_rand_score = 1.2
         self.max_steps = 10000
         self.agent = Agent(self.args.algorithm, self.env_state_size, self.env_action_size,
@@ -274,7 +274,7 @@ class Task:
         self.env_state_size = (128)
         self.env_action_size = self.env.action_space.n
         self.type = "ram"
-        self.solved_score = None
+        self.solved_score = 581
         self.average_rand_score = 179
         self.max_steps = 10000
         self.agent = Agent(self.args.algorithm, self.env_state_size, self.env_action_size,
@@ -290,7 +290,7 @@ class Task:
         self.env_state_size = (128)
         self.env_action_size = self.env.action_space.n
         self.type = "ram"
-        self.solved_score = None
+        self.solved_score = 4092
         self.average_rand_score = 354
         self.max_steps = 10000
         self.agent = Agent(self.args.algorithm, self.env_state_size, self.env_action_size,

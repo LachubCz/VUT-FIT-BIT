@@ -29,7 +29,7 @@ def combined_graph(scores, episodes_numbers, name):
     plt.ylabel("Skóre")
     plt.xlabel("Epizody")
     plt.title("2048")
-    plt.xlim([0,10000])
+    plt.xlim([0,45000])
     plt.ylim([0,7000])
     plt.savefig("./{}" .format(name))
     plt.clf()

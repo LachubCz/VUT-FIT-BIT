@@ -3,6 +3,7 @@
 docstring
 """
 import os
+import sys
 import os.path
 import argparse
 import scipy
@@ -11,6 +12,7 @@ warnings.simplefilter('ignore', FutureWarning)
 import numpy as np
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
+from keras import backend as K
 import gym.wrappers as wrappers
 
 from task import Task
@@ -56,6 +58,10 @@ def get_args():
                         help="frequency of updating target net")
     parser.add_argument("-save_f", action="store", dest="save_f", type=int, default=25,
                         help="frequency of saving model")
+    parser.add_argument("-num_of_frames", action="store", dest="num_of_frames", type=int, default=4, choices=[2, 3, 4],
+                        help="Number of frames to process as a information of state.")
+    parser.add_argument("-render", action="store_true", default=False,
+                        help="script renders game while showing agents skills")
 
     args = parser.parse_args()
 
@@ -93,7 +99,6 @@ def fullstate_game(task, normalize_score=True):
     normalized_scores = []
 
     steps = 0
-    last = None
 
     for eps in range(task.args.episodes):
         state = task.env.reset()
@@ -193,7 +198,12 @@ def partstate_game(task, normalize_score=True):
     for eps in range(task.args.episodes):
         state = task.env.reset()
         state = engineer_img(state)
-        state = np.array([state, state])
+        if task.args.num_of_frames == 4:
+            state = np.array([state, state, state, state])
+        elif task.args.num_of_frames == 3:
+            state = np.array([state, state, state])
+        elif task.args.num_of_frames == 2:
+            state = np.array([state, state])
 
         normalized_score = 0
         true_score = 0
@@ -202,7 +212,13 @@ def partstate_game(task, normalize_score=True):
         for t in range(task.max_steps):
             action = task.agent.get_action(state, epsilon=True)
             next_state, reward, done, info = task.env.step(action)
-            next_state = np.array([state[1], engineer_img(next_state)])
+
+            if task.args.num_of_frames == 4:
+                next_state = np.array([state[1], state[2], state[3], engineer_img(next_state)])
+            elif task.args.num_of_frames == 3:
+                next_state = np.array([state[1], state[2], engineer_img(next_state)])
+            elif task.args.num_of_frames == 2:
+                next_state = np.array([state[1], engineer_img(next_state)])
 
             true_score = true_score + reward
 
@@ -305,19 +321,32 @@ def main():
             print("[Agent added {} new memories. Current memory_size: {}]" 
                   .format(new_memories, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
 
+    if task.args.render:
+        if task.type == "basic" or task.type == "ram" or task.type == "text":
+            print("[Agent's average score: ", pl.score_estimate_fs(task, task.args.episodes, render=True), "]")
+        elif task.type == "image":
+            print("[Agent's average score: ", pl.score_estimate_ps(task, task.args.episodes, render=True), "]")
+        return
+
     if task.args.vids:
         task.env = wrappers.Monitor(task.env, "./", video_callable=lambda episode_id: episode_id%20==0, force=True)
 
     if task.type == "basic" or task.type == "text" or task.type == "ram":
-        task, true_scores, episodes_numbers, highest, normalized_scores = fullstate_game(task)
+        task, true_scores, episodes_numbers, highest, normalized_scores = fullstate_game(task, True)
     elif task.type == "image":
-        task, true_scores, episodes_numbers, highest, normalized_scores = partstate_game(task)
+        task, true_scores, episodes_numbers, highest, normalized_scores = partstate_game(task, True)
 
     task.agent.save_model_weights("{}-last.h5" .format(task.name))
     print("[Model was saved.]")
     task.agent.save_target_weights("{}-last.h5" .format(task.name))
     print("[Target model was saved.]")
-    combined_graph(true_scores, episodes_numbers, "{}_results.pdf" .format(task.name), [episodes_numbers[-1]+10,max(true_scores)+10], task.average_rand_score)
-    print("[Graph of learning progress visualization was made.]")
+
+    try:
+        combined_graph(true_scores, episodes_numbers, "{}_results.pdf" .format(task.name), [episodes_numbers[-1]+10,max(true_scores)+10], task.average_rand_score)
+        print("[Graph of learning progress visualization was made.]")
+    except ValueError:
+        err_print("[Not enough values to make graph.]")
+
+    K.clear_session()
 
 main()
