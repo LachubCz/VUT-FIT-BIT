@@ -1,17 +1,18 @@
 """
-docstring
+file contains class Task, which is wrapper
+for working with different environments
 """
 import sys
 import gym
 import gym_2048
-from gym import wrappers
+from gym import wrappers    
 from agent import Agent
 from playing import Playing as pl
 from visualization import combined_graph
 
 class Task:
     """
-    docstring
+    class for working with different environments
     """
     def __init__(self, args):
         self.args = args
@@ -41,7 +42,7 @@ class Task:
 
     def cartp0(self):
         """
-        docstring
+        initialization method for working with environment CartPole-v0
         """
         self.name = self.args.environment
         self.env = gym.make(self.name)
@@ -55,14 +56,14 @@ class Task:
                            self.args.network, self.args.memory, [32,16])
         self.test = self.cartp0_test
 
-    def cartp0_test(self, scores, episodes_numbers):
+    def cartp0_test(self, scores, episode_numbers):
         """
-        docstring
+        method tests CartPole-v0 solution
         """
-        complete_estimation = pl.score_estimate_fs(self, 10)
+        complete_estimation = pl.agent_score_estimate(self, 10)
         if complete_estimation >= self.solved_score:
             for i in range(2, 11):
-                estimation = pl.score_estimate_fs(self, 10)
+                estimation = pl.agent_score_estimate(self, 10)
                 complete_estimation = complete_estimation + estimation
                 if (complete_estimation / i) < self.solved_score:
                     return
@@ -73,14 +74,15 @@ class Task:
         if score > self.solved_score:
             self.agent.save_model_weights("{}-solved.h5" .format(self.name))
             print("[Model was saved.]")
-            combined_graph(scores, episodes_numbers, "{}_results.pdf" .format(self.name), [episodes_numbers[-1]+10,max(scores)+10], self.average_rand_score)
+            combined_graph(scores, episode_numbers, "{}_results" .format(self.name), 
+                           [episode_numbers[-1], max(scores)+10], {self.average_rand_score:self.average_rand_score}, scatter=True)
             print("[Graph of learning progress visualization was made.]")
-            print("[Task was solved after {} episodes with score {}.]" .format(episodes_numbers[-1], score))
+            print("[Task was solved after {} episodes with score {}.]" .format(episode_numbers[-1], score))
             sys.exit()
 
     def cartp1(self):
         """
-        docstring
+        initialization method for working with environment CartPole-v1
         """
         self.name = self.args.environment
         self.env = gym.make(self.name)
@@ -94,14 +96,14 @@ class Task:
                            self.args.network, self.args.memory, [32,16])
         self.test = self.cartp1_test
 
-    def cartp1_test(self, scores, episodes_numbers):
+    def cartp1_test(self, scores, episode_numbers):
         """
-        docstring
+        method tests CartPole-v1 solution
         """
-        complete_estimation = pl.score_estimate_fs(self, 10)
+        complete_estimation = pl.agent_score_estimate(self, 10)
         if complete_estimation >= self.solved_score:
             for i in range(2, 11):
-                estimation = pl.score_estimate_fs(self, 10)
+                estimation = pl.agent_score_estimate(self, 10)
                 complete_estimation = complete_estimation + estimation
                 if (complete_estimation / i) < self.solved_score:
                     return
@@ -112,14 +114,15 @@ class Task:
         if score > self.solved_score:
             self.agent.save_model_weights("{}-solved.h5" .format(self.name))
             print("[Model was saved.]")
-            combined_graph(scores, episodes_numbers, "{}_results.pdf" .format(self.name), [episodes_numbers[-1]+10,max(scores)+10], self.average_rand_score)
+            combined_graph(scores, episode_numbers, "{}_results" .format(self.name), 
+                           [episode_numbers[-1], max(scores)+10], {self.average_rand_score:self.average_rand_score}, scatter=True)
             print("[Graph of learning progress visualization was made.]")
-            print("[Task was solved after {} episodes with score {}.]" .format(episodes_numbers[-1], score))
+            print("[Task was solved after {} episodes with score {}.]" .format(episode_numbers[-1], score))
             sys.exit()
 
     def mcar0(self):
         """
-        docstring
+        initialization method for working with environment MountainCar-v0
         """
         self.name = self.args.environment
         self.env = gym.make(self.name)
@@ -133,14 +136,14 @@ class Task:
                            self.args.network, self.args.memory, [32,16])
         self.test = self.mcar0_test
 
-    def mcar0_test(self, scores, episodes_numbers):
+    def mcar0_test(self, scores, episode_numbers):
         """
-        docstring
+        method tests MountainCar-v0 solution
         """
-        complete_estimation = pl.score_estimate_fs(self, 10)
+        complete_estimation = pl.agent_score_estimate(self, 10)
         if complete_estimation >= self.solved_score:
             for i in range(2, 11):
-                estimation = pl.score_estimate_fs(self, 10)
+                estimation = pl.agent_score_estimate(self, 10)
                 complete_estimation = complete_estimation + estimation
                 if (complete_estimation / i) < self.solved_score:
                     return
@@ -151,14 +154,15 @@ class Task:
         if score > self.solved_score:
             self.agent.save_model_weights("{}-solved.h5" .format(self.name))
             print("[Model was saved.]")
-            combined_graph(scores, episodes_numbers, "{}_results.pdf" .format(self.name), [episodes_numbers[-1]+10,max(scores)+10], self.average_rand_score)
+            combined_graph(scores, episode_numbers, "{}_results" .format(self.name), 
+                           [episode_numbers[-1], max(scores)+10], {self.average_rand_score:self.average_rand_score}, scatter=True)
             print("[Graph of learning progress visualization was made.]")
-            print("[Task was solved after {} episodes with score {}.]" .format(episodes_numbers[-1], score))
+            print("[Task was solved after {} episodes with score {}.]" .format(episode_numbers[-1], score))
             sys.exit()
 
     def acro1(self):
         """
-        docstring
+        initialization method for working with environment Acrobot-v1
         """
         self.name = self.args.environment
         self.env = gym.make(self.name)
@@ -172,22 +176,23 @@ class Task:
                            self.args.network, self.args.memory, [32,16])
         self.test = self.acro1_test
 
-    def acro1_test(self, scores, episodes_numbers):
+    def acro1_test(self, scores, episode_numbers):
         """
-        docstring
+        method tests Acrobot-v1 solution
         """
-        if episodes_numbers[-1] == 99:
-            score = pl.score_estimate_fs(self, 100)
+        if episode_numbers[-1] == 99:
+            score = pl.agent_score_estimate(self, 100)
             self.agent.save_model_weights("{}-solved.h5" .format(self.name))
             print("[Model was saved.]")
-            combined_graph(scores, episodes_numbers, "{}_results.pdf" .format(self.name), [episodes_numbers[-1]+10,max(scores)+10], self.average_rand_score)
+            combined_graph(scores, episode_numbers, "{}_results" .format(self.name), 
+                           [episode_numbers[-1], max(scores)+10], {self.average_rand_score:self.average_rand_score}, scatter=True)
             print("[Graph of learning progress visualization was made.]")
-            print("[Task was solved after {} episodes with score {}.]" .format(episodes_numbers[-1], score))
+            print("[Task was solved after {} episodes with score {}.]" .format(episode_numbers[-1], score))
             sys.exit()
 
     def tfe0(self):
         """
-        docstring
+        initialization method for working with environment 2048-v0
         """
         self.name = self.args.environment
         self.env = gym.make(self.name)
@@ -196,21 +201,21 @@ class Task:
         self.type = "text"
         self.solved_score = None
         self.average_rand_score = 1011
-        self.max_steps = 100000
+        self.max_steps = 1000
         self.agent = Agent(self.args.algorithm, self.env_state_size, self.env_action_size,
                            self.args.network, self.args.memory, [256, 256])
         self.test = None
 
     def break0(self):
         """
-        docstring
+        initialization method for working with environment Breakout-v0
         """
         self.name = self.args.environment
         self.env = gym.make(self.name)
         self.env_state_size = (self.args.num_of_frames, 84, 84)
         self.env_action_size = self.env.action_space.n
         self.type = "image"
-        self.solved_score = 168
+        self.solved_score = 31
         self.average_rand_score = 1.2
         self.max_steps = 10000
         self.agent = Agent(self.args.algorithm, self.env_state_size, self.env_action_size,
@@ -219,14 +224,14 @@ class Task:
 
     def space0(self):
         """
-        docstring
+        initialization method for working with environment SpaceInvaders-v0
         """
         self.name = self.args.environment
         self.env = gym.make(self.name)
         self.env_state_size = (self.args.num_of_frames, 84, 84)
         self.env_action_size = self.env.action_space.n
         self.type = "image"
-        self.solved_score = 581
+        self.solved_score = 3690
         self.average_rand_score = 179
         self.max_steps = 10000
         self.agent = Agent(self.args.algorithm, self.env_state_size, self.env_action_size,
@@ -235,14 +240,14 @@ class Task:
 
     def beam0(self):
         """
-        docstring
+        initialization method for working with environment BeamRider-v0
         """
         self.name = self.args.environment
         self.env = gym.make(self.name)
         self.env_state_size = (self.args.num_of_frames, 84, 84)
         self.env_action_size = self.env.action_space.n
         self.type = "image"
-        self.solved_score = 4092
+        self.solved_score = 7456
         self.average_rand_score = 354
         self.max_steps = 10000
         self.agent = Agent(self.args.algorithm, self.env_state_size, self.env_action_size,
@@ -251,14 +256,14 @@ class Task:
 
     def breakR0(self):
         """
-        docstring
+        initialization method for working with environment Breakout-ram-v0
         """
         self.name = self.args.environment
         self.env = gym.make(self.name)
         self.env_state_size = (128)
         self.env_action_size = self.env.action_space.n
         self.type = "ram"
-        self.solved_score = 168
+        self.solved_score = 31
         self.average_rand_score = 1.2
         self.max_steps = 10000
         self.agent = Agent(self.args.algorithm, self.env_state_size, self.env_action_size,
@@ -267,14 +272,14 @@ class Task:
 
     def spaceR0(self):
         """
-        docstring
+        initialization method for working with environment SpaceInvaders-ram-v0
         """
         self.name = self.args.environment
         self.env = gym.make(self.name)
         self.env_state_size = (128)
         self.env_action_size = self.env.action_space.n
         self.type = "ram"
-        self.solved_score = 581
+        self.solved_score = 3690
         self.average_rand_score = 179
         self.max_steps = 10000
         self.agent = Agent(self.args.algorithm, self.env_state_size, self.env_action_size,
@@ -283,14 +288,14 @@ class Task:
 
     def beamR0(self):
         """
-        docstring
+        initialization method for working with environment BeamRider-ram-v0
         """
         self.name = self.args.environment
         self.env = gym.make(self.name)
         self.env_state_size = (128)
         self.env_action_size = self.env.action_space.n
         self.type = "ram"
-        self.solved_score = 4092
+        self.solved_score = 7456
         self.average_rand_score = 354
         self.max_steps = 10000
         self.agent = Agent(self.args.algorithm, self.env_state_size, self.env_action_size,

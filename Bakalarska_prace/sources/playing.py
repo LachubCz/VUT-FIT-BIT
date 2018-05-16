@@ -2,8 +2,12 @@
 docstring
 """
 import time
+import sys
 import scipy
+import scipy.misc
 import numpy as np
+from tqdm import tqdm
+from tqdm import trange
 
 def engineer_img(img):
     """
@@ -15,6 +19,7 @@ def engineer_img(img):
     img = 0.299 * red + 0.587 * green + 0.114 * blue #RGB -> Luma (Digital ITU BT.601)
 
     img = img.astype(np.uint8) / 255.0 - 0.5 #normalizace
+
     return img
 
 class Playing():
@@ -27,7 +32,8 @@ class Playing():
         """
         total_reward = 0
 
-        for game in range(games):
+        bar = trange(games, leave=True)
+        for game in bar:
             task.env.reset()
             done = False
 
@@ -36,15 +42,20 @@ class Playing():
                 next_state, reward, done, info = task.env.step(action)
                 total_reward = total_reward + reward
 
+            if game != 0:
+                bar.set_description("Average score: " + str(round(total_reward / (game+1), 2)))
+
+        print("[Random agent average score: {}]" .format(round(total_reward / games, 2)))
+
         return total_reward / games
 
-    def score_estimate_fs(task, games, render=False):
+    def agent_score_estimate(task, games, render=False, show_bar=False):
         """
         odhad agentova skore pro vektorove hry
         """
         total_reward = 0
-
-        for game in range(games):
+        bar = trange(games, leave=True, disable=(not show_bar))
+        for game in bar:
             state = task.env.reset()
             last_state = state
             wrong_move = False
@@ -54,6 +65,15 @@ class Playing():
                 state = state / 16384
             elif task.type == "ram":
                 state = state / 255
+            elif task.type == "image":
+                next_state = engineer_img(next_state)
+
+            if task.args.num_of_frames == 4:
+                state = np.array([state, state, state, state])
+            elif task.args.num_of_frames == 3:
+                state = np.array([state, state, state])
+            elif task.args.num_of_frames == 2:
+                state = np.array([state, state])
 
             while not done:
                 if render and task.type == "text":
@@ -75,51 +95,19 @@ class Playing():
 
                 last_state = next_state
                 if task.type == "text": 
-                    next_state = next_state / 16384
+                    state = state / 16384
                 elif task.type == "ram":
-                    next_state = next_state / 255
+                    state = state / 255
+                elif task.type == "image":
+                    next_state = engineer_img(next_state)
 
                 state = next_state
                 total_reward = total_reward + reward
+            if game != 0:
+                bar.set_description("Average score: " + str(round(total_reward / (game+1), 2)))
 
-        return total_reward / games
-
-    def score_estimate_ps(task, games, render=False):
-        """
-        odhad agentova skore pro obrazove hry
-        """
-        total_reward = 0
-
-        for game in range(games):
-            state = task.env.reset()
-            state = engineer_img(state)
-
-            if task.args.num_of_frames == 4:
-                state = np.array([state, state, state, state])
-            elif task.args.num_of_frames == 3:
-                state = np.array([state, state, state])
-            elif task.args.num_of_frames == 2:
-                state = np.array([state, state])
-
-            done = False
-
-            while not done:
-                if render:
-                    time.sleep(0.03)
-                    task.env.render()
-                action = task.agent.get_action(state, epsilon=False)
-                next_state, reward, done, info = task.env.step(action)
-
-                if task.args.num_of_frames == 4:
-                    next_state = np.array([state[1], state[2], state[3], engineer_img(next_state)])
-                elif task.args.num_of_frames == 3:
-                    next_state = np.array([state[1], state[2], engineer_img(next_state)])
-                elif task.args.num_of_frames == 2:
-                    next_state = np.array([state[1], engineer_img(next_state)])
-
-                state = next_state
-
-                total_reward = total_reward + reward
+        if show_bar:
+            print("[Agent's average score: {}]" .format(round(total_reward / games, 2)))
 
         return total_reward / games
 
@@ -128,7 +116,7 @@ class Playing():
         nahodny agent s prioritni pameti a vektorovym prostredim
         """
         task.agent.clear_memory()
-        new_observation = 0
+        new_observations = 0
 
         while True:
             state = task.env.reset()
@@ -157,11 +145,13 @@ class Playing():
                     next_state = next_state / 255
 
                 task.agent.remember(state, action, reward, next_state, done, rand_agent=True)
-                new_observation = new_observation + 1
+                new_observations = new_observations + 1
                 state = next_state
 
                 if task.agent.memory.length == task.agent.memory_size:
-                    return new_observation
+                    print("[Random agent added {} new memories. Current memory_size: {}]" 
+                          .format(new_observations, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
+                    return new_observations
 
                 if done:
                     break
@@ -170,7 +160,7 @@ class Playing():
         """
         nahodny agent s prioritni pameti a obrazovym prostredim
         """
-        new_observation = 0
+        new_observations = 0
         task.agent.clear_memory()
 
         while True:
@@ -205,12 +195,14 @@ class Playing():
                         reward = -1.0
 
                 task.agent.remember(state, action, reward, next_state, done, rand_agent=True)
-                new_observation = new_observation + 1
+                new_observations = new_observations + 1
 
                 state = next_state
 
                 if task.agent.memory.length == task.agent.memory_size:
-                    return new_observation
+                    print("[Random agent added {} new memories. Current memory_size: {}]" 
+                          .format(new_observations, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
+                    return new_observations
 
                 if done:
                     break
@@ -219,11 +211,13 @@ class Playing():
         """
         nenahodny agent s normalni pameti a vektorovym prostredim
         """
-        new_observation = 0
+        new_observations = 0
         average_priority = task.agent.memory.priority_tree[0] / task.agent.memory.length
 
         while True:
             state = task.env.reset()
+            last_state = state
+            wrong_move = False
 
             if task.type == "text": 
                 state = state / 16384
@@ -231,7 +225,11 @@ class Playing():
                 state = state / 255
 
             while True:
-                action = task.agent.get_action(state, epsilon=True)
+                if task.name == "2048-v0" and wrong_move:
+                    action = np.random.randint(0, task.env_action_size, size=1)[0]
+                    wrong_move = False
+                else:
+                    action = task.agent.get_action(state, epsilon=True)
                 next_state, reward, done, info = task.env.step(action)
 
                 if normalize_score and task.type != "basic":
@@ -243,17 +241,23 @@ class Playing():
                     if done:
                         reward = -1.0
 
+                if sum(last_state) == sum(next_state):
+                    wrong_move = True
+
+                last_state = next_state
                 if task.type == "text": 
                     next_state = next_state / 16384
                 elif task.type == "ram":
                     next_state = next_state / 255
 
                 task.agent.remember(state, action, reward, next_state, done, rand_agent=False)
-                new_observation = new_observation + 1
+                new_observations = new_observations + 1
                 state = next_state
 
                 if task.agent.memory.length == task.agent.memory_size:
-                    return new_observation
+                    print("[Agent added {} new memories. Current memory_size: {}]" 
+                          .format(new_observations, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
+                    return new_observations
 
                 if done:
                     break
@@ -262,7 +266,7 @@ class Playing():
         """
         nenahodny agent s prioritni pameti a obrazovym prostredim NEDOKONCENO
         """
-        new_observation = 0
+        new_observations = 0
         task.agent.clear_memory()
 
         while True:
@@ -297,12 +301,14 @@ class Playing():
                         reward = -1.0
 
                 task.agent.remember(state, action, reward, next_state, done, rand_agent=False)
-                new_observation = new_observation + 1
+                new_observations = new_observations + 1
 
                 state = next_state
 
                 if task.agent.memory.length == task.agent.memory_size:
-                    return new_observation
+                    print("[Agent added {} new memories. Current memory_size: {}]" 
+                          .format(new_observations, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
+                    return new_observations
 
                 if done:
                     break
@@ -311,7 +317,7 @@ class Playing():
         """
         nahodny agent s normalni pameti a vektorovym prostredim
         """
-        new_observation = 0
+        new_observations = 0
         task.agent.clear_memory()
 
         while True:
@@ -341,11 +347,13 @@ class Playing():
                     next_state = next_state / 255
 
                 task.agent.remember(state, action, reward, next_state, done, rand_agent=True)
-                new_observation = new_observation + 1
+                new_observations = new_observations + 1
                 state = next_state
                 
                 if len(task.agent.memory) == task.agent.memory_size:
-                    return new_observation
+                    print("[Random agent added {} new memories. Current memory_size: {}]" 
+                          .format(new_observations, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
+                    return new_observations
 
                 if done:
                     break
@@ -355,7 +363,7 @@ class Playing():
         """
         nahodny agent s normalni pameti a obrazovym prostredim
         """
-        new_observation = 0
+        new_observations = 0
         task.agent.clear_memory()
 
         while True:
@@ -390,12 +398,14 @@ class Playing():
                         reward = -1.0
 
                 task.agent.remember(state, action, reward, next_state, done, rand_agent=True)
-                new_observation = new_observation + 1
+                new_observations = new_observations + 1
 
                 state = next_state
 
                 if len(task.agent.memory) == task.agent.memory_size:
-                    return new_observation
+                    print("[Random agent added {} new memories. Current memory_size: {}]" 
+                          .format(new_observations, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
+                    return new_observations
 
                 if done:
                     break
@@ -404,11 +414,13 @@ class Playing():
         """
         nenahodny agent s normalni pameti a vektorovym prostredim
         """
-        new_observation = 0
+        new_observations = 0
         task.agent.clear_memory()
 
         while True:
             state = task.env.reset()
+            last_state = state
+            wrong_move = False
 
             if task.type == "text": 
                 state = state / 16384
@@ -416,7 +428,11 @@ class Playing():
                 state = state / 255
 
             while True:
-                action = task.agent.get_action(state, epsilon=True)
+                if task.name == "2048-v0" and wrong_move:
+                    action = np.random.randint(0, task.env_action_size, size=1)[0]
+                    wrong_move = False
+                else:
+                    action = task.agent.get_action(state, epsilon=True)
                 next_state, reward, done, info = task.env.step(action)
 
                 if normalize_score and task.type != "basic":
@@ -427,18 +443,24 @@ class Playing():
 
                     if done:
                         reward = -1.0
+                        
+                if sum(last_state) == sum(next_state):
+                    wrong_move = True
 
+                last_state = next_state
                 if task.type == "text": 
                     next_state = next_state / 16384
                 elif task.type == "ram":
                     next_state = next_state / 255
 
                 task.agent.remember(state, action, reward, next_state, done, rand_agent=False)
-                new_observation = new_observation + 1
+                new_observations = new_observations + 1
                 state = next_state
                 
                 if len(task.agent.memory) == task.agent.memory_size:
-                    return new_observation
+                    print("[Agent added {} new memories. Current memory_size: {}]" 
+                          .format(new_observations, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
+                    return new_observations
 
                 if done:
                     break
@@ -447,7 +469,7 @@ class Playing():
         """
         nenahodny agent s normalni pameti a obrazovym prostredim
         """
-        new_observation = 0
+        new_observations = 0
         task.agent.clear_memory()
 
         while True:
@@ -482,12 +504,14 @@ class Playing():
                         reward = -1.0
 
                 task.agent.remember(state, action, reward, next_state, done, rand_agent=False)
-                new_observation = new_observation + 1
+                new_observations = new_observations + 1
 
                 state = next_state
 
                 if len(task.agent.memory) == task.agent.memory_size:
-                    return new_observation
+                    print("[Agent added {} new memories. Current memory_size: {}]" 
+                          .format(new_observations, len(task.agent.memory) if task.agent.memory_type == "basic" else task.agent.memory.length))
+                    return new_observations
 
                 if done:
                     break

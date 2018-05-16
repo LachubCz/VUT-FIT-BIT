@@ -1,29 +1,28 @@
 """
-docstring
+file contains implementation of Agent class
 """
 import random
 import numpy as np
 from collections import deque
 from memory import Memory
-from network import Network as network
-#from profiling import * #profiling - @do_profile(follow=[method, ])
+from network import Network
 
 class Agent:
     """
-    docstring
+    class implements agent
     """
     def __init__(self, algorithm, state_size, action_size, model_type, memory_type, net_units=None):
         self.initial_epsilon = 1
         self.final_epsilon = 0.1
         self.current_epsilon = self.initial_epsilon
-        self.epsilon_decay = 0.0000009
+        self.epsilon_decay = 0.0002#0.0000009
         self.gamma = 0.99
-        self.minibatch_size = 128
-        self.learning_rate = 0.00025
+        self.minibatch_size = 256
+        self.learning_rate = 0.001#0.00025
         self.fraction_update = 0.125
 
         self.memory_type = memory_type
-        self.memory_size = 200000
+        self.memory_size = 10000#200000
         if self.memory_type == "basic":
             self.memory = deque(maxlen=self.memory_size)
         else:
@@ -32,21 +31,23 @@ class Agent:
         self.action_size = action_size
         self.state_size = state_size
 
+        network = Network(state_size, action_size, self.learning_rate, "MSE", [True, False])
+
         if model_type == "2layer_bsc_mdl":
-            self.model_net = network.make_2layer_bsc_mdl(state_size, action_size, self.learning_rate, net_units)
-            self.target_net = network.make_2layer_bsc_mdl(state_size, action_size, self.learning_rate, net_units)
+            self.model_net = network.make_2layer_mdl(net_units)
+            self.target_net = network.make_2layer_mdl(net_units)
         elif model_type == "2layer_duel_mdl":
-            self.model_net = network.make_2layer_duel_mdl(state_size, action_size, self.learning_rate, net_units)
-            self.target_net = network.make_2layer_duel_mdl(state_size, action_size, self.learning_rate, net_units)
+            self.model_net = network.make_2layer_duel_mdl(net_units)
+            self.target_net = network.make_2layer_duel_mdl(net_units)
         elif model_type == "bsc_img_mdl":
-            self.model_net = network.make_bsc_img_mdl(state_size, action_size, self.learning_rate)
-            self.target_net = network.make_bsc_img_mdl(state_size, action_size, self.learning_rate)
+            self.model_net = network.make_bsc_img_mdl()
+            self.target_net = network.make_bsc_img_mdl()
         elif model_type == "duel_img_model":
-            self.model_net = network.make_duel_img_model(state_size, action_size, self.learning_rate)
-            self.target_net = network.make_duel_img_model(state_size, action_size, self.learning_rate)
+            self.model_net = network.make_duel_img_mdl()
+            self.target_net = network.make_duel_img_mdl()
         elif model_type == "1layer_ram_mdl":
-            self.model_net = network.make_1layer_ram_mdl(state_size, action_size, self.learning_rate, net_units)
-            self.target_net = network.make_1layer_ram_mdl(state_size, action_size, self.learning_rate, net_units)
+            self.model_net = network.make_1layer_mdl(net_units)
+            self.target_net = network.make_1layer_mdl(net_units)
 
         self.update_target_net()
 
@@ -58,13 +59,14 @@ class Agent:
 
     def update_target_net(self):
         """
-        docstring
+        method updates target network
         """
         self.target_net.set_weights(self.model_net.get_weights())
+        print("[Target network was updated.]")
 
     def update_target_net_partially(self):
         """
-        docstring
+        method updates target network by parts
         """
         weights_model = self.model_net.get_weights()
         weights_target = self.target_net.get_weights()
@@ -73,10 +75,11 @@ class Agent:
             weights_target[i] = weights_model[i] * self.fraction_update + weights_target[i] * (1 - self.fraction_update)
 
         self.target_net.set_weights(weights_target)
+        print("[Target network was updated by parts.]")
 
     def get_error(self, state, action, reward, next_state, done):
         """
-        docstring
+        method returns difference between Q-value from primary and target network
         """
         q_value = self.model_net.predict(np.array([state]))
         ns_model_pred = self.model_net.predict(np.array([next_state]))
@@ -95,7 +98,7 @@ class Agent:
 
     def remember(self, state, action, reward, next_state, done, rand_agent):
         """
-        docstring
+        method saves observation (experience) to experience replay memory
         """
         if self.memory_type == "basic":
             self.memory.append((state, action, reward, next_state, done))
@@ -109,13 +112,13 @@ class Agent:
 
     def clear_memory(self):
         """
-        docstring
+        method clears replay memory
         """
         self.memory.clear()
 
     def decrease_epsilon(self):
         """
-        docstring
+        method decreases epsilon
         """
         if self.current_epsilon > self.final_epsilon:
             if (self.current_epsilon - self.epsilon_decay) > self.final_epsilon:
@@ -125,7 +128,7 @@ class Agent:
 
     def get_action(self, state, epsilon):
         """
-        docstring
+        method returns action to take
         """
         if not epsilon:
             q_value = self.model_net.predict(np.array([state]))
@@ -133,11 +136,14 @@ class Agent:
 
         if np.random.rand() <= self.current_epsilon:
             return np.random.randint(0, self.action_size, size=1)[0]
-        else:
+        else:            
             q_value = self.model_net.predict(np.array([state]))
             return np.argmax(q_value)
 
     def get_minibatch(self):
+        """
+        method returns minibatch from diffrent memory types
+        """
         if self.memory_type == "basic":
             minibatch = random.sample(list(self.memory), self.minibatch_size)
 
@@ -159,13 +165,13 @@ class Agent:
 
     def train(self):
         """
-        docstring
+        method trains agent with selected algorithm
         """
         self.algorithms[self.algorithm]()
 
     def train_dqn(self):
         """
-        docstring
+        method trains agent using DQN
         """
         if self.memory_type == "basic":
             if len(self.memory) >= self.minibatch_size:
@@ -199,7 +205,7 @@ class Agent:
 
     def train_target_dqn(self):
         """
-        docstring
+        method trains agent using DQN with target network
         """
         if self.memory_type == "basic":
             if len(self.memory) >= self.minibatch_size:
@@ -233,7 +239,7 @@ class Agent:
 
     def train_ddqn(self):
         """
-        docstring
+        method trains agent using DDQN
         """
         if self.memory_type == "basic":
             if len(self.memory) >= self.minibatch_size:
@@ -268,24 +274,28 @@ class Agent:
 
     def load_model_weights(self, name):
         """
-        docstring
+        method loads weights to primary neural network
         """
         self.model_net.load_weights(name)
+        print("[Model was saved.]")
 
     def save_model_weights(self, name):
         """
-        docstring
+        method saves weights of primary neural network
         """
         self.model_net.save_weights("./model-{}".format(name))
+        print("[Target model was saved.]")
 
     def load_target_weights(self, name):
         """
-        docstring
+        method loads weights to target neural network
         """
         self.target_net.load_weights(name)
+        print("[Target model has been loaded.]")
 
     def save_target_weights(self, name):
         """
-        docstring
+        method saves weights of target neural network
         """
         self.target_net.save_weights("./target-{}".format(name))
+        print("[Model has been loaded.]")
