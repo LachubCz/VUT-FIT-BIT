@@ -66,7 +66,7 @@ class Playing():
             elif task.type == "ram":
                 state = state / 255
             elif task.type == "image":
-                next_state = engineer_img(next_state)
+                state = engineer_img(state)
 
             if task.args.num_of_frames == 4:
                 state = np.array([state, state, state, state])
@@ -84,22 +84,36 @@ class Playing():
                     task.env.render()
                     
                 if task.name == "2048-v0" and wrong_move:
-                    action = np.random.randint(0, task.env_action_size, size=1)[0]
+                    action = np.argmax(actions)
                     wrong_move = False
                 else:
-                    action = task.agent.get_action(state, epsilon=False)
+                    if task.name == "Breakout-v0" or task.name == "Breakout-ram-v0" or task.name == "BeamRider-v0":
+                        action = task.agent.get_action(state, epsilon=True)
+                    else:
+                        actions = task.agent.model_net.predict(np.array([state]))
+                        action = np.argmax(actions)
+
                 next_state, reward, done, info = task.env.step(action)
 
-                if sum(last_state) == sum(next_state):
-                    wrong_move = True
+                if task.name == "2048-v0":
+                    if sum(last_state) == sum(next_state):
+                        wrong_move = True
+                        actions[0][action] = -10000
 
                 last_state = next_state
                 if task.type == "text": 
-                    state = state / 16384
+                    next_state = next_state / 16384
                 elif task.type == "ram":
-                    state = state / 255
+                    next_state = next_state / 255
                 elif task.type == "image":
                     next_state = engineer_img(next_state)
+
+                if task.args.num_of_frames == 4:
+                    next_state = np.array([state[1], state[2], state[3], next_state])
+                elif task.args.num_of_frames == 3:
+                    next_state = np.array([state[1], state[2], next_state])
+                elif task.args.num_of_frames == 2:
+                    next_state = np.array([state[1], next_state])
 
                 state = next_state
                 total_reward = total_reward + reward
