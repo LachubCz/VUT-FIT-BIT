@@ -85,14 +85,14 @@ Soubory:
 
 * 2048-v0.h5
 * Acrobot-v1.h5
-* BeamRider-v0
+* BeamRider-v0 (2 snímky na vstup neuronové sítě)
 * BeamRider-ram-v0
-* Breakout-v0
+* Breakout-v0 (4 snímky na vstup neuronové sítě)
 * Breakout-ram-v0
 * CartPole-v0.h5
 * CartPole-v1.h5
 * MountainCar-v0.h5
-* SpaceInvaders-v0.h5
+* SpaceInvaders-v0.h5 (4 snímky na vstup neuronové sítě)
 * SpaceInvaders-ram-v0.h5
 
 **./trained_models/dueling_net:**
