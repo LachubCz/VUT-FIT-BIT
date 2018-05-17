@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-docstring
+file contains main
 """
 import os
 import sys
@@ -100,6 +100,9 @@ def get_args():
     return args
 
 def train(task, normalize_score=True):
+    """
+    method training
+    """
     episodes_numbers = []
     highest = []
     true_scores = []
@@ -213,7 +216,7 @@ def train(task, normalize_score=True):
 
 def main():
     """
-    docstring
+    main
     """
     args = get_args()
 

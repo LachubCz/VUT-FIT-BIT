@@ -1,5 +1,5 @@
 """
-methods for visualization of learning progress
+file contains methods for visualization of learning progress
 """
 import os
 import os.path
@@ -28,7 +28,7 @@ plt.rc('figure', titlesize=BIGGER_SIZE)
 
 def get_name(graph_name):
     """
-    docstring
+    method creates name for pdf
     """
     if os.path.isfile(graph_name+".pdf"):
         i=1
@@ -44,9 +44,8 @@ def get_name(graph_name):
 
 def combined_graph(scores, episode_numbers, name, coordinates=None, linears=None, scatter=False):
     """
-    method prints point graph
+    method prints point graph and
     interpolation graph with gaussian filter of learning progress
-    polynomial graph of learning progress
     """
     if linears is not None:
         for key, value in linears.items():
@@ -76,7 +75,7 @@ def combined_graph(scores, episode_numbers, name, coordinates=None, linears=None
 
 def heat_map(array, graph_name, axes):
     """
-    docstring
+    method creates heatmap
     """
     fig, ax = plt.subplots()
     im = ax.imshow(array, cmap=cm.YlOrRd)
@@ -91,7 +90,7 @@ def heat_map(array, graph_name, axes):
 
 def split_data(line):
     """
-    docstring
+    method splits varibles on line
     """
     data = list()
     arr = np.array([string for string in line.split(", ")], dtype=str)
@@ -131,7 +130,7 @@ def read_file(filename):
 
 def get_visualization(filename, graph_name, idx_val, coordinates=None, linears=None, scatter=False):
     """
-    docstring
+    method reads and proceses file with learning log
     """
     values = list()
     data, counter = read_file(filename)

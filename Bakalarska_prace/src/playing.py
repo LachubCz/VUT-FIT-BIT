@@ -1,5 +1,7 @@
 """
-docstring
+file contains methods for score estimation,
+for fulling diffrent types of memory with diffrent sources
+and processing of images
 """
 import time
 import sys
@@ -11,24 +13,25 @@ from tqdm import trange
 
 def engineer_img(img):
     """
-    docstring
+    method proceses image - make it gray and normalize
     """
     img = scipy.misc.imresize(img, (84, 84), interp='bilinear') 
 
     red, green, blue = img[:,:,0], img[:,:,1], img[:,:,2]
     img = 0.299 * red + 0.587 * green + 0.114 * blue #RGB -> Luma (Digital ITU BT.601)
 
-    img = img.astype(np.uint8) / 255.0 - 0.5 #normalizace
+    img = img.astype(np.uint8) / 255.0 - 0.5 #normalization
 
     return img
 
 class Playing():
     """
-    docstring
+    class contains methods for score estimation and
+    for fulling diffrent types of memory with diffrent sources
     """
     def rand_score_estimate(task, games):
         """
-        odhad nahodneho skore pro fsorove hry
+        score estimation for random agent
         """
         total_reward = 0
 
@@ -51,7 +54,7 @@ class Playing():
 
     def agent_score_estimate(task, games, render=False, show_bar=False):
         """
-        odhad agentova skore pro vektorove hry
+        score estimation for trained agent
         """
         total_reward = 0
         bar = trange(games, leave=True, disable=(not show_bar))
@@ -127,7 +130,7 @@ class Playing():
 
     def prior_rand_agent_replay_fs(task, normalize_score=True):
         """
-        nahodny agent s prioritni pameti a vektorovym prostredim
+        random agent fulfills pririty experience replay memory without buffer
         """
         task.agent.clear_memory()
         new_observations = 0
@@ -172,7 +175,7 @@ class Playing():
 
     def prior_rand_agent_replay_ps(task, normalize_score=True):
         """
-        nahodny agent s prioritni pameti a obrazovym prostredim
+        random agent fulfills pririty experience replay memory with buffer
         """
         new_observations = 0
         task.agent.clear_memory()
@@ -223,7 +226,7 @@ class Playing():
 
     def prior_agent_replay_fs(task, normalize_score=True):
         """
-        nenahodny agent s normalni pameti a vektorovym prostredim
+        trained agent fulfills pririty experience replay memory without buffer
         """
         new_observations = 0
         average_priority = task.agent.memory.priority_tree[0] / task.agent.memory.length
@@ -278,7 +281,7 @@ class Playing():
 
     def prior_agent_replay_ps(task, normalize_score=True):
         """
-        nenahodny agent s prioritni pameti a obrazovym prostredim NEDOKONCENO
+        trained agent fulfills pririty experience replay memory with buffer
         """
         new_observations = 0
         task.agent.clear_memory()
@@ -329,7 +332,7 @@ class Playing():
 
     def rand_agent_replay_fs(task, normalize_score=True):
         """
-        nahodny agent s normalni pameti a vektorovym prostredim
+        random agent fulfills experience replay memory without buffer
         """
         new_observations = 0
         task.agent.clear_memory()
@@ -375,7 +378,7 @@ class Playing():
 
     def rand_agent_replay_ps(task, normalize_score=True):
         """
-        nahodny agent s normalni pameti a obrazovym prostredim
+        random agent fulfills experience replay memory with buffer
         """
         new_observations = 0
         task.agent.clear_memory()
@@ -426,7 +429,7 @@ class Playing():
 
     def agent_replay_fs(task, normalize_score=True):
         """
-        nenahodny agent s normalni pameti a vektorovym prostredim
+        trained agent fulfills experience replay memory without buffer
         """
         new_observations = 0
         task.agent.clear_memory()
@@ -481,7 +484,7 @@ class Playing():
 
     def agent_replay_ps(task, normalize_score=True):
         """
-        nenahodny agent s normalni pameti a obrazovym prostredim
+        trained agent fulfills experience replay memory with buffer
         """
         new_observations = 0
         task.agent.clear_memory()

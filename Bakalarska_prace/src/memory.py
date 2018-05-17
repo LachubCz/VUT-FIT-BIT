@@ -1,12 +1,12 @@
 """
-docstring
+file contains class which implements prioritized experience replay memory using sum tree
 """
 import random
 import numpy as np
 
 class Memory:
     """
-    docstring
+    class implements prioritized experience replay memory using sum tree
     """
     capacity = None
     priority_tree = None
@@ -27,7 +27,7 @@ class Memory:
 
     def sample(self, minibatch_size):
         """
-        docstring
+        method returns sample of memories of size minibatch_size
         """
         minibatch = []
         section = self.priority_tree[0] / minibatch_size
@@ -42,7 +42,7 @@ class Memory:
 
     def get_observation(self, index, p):
         """
-        docstring
+        method returns memory (observation) from specific range 
         """
         left = 2 * index + 1
 
@@ -57,14 +57,15 @@ class Memory:
 
     def get_priority(self, obs_error):
         """
-        docstring
+        method returns priority of memory (observation) based on difference between Q-value
+        from primary and target net
         """
         priority = (obs_error + self.basic_error) ** self.error_power
         return priority
 
     def add_observation(self, observation, obs_error):
         """
-        docstring
+        method adds new observation (memory) into replay memory 
         """
         self.observation_tree[self.nw_elem_idx] = observation
         
@@ -85,7 +86,7 @@ class Memory:
 
     def propagate_changes(self, index, difference):
         """
-        docstring
+        method propagate changes in priority from bottom of the tree to its top
         """
         parent = (index - 1) // 2
 
@@ -96,7 +97,7 @@ class Memory:
 
     def update_minibatch(self, minibatch, obs_errors):
         """
-        docstring
+        method updates priority of minibatch of memories
         """
         for i in range(len(minibatch)):
             index = minibatch[i][0]
@@ -110,7 +111,7 @@ class Memory:
 
     def clear(self):
         """
-        docstring
+        method clears memory
         """
         self.priority_tree = np.zeros(2*self.capacity - 1)
         self.observation_tree = np.zeros(self.capacity, dtype=object)
