@@ -2,7 +2,7 @@ DQN a její vylepšení
 ====================
 Popis aplikace
 -----------
-Aplikace slouží k trénování zpětnovazebního agenta pomocí DQN a několika jeho vylepšení na prostředích z toolkitu Open AI Gym.
+Aplikace k trénování zpětnovazebního agenta pomocí DQN a několika jeho vylepšení na prostředích z toolkitu Open AI Gym.
 
 **Podporovaná prostředí:**
 
