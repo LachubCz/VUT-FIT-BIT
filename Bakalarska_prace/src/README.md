@@ -23,19 +23,19 @@ Použití
 ##### python3 main.py -env env -eps eps -mode mode [-alg alg] [-mem mem] [-net net] [-pu pu] [-mdl mdl] [-init] [-num_of_frames num_of_frames] [-save_f save_f] [-update_f update_f] [-vids]
 ###### Parametry:
 
-    -env env           |   
-    -eps eps           |   
-    -mode mode         |   
-    -alg alg           |   
-    -mem mem           |   
-    -net net           |   
-    -pu pu             |   
-    -mdl mdl           |   
-    -init              |   
-    -num_of_frames num_of_frames    |   
-    -save_f save_f     |   
-    -update_f update_f |   
-    -vids              |   
+    -env env           |   jméno prostředí
+    -eps eps           |   počet epizod
+    -mode mode         |   mód ve kterém je aplikace spuštěna (train, test, render)
+    -alg alg           |   druh algoritmu (DQN, DQN+TN, DDQN)
+    -mem mem           |   druh vzpomínkové paměti (basic, prioritized)
+    -net net           |   architektura neuronové sítě (basic, dueling)
+    -pu pu             |   výpočetní jednotka (CPU, GPU)
+    -mdl mdl           |   nahrání existujícího modelu
+    -init              |   inicializace paměti náhodným hráčem před trénováním
+    -num_of_frames num_of_frames    |   počet snímků, které jdou na vstup neuronové sítě (2,3,4)
+    -save_f save_f     |   frekvence epizod ve kterých se ukládají modely
+    -update_f update_f |   počet kroků po kterém se bude aktualizovat cílová síť
+    -vids              |   zapnutí nahrávání videa
 
 Příklady použítí
 -----------------
