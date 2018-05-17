@@ -1,112 +1,108 @@
-# TO-DO
-### Tvorba
-* Popsat experimenty a začít s článkem
+DQN a její vylepšení
+====================
+Popis aplikace
+-----------
+Aplikace slouží k trénování zpětnovazebního agenta pomocí DQN a několika jeho vylepšení na prostředích z toolkitu Open AI Gym.
 
-### Experimenty:
-* Testování hraní s obrázky
+**Podporovaná prostředí:**
 
-* Testování zvětšení minibatchů
+* CartPole-v0
+* CartPole-v1
+* MountainCar-v0
+* Acrobot-v1
+* 2048-v0
+* SpaceInvaders-v0
+* SpaceInvaders-ram-v0
+* Breakout-v0
+* Breakout-ram-v0
+* BeamRider-v0
+* BeamRider-ram-v0
 
-# Odkazy
+Použití
+-----
+##### python main.py [-lr] [-dt] [-rf] [-d d] [-train] [-test] [-eval] [-train_test] [-s] [-lrm lrm] [-dtm dtm] [-rfm rfm] [-dic dic]
+###### Parameters: 
 
-Deep Reinforcement Learning: Pong from Pixels
-http://karpathy.github.io/2016/05/31/rl/
+    -lr         |   script will use Logistic Regression model (it's possible to run multiple modes simultaneously)
+    -dt         |   script will use Decision Tree model (it's possible to run multiple modes simultaneously)
+    -rf         |   script will use Random Forest model (it's possible to run multiple modes simultaneously)
+    -d d        |   dataset name (location) to load
+    -train      |   script will run in train mode, model will train on hole dataset, no output
+    -test       |   script will run in test mode, model will process hole dataset and compare own predictions with correct labels, output is performace
+    -eval       |   script will run in eval mode, model will predict labels for hole dataset and return them, if you want to use this mode, you have to load taugh models, output is array of predicted labels
+    -train_test |   script will run in train_test mode, first half of dataset will be used as training data and second half as a testing data, output is performace
+    -s          |   script will save models
+    -lrm lrm    |   name of Logistic Regression model (location) to load
+    -dtm dtm    |   name of Decision Tree model (location) to load
+    -rfm rfm    |   name of Random Forest model (location) to load
+    -dic dic    |   name of dictionary (location) to load
 
-Using Keras and Deep Q-Network to Play FlappyBird
-https://yanpanlau.github.io/2016/07/10/FlappyBird-Keras.html
+Examples
+-----------------
+    python main.py -d datasets/churn.all -lr -rf -dt -train_test -s
+    python main.py -d datasets/churn_for_train.all -lr -train -s
+    python main.py -d datasets/churn_for_test.all -lr -test -lrm models/log_regression.pkl -dic models/dictionary.pkl
+    python main.py -d datasets/churn_for_eval.all -lr -dt -eval -lrm models/log_regression.pkl -dtm models/decision_tree.pkl -dic models/dictionary.pkl
 
-Deep Q-Learning with Keras and Gym - CartPole
-https://keon.io/deep-q-learning/
+Libraries
+-----------------
+**Standard libraries:**
+* os
+* time
+* re
+* argparse
+* sys
+* math
+* collections
+* random
+* warnings
 
-DQN in Keras + TensorFlow + OpenAI Gym - Breakout
-https://github.com/elix-tech/dqn/blob/master/dqn.py
 
-atariAgent - Asault
-https://github.com/cfsantos/atariAgent
+**Third party libraries:**
+* keras
+* tensorflow
+* gym
+* gym_2048
+* numpy
+* tqdm
+* scipy
+* sklearn
+* matplotlib
 
-Playing CartPole with a CNN and Q Learning
-https://github.com/NoahLidell/math-of-intelligence/blob/master/q_learning/cartpole_cnn_qlearning.ipynb
+Files:
+---------------------------
+**./:**
 
-Game_bot_DQN - Breakout
-https://github.com/jhGitHub009/Game_bot_DQN/blob/master/Convolutional_DQN.py
+* agent.py
+* main.py
+* memory.py
+* network.py
+* playing.py
+* README.md
+* task.py
+* visualization.py
 
-Minimal Deep Q Learning (DQN & DDQN) implementations in Keras
-https://github.com/keon/deep-q-learning
+**./trained_models/basic_net:**
 
-DQN on environments in OpenAI gym - MountainCar, CartPole
-https://github.com/Wert1996/DQN-on-Open-AI-Gym
+* 2048-v0.h5
+* Acrobot-v1.h5
+* BeamRider-v0
+* BeamRider-ram-v0
+* Breakout-v0
+* Breakout-ram-v0
+* CartPole-v0.h5
+* CartPole-v1.h5
+* MountainCar-v0.h5
+* SpaceInvaders-v0.h5
+* SpaceInvaders-ram-v0.h5
 
-CartPole_v1_DDQN
-https://github.com/jankrepl/CartPole-v1_DDQN
+**./trained_models/dueling_net:**
 
-Mountaincar problem solver using DQN
-https://github.com/diwasblack/mountaincar
+* Acrobot-v1.h5
+* CartPole-v0.h5
+* CartPole-v1.h5
+* MountainCar-v0.h5
 
-Implementace A3C
-https://gist.github.com/yashpatel5400
+****
 
-RL agents with keras and TF for openAI gym - Deling, Crtpole, MuntainCar - mohlo by být užitečné
-https://github.com/jmrf/RL-for-openAI-gym
-
-Reinforcement Learning with TensorFlow
-https://github.com/urielsade/reinforcement-learning
-
-Jaromir Janisch teorie
-https://jaromiru.com/2017/02/16/lets-make-an-a3c-theory/
-
-Jaromir Janisch - AI examples with TensorFlow, Keras
-https://github.com/jaara/ai_examples/tree/master/open_gym
-
-Jaromir Janisch - Accompanying repository for Let's make a DQN / A3C series
-https://github.com/jaara/AI-blog
-
-atariAgent - Asault
-https://github.com/cfsantos/atariAgent
-
-Reinforcement Learning Methods and Tutorials - Čína
-https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow
-
-Deep Reinforcement Learning on Space Invaders Using Keras - zpracování obrázků, dueling
-https://yilundu.github.io/2016/12/24/Deep-Q-Learning-on-Space-Invaders.html
-
-Space Invaders
-https://github.com/yilundu/DQN-DDQN-on-Space-Invaders/blob/master/deep_Q.py
-
-Reinforcement Learning w/ Keras + OpenAI: DQNs
-https://towardsdatascience.com/reinforcement-learning-w-keras-openai-dqns-1eed3a5338c
-
-Keras input explanation: input_shape, units, batch_size, dim, etc
-https://stackoverflow.com/questions/44747343/keras-input-explanation-input-shape-units-batch-size-dim-etc
-
-2-double-dqn + A2C a další
-https://github.com/rlcode/reinforcement-learning/blob/master/2-cartpole/2-double-dqn/cartpole_ddqn.py
-
-Implementation of the Double-Dueling DQN algorithm written using Keras.
-https://github.com/p-Mart/Double-Dueling-DQN-Keras/blob/master/DDDQN.py
-
-Duel_DDQN V0.3
-https://github.com/analog-rl/Duel_DDQN/blob/master/duel.py
-
-DQN and Dueling architecture for solving CartPole and Mountain Car envs-OpenAI gym
-https://github.com/satyenrajpal/RL_Classical_control
-
-Highly modularized implementation of popular deep RL algorithms by PyTorch
-https://github.com/ShangtongZhang/DeepRL
-
-2048 - prostředí
-https://github.com/rgal/gym-2048
-
-Sbírka algoritmů od Ukrajince
-https://gym.openai.com/users/tambetm/
-
-Zrychlení učení
-https://medium.com/mlreview/speeding-up-dqn-on-pytorch-solving-pong-in-30-minutes-81a1bd2dff55
-
-Deep Q-Networks and Beyond
-https://medium.com/@awjuliani/simple-reinforcement-learning-with-tensorflow-part-4-deep-q-networks-and-beyond-8438a3e2b8df
-
-Reddit diskuze o Multithread DQN a A3C
-https://www.reddit.com/r/MachineLearning/comments/6nc90q/d_a3c_versus_multithreaded_dqn/
-
-Poznámky z obhajoby semestrální práce
-https://docs.google.com/spreadsheets/d/e/2PACX-1vQHHD3l4CAd-NJsOlckev_AbNGoxZAcEZNt9ETZJxq2GUjyZteVYuTDtFmbmikUuTt35yP02VhV90V8/pubhtml#
+###### Created by: Petr Buchal
