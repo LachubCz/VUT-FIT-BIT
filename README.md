@@ -1,4 +1,4 @@
-# VUT FIT BIT 
+## VUT FIT BIT
 ### 1. semester
 
 * IUS - Úvod do softwarového inženýrství
