@@ -1,5 +1,5 @@
-# VUT FIT BIT 
-### 1. semester
+# VUT FIT BIT
+## 1. semester
 
 * IUS - Úvod do softwarového inženýrství
   * [1. Projekt](./1_semestr/IUS/Proj1) - 28/30
@@ -8,7 +8,7 @@
   * [2. Projekt](./1_semestr/IZP/Proj2) - 4/7
   * [3. Projekt](./1_semestr/IZP/Proj3) - 7/10
 
-### 2. semester
+## 2. semester
 
 * INC - Návrh číslicových systémů
   * [1. Projekt](./2_semestr/INC/Proj1) - 20/20
@@ -21,7 +21,7 @@
   * [1. Projekt](./2_semestr/IVS/Proj1) - 16/20
   * [2. Projekt](./2_semestr/IVS/Proj2) - 45/50
   
-### 3. semester
+## 3. semester
 
 * IAL - Algoritmy
   * [1. Projekt](./3_semestr/IAL/Proj1) - 10/10
@@ -34,7 +34,7 @@
 * ISS - Signály a systémy
   * [1. Projekt](./3_semestr/ISS/Proj1) - 6,5/12
   
-### 4. semester
+## 4. semester
 
 * IDS - Databázové systémy
   * [1. Projekt](./4_semestr/IDS/Proj1) - 27/34
@@ -52,7 +52,7 @@
 * IW5 - Programování v .NET a C#
   * [1. Projekt](./4_semestr/IW5/Proj1) - 33/70
 
-### 5. semester
+## 5. semester
 
 * IIS - Informační systémy
   * [1. Projekt](./5_semestr/IIS/Proj1) - 19/30
@@ -65,7 +65,7 @@
 * ITU - Tvorba uživatelských rozhraní
   * [1. Projekt](./5_semestr/ITU/Proj1) - 54/55
   
-### 6. semester
+## 6. semester
 
 * ISJ - Skriptovací jazyky
   * [1. Projekt](./6_semestr/ISJ/Proj1) - 5/5
