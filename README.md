@@ -1,12 +1,18 @@
 # VUT FIT BIT
 ## 1. semester
 
+* IEL - Elektronika pro informační technologie
+  * [1. Projekt](./1_semestr/IEL/Proj1) - 1,1/12
 * IUS - Úvod do softwarového inženýrství
   * [1. Projekt](./1_semestr/IUS/Proj1) - 28/30
 * IZP - Základy programování
   * [1. Projekt](./1_semestr/IZP/Proj1) - 2/5
   * [2. Projekt](./1_semestr/IZP/Proj2) - 4/7
   * [3. Projekt](./1_semestr/IZP/Proj3) - 7/10
+* ISC - Počítačový seminář
+  * [1. Projekt](./1_semestr/ISC/Proj1) - 4/4
+  * [2. Projekt](./1_semestr/ISC/Proj2&3) - 3/4
+  * [3. Projekt](./1_semestr/ISC/Proj2&3) - 3/4
 
 ## 2. semester
 
