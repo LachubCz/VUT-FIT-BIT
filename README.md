@@ -2,7 +2,7 @@
 ## 1. semester
 
 * IEL - Elektronika pro informační technologie
-  * [1. Projekt](./1_semestr/IEL/Proj1) - 1,1/12
+  * [1. Projekt](./1_semestr/IEL/Proj1) - 1.1/12
 * IUS - Úvod do softwarového inženýrství
   * [1. Projekt](./1_semestr/IUS/Proj1) - 28/30
 * IZP - Základy programování
@@ -38,7 +38,7 @@
   * [1. Projekt](./3_semestr/INP/Proj1) - 10/10
   * [2. Projekt](./3_semestr/INP/Proj2) - 13/23
 * ISS - Signály a systémy
-  * [1. Projekt](./3_semestr/ISS/Proj1) - 6,5/12
+  * [1. Projekt](./3_semestr/ISS/Proj1) - 6.5/12
   
 ## 4. semester
 
@@ -63,11 +63,11 @@
 * IIS - Informační systémy
   * [1. Projekt](./5_semestr/IIS/Proj1) - 19/30
 * IMP - Mikroprocesorové a vestavěné systémy
-  * [1. Projekt](./5_semestr/IMP/Proj1) - 13,3/14
+  * [1. Projekt](./5_semestr/IMP/Proj1) - 13.3/14
 * IMS - Modelování a simulace
   * [1. Projekt](./5_semestr/IMS/Proj1) - 15/20
 * ISA - Síťové aplikace a správa sítí
-  * [1. Projekt](./5_semestr/ISA/Proj1) - 10,5/20
+  * [1. Projekt](./5_semestr/ISA/Proj1) - 10.5/20
 * ITU - Tvorba uživatelských rozhraní
   * [1. Projekt](./5_semestr/ITU/Proj1) - 54/55
   
