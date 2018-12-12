@@ -9,6 +9,7 @@
   * [1. Projekt](./1_semestr/IZP/Proj1) - 2/5
   * [2. Projekt](./1_semestr/IZP/Proj2) - 4/7
   * [3. Projekt](./1_semestr/IZP/Proj3) - 7/10
+  * [4. Projekt](./1_semestr/IZP/Proj4) - 4/4
 * ISC - Počítačový seminář
   * [1. Projekt](./1_semestr/ISC/Proj1) - 4/4
   * [2. Projekt](./1_semestr/ISC/Proj2&3) - 3/4
