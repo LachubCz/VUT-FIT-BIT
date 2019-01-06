@@ -1,4 +1,6 @@
 # VUT FIT BIT
+[![university](https://img.shields.io/badge/university-Brno%20University%20of%20Technology-red.svg)](https://www.vutbr.cz/en/)
+[![faculty](https://img.shields.io/badge/faculty-Faculty%20of%20Information%20Technology-blue.svg)](http://www.fit.vutbr.cz/.en)
 ## 1. semester
 
 * IEL - Elektronika pro informační technologie
